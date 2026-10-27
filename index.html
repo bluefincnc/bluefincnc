@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oregon LiDAR Map</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+}
+
+#map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #e5e5e5;
+}
+
+.leaflet-top.leaflet-right {
+  top: 65px;
+  right: 8px;
+}
+
+.leaflet-control-layers {
+  max-width: min(230px, calc(100vw - 28px));
+  max-height: 48vh;
+  overflow-y: auto;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 6px #777;
+  font-size: 14px;
+}
+
+.leaflet-control-layers-expanded {
+  padding: 10px 12px;
+}
+
+.leaflet-control-layers label {
+  margin: 6px 0;
+}
+
+.leaflet-control-layers-separator {
+  margin: 8px 0;
+}
+
+/* DOGAMI opacity */
+#opacityControl {
+  position: absolute;
+  top: 65px;
+  left: 10px;
+  z-index: 1000;
+  width: 180px;
+  padding: 10px;
+  box-sizing: border-box;
+  background: rgba(255,255,255,0.96);
+  border-radius: 6px;
+  box-shadow: 0 1px 6px #777;
+  font-size: 13px;
+}
+
+#opacityControl input {
+  width: 100%;
+  margin: 8px 0 0;
+}
+
+#opacityValue {
+  font-weight: bold;
+}
+
+/* Coordinate display */
+#coordinates {
+  position: absolute;
+  top: 145px;
+  left: 10px;
+  z-index: 1000;
+  max-width: calc(100vw - 40px);
+  padding: 8px 10px;
+  box-sizing: border-box;
+  background: rgba(255,255,255,0.96);
+  border-radius: 6px;
+  box-shadow: 0 1px 6px #777;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+/* GPS button */
+#gpsButton {
+  position: absolute;
+  left: 10px;
+  bottom: 24px;
+  z-index: 1100;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 10px 13px;
+  border: 0;
+  border-radius: 7px;
+  background: rgba(255,255,255,0.97);
+  box-shadow: 0 1px 6px #777;
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+#gpsButton:active {
+  background: #e8f1ff;
+}
+
+#gpsButton[aria-pressed="true"] {
+  color: #1769d2;
+  outline: 2px solid #1769d2;
+}
+
+/* GPS accuracy circle */
+.gps-accuracy-circle {
+  stroke: #2478e5;
+  stroke-opacity: 0.75;
+  stroke-width: 1.5;
+  fill: #3388ff;
+  fill-opacity: 0.16;
+}
+
+/* Blue GPS dot */
+.gps-location-dot {
+  width: 16px;
+  height: 16px;
+  background: #2583ff;
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.55);
+  box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  .leaflet-top.leaflet-right {
+    top: 65px;
+    right: 6px;
+  }
+
+  .leaflet-control-layers {
+    max-height: 42vh;
+    font-size: 13px;
+  }
+
+  #opacityControl {
+    top: 65px;
+    left: 6px;
+    width: 145px;
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  #coordinates {
+    top: 140px;
+    left: 6px;
+    max-width: 155px;
+    font-size: 12px;
+  }
+
+  #gpsButton {
+    left: 8px;
+    bottom: 18px;
+    min-width: 48px;
+    min-height: 48px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div id="map"></div>
+
+<div id="opacityControl">
+  <div><strong>DOGAMI opacity:</strong>
+    <span id="opacityValue">60%</span>
+  </div>
+  <input id="opacitySlider" type="range" min="0" max="100" value="60">
+</div>
+
+<div id="coordinates">Tap or click the map for coordinates</div>
+
+<button id="gpsButton" type="button"
+        aria-pressed="false"
+        title="Show my phone's GPS location">◎ GPS</button>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+(function () {
+  "use strict";
+
+  const map = L.map("map", {
+    zoomControl: false,
+    doubleClickZoom: true
+  }).setView([42.4368, -123.1400], 11);
+
+  // Base maps
+  const streetMap = L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+    {
+      attribution: "Tiles &copy; Esri",
+      maxZoom: 19
+    }
+  ).addTo(map);
+
+  const topoMap = L.tileLayer(
+    "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+    {
+      attribution: "&copy; OpenTopoMap contributors",
+      maxZoom: 17
+    }
+  );
+
+  // DOGAMI hillshade ImageServer
+  const dogamiUrl =
+    "https://gis.dogami.oregon.gov/arcgis/rest/services/lidar/DIGITAL_TERRAIN_MODEL_MOSAIC_HS/ImageServer/exportImage";
+
+  const hillshade = L.imageOverlay(
+    "",
+    [[42.0, -124.0], [43.0, -122.0]],
+    {
+      opacity: 0.60,
+      interactive: false
+    }
+  );
+
+  // Oregon PLSS Sections
+  const plssUrl =
+    "https://gis.odf.oregon.gov/ags1/rest/services/WebMercator/PLSS/MapServer/export";
+
+  const plss = L.imageOverlay(
+    "",
+    [[42.0, -124.0], [43.0, -122.0]],
+    {
+      opacity: 1,
+      interactive: false
+    }
+  );
+
+  let hillshadeRequest = 0;
+  let plssRequest = 0;
+  let refreshTimer = null;
+
+  function makeExportUrl(serviceUrl, params) {
+    return serviceUrl + "?" +
+      new URLSearchParams(params).toString();
+  }
+
+  function updateHillshade() {
+    if (!map.hasLayer(hillshade)) return;
+
+    const size = map.getSize();
+    if (size.x < 1 || size.y < 1) return;
+
+    const bounds = map.getBounds();
+    const south = bounds.getSouth();
+    const west = bounds.getWest();
+    const north = bounds.getNorth();
+    const east = bounds.getEast();
+
+    const imageBounds = L.latLngBounds(
+      [south, west],
+      [north, east]
+    );
+
+    const params = {
+      bbox: [west, south, east, north].join(","),
+      bboxSR: "4326",
+      imageSR: "4326",
+      size: Math.max(1, Math.round(size.x)) + "," +
+            Math.max(1, Math.round(size.y)),
+      format: "png32",
+      transparent: "true",
+      f: "image"
+    };
+
+    const requestNumber = ++hillshadeRequest;
+    const url = makeExportUrl(dogamiUrl, params);
+    const testImage = new Image();
+
+    testImage.onload = function () {
+      if (requestNumber !== hillshadeRequest) return;
+      if (!map.hasLayer(hillshade)) return;
+
+      hillshade.setBounds(imageBounds);
+      hillshade.setUrl(url);
+    };
+
+    testImage.onerror = function () {
+      if (requestNumber !== hillshadeRequest) return;
+      console.error("DOGAMI hillshade image request failed:", url);
+    };
+
+    testImage.src = url;
+  }
+
+  function updatePLSS() {
+    if (!map.hasLayer(plss)) return;
+
+    const size = map.getSize();
+    if (size.x < 1 || size.y < 1) return;
+
+    const bounds = map.getBounds();
+    const south = bounds.getSouth();
+    const west = bounds.getWest();
+    const north = bounds.getNorth();
+    const east = bounds.getEast();
+
+    const imageBounds = L.latLngBounds(
+      [south, west],
+      [north, east]
+    );
+
+    const params = {
+      bbox: [west, south, east, north].join(","),
+      bboxSR: "4326",
+      imageSR: "4326",
+      size: Math.max(1, Math.round(size.x)) + "," +
+            Math.max(1, Math.round(size.y)),
+      format: "png32",
+      transparent: "true",
+      layers: "show:0,1",
+      f: "image"
+    };
+
+    const requestNumber = ++plssRequest;
+    const url = makeExportUrl(plssUrl, params);
+    const testImage = new Image();
+
+    testImage.onload = function () {
+      if (requestNumber !== plssRequest) return;
+      if (!map.hasLayer(plss)) return;
+
+      plss.setBounds(imageBounds);
+      plss.setUrl(url);
+    };
+
+    testImage.onerror = function () {
+      if (requestNumber !== plssRequest) return;
+      console.error("PLSS image request failed:", url);
+    };
+
+    testImage.src = url;
+  }
+
+  function refreshVisibleOverlays() {
+    clearTimeout(refreshTimer);
+
+    refreshTimer = setTimeout(function () {
+      updateHillshade();
+      updatePLSS();
+    }, 200);
+  }
+
+  // Layer menu
+  L.control.layers(
+    {
+      "Esri Street Map": streetMap,
+      "OpenTopoMap": topoMap
+    },
+    {
+      "DOGAMI Hillshade": hillshade,
+      "PLSS Sections": plss
+    },
+    {
+      collapsed: false,
+      position: "topright"
+    }
+  ).addTo(map);
+
+  map.on("overlayadd", function (event) {
+    if (event.layer === hillshade) updateHillshade();
+    if (event.layer === plss) updatePLSS();
+  });
+
+  map.on("moveend", refreshVisibleOverlays);
+  map.on("zoomend", refreshVisibleOverlays);
+
+  map.on("resize", function () {
+    refreshVisibleOverlays();
+  });
+
+  if (typeof ResizeObserver !== "undefined") {
+    const observer = new ResizeObserver(function () {
+      map.invalidateSize({ pan: false });
+      refreshVisibleOverlays();
+    });
+
+    observer.observe(document.getElementById("map"));
+  }
+
+  // DOGAMI opacity slider
+  const opacitySlider = document.getElementById("opacitySlider");
+  const opacityValue = document.getElementById("opacityValue");
+
+  L.DomEvent.disableClickPropagation(
+    document.getElementById("opacityControl")
+  );
+
+  opacitySlider.addEventListener("input", function () {
+    const opacity = Number(opacitySlider.value) / 100;
+    hillshade.setOpacity(opacity);
+    opacityValue.textContent = opacitySlider.value + "%";
+  });
+
+  // Degrees and decimal minutes (DDM) only.
+  // Negative values indicate south or west.
+  function toDDM(value) {
+    const sign = value < 0 ? "-" : "";
+    const absolute = Math.abs(value);
+    const degrees = Math.floor(absolute);
+    const minutes = (absolute - degrees) * 60;
+
+    return sign + degrees + "° " + minutes.toFixed(3) + "'";
+  }
+
+  const coordinatesDisplay =
+    document.getElementById("coordinates");
+
+  map.on("click", function (event) {
+    coordinatesDisplay.textContent =
+      toDDM(event.latlng.lat) + "  " +
+      toDDM(event.latlng.lng);
+  });
+
+  // Phone GPS
+  const gpsButton = document.getElementById("gpsButton");
+
+  let gpsWatchId = null;
+  let gpsMarker = null;
+  let gpsAccuracy = null;
+  let gpsHasCentered = false;
+
+  const gpsIcon = L.divIcon({
+    className: "",
+    html: '<div class="gps-location-dot"></div>',
+    iconSize: [16, 16],
+    iconAnchor: [8, 8]
+  });
+
+  L.DomEvent.disableClickPropagation(gpsButton);
+
+  function stopGpsTracking() {
+    if (gpsWatchId !== null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(gpsWatchId);
+    }
+
+    gpsWatchId = null;
+    gpsHasCentered = false;
+    gpsButton.setAttribute("aria-pressed", "false");
+    gpsButton.textContent = "◎ GPS";
+    gpsButton.title = "Show my phone's GPS location";
+  }
+
+  function gpsError(error) {
+    stopGpsTracking();
+
+    if (error.code === 1) {
+      coordinatesDisplay.textContent =
+        "Location permission denied. Allow location access in your browser, then try again.";
+    } else if (error.code === 2) {
+      coordinatesDisplay.textContent =
+        "Could not determine location. Check your phone's location services.";
+    } else if (error.code === 3) {
+      coordinatesDisplay.textContent =
+        "GPS timed out. Tap GPS to try again.";
+    } else {
+      coordinatesDisplay.textContent =
+        "Unable to get GPS location.";
+    }
+  }
+
+  gpsButton.addEventListener("click", function () {
+    // Tap again to stop tracking.
+    if (gpsWatchId !== null) {
+      stopGpsTracking();
+      return;
+    }
+
+    if (!("geolocation" in navigator)) {
+      coordinatesDisplay.textContent =
+        "This browser does not support location access.";
+      return;
+    }
+
+    if (!window.isSecureContext) {
+      coordinatesDisplay.textContent =
+        "GPS requires a secure HTTPS page. Open the map using its HTTPS address.";
+      return;
+    }
+
+    gpsHasCentered = false;
+    gpsButton.setAttribute("aria-pressed", "true");
+    gpsButton.textContent = "GPS…";
+    gpsButton.title = "Stop GPS tracking";
+    coordinatesDisplay.textContent =
+      "Waiting for phone GPS location…";
+
+    gpsWatchId = navigator.geolocation.watchPosition(
+      function (position) {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const accuracy = Math.max(
+          0, position.coords.accuracy || 0
+        );
+        const location = L.latLng(lat, lng);
+
+        // Accuracy circle
+        if (!gpsAccuracy) {
+          gpsAccuracy = L.circle(location, {
+            radius: accuracy,
+            className: "gps-accuracy-circle",
+            interactive: false
+          }).addTo(map);
+        } else {
+          gpsAccuracy.setLatLng(location);
+          gpsAccuracy.setRadius(accuracy);
+        }
+
+        // Blue location dot
+        if (!gpsMarker) {
+          gpsMarker = L.marker(location, {
+            icon: gpsIcon,
+            interactive: false,
+            keyboard: false,
+            zIndexOffset: 1000
+          }).addTo(map);
+        } else {
+          gpsMarker.setLatLng(location);
+        }
+
+        coordinatesDisplay.textContent =
+          toDDM(lat) + "  " + toDDM(lng) +
+          "  (GPS ±" + Math.round(accuracy) + " m)";
+
+        gpsButton.textContent = "GPS ON";
+
+        // Center the map on the first GPS fix only.
+        // Later updates move the dot without dragging the map.
+        if (!gpsHasCentered) {
+          map.setView(location, Math.max(map.getZoom(), 15));
+          gpsHasCentered = true;
+        }
+      },
+      gpsError,
+      {
+        enableHighAccuracy: true,
+        maximumAge: 3000,
+        timeout: 20000
+      }
+    );
+  });
+
+  // Initial map sizing
+  setTimeout(function () {
+    map.invalidateSize();
+  }, 500);
+
+})();
+</script>
+
+</body>
+</html>

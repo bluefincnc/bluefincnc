@@ -467,12 +467,12 @@ html, body {
 
   // Fixed Rogue River area, 100 nautical mile radius.
   const adsbUrl =
-    "https://api.adsb.lol/v2/lat/42.44/lon/-123.17/dist/100";
+    "https://avioadsb.org/v1/point/42.44/-123.17/100";
 
   const aircraftLayer = L.layerGroup().addTo(map);
   const aircraftMarkers = new Map();
 
-  const AIRCRAFT_REFRESH_MS = 10000;
+  const AIRCRAFT_REFRESH_MS = 60000;
   let aircraftRequestInProgress = false;
   let aircraftRefreshTimer = null;
   let lastAircraftSuccess = 0;

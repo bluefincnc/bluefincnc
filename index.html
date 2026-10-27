@@ -26,7 +26,7 @@ html, body {
 }
 
 .leaflet-top.leaflet-right {
-  top: 65px;
+  top: 10px;
   right: 8px;
 }
 
@@ -55,7 +55,7 @@ html, body {
 /* DOGAMI opacity */
 #opacityControl {
   position: absolute;
-  top: 65px;
+  top: 10px;
   left: 10px;
   z-index: 1000;
   width: 180px;
@@ -69,17 +69,43 @@ html, body {
 
 #opacityControl input {
   width: 100%;
-  margin: 8px 0 0;
+  margin: 5px 0 8px;
 }
 
-#opacityValue {
+#opacityValue, #perimeterOpacityValue {
   font-weight: bold;
+}
+
+.opacity-row-label {
+  display: block;
+  margin-top: 7px;
+}
+
+/* Bright red perimeter outline with a subtle glow */
+.fire-perimeter-glow {
+  filter: drop-shadow(0 0 4px rgba(255, 20, 0, 0.9));
 }
 
 /* Coordinate display */
 #coordinates {
   position: absolute;
-  top: 145px;
+  top: 135px;
+  left: 10px;
+  z-index: 1000;
+  max-width: calc(100vw - 40px);
+  padding: 8px 10px;
+  box-sizing: border-box;
+  background: rgba(255,255,255,0.96);
+  border-radius: 6px;
+  box-shadow: 0 1px 6px #777;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+/* Live GPS coordinate display */
+#gpsCoordinates {
+  position: absolute;
+  top: 185px;
   left: 10px;
   z-index: 1000;
   max-width: calc(100vw - 40px);
@@ -143,7 +169,7 @@ html, body {
 
 @media (max-width: 600px) {
   .leaflet-top.leaflet-right {
-    top: 65px;
+    top: 10px;
     right: 6px;
   }
 
@@ -153,7 +179,7 @@ html, body {
   }
 
   #opacityControl {
-    top: 65px;
+    top: 10px;
     left: 6px;
     width: 145px;
     padding: 8px;
@@ -161,7 +187,14 @@ html, body {
   }
 
   #coordinates {
-    top: 140px;
+    top: 160px;
+    left: 6px;
+    max-width: 155px;
+    font-size: 12px;
+  }
+
+  #gpsCoordinates {
+    top: 210px;
     left: 6px;
     max-width: 155px;
     font-size: 12px;
@@ -186,9 +219,14 @@ html, body {
     <span id="opacityValue">60%</span>
   </div>
   <input id="opacitySlider" type="range" min="0" max="100" value="60">
+  <label class="opacity-row-label" for="perimeterOpacitySlider"><strong>Fire perimeter fill:</strong>
+    <span id="perimeterOpacityValue">25%</span>
+  </label>
+  <input id="perimeterOpacitySlider" type="range" min="0" max="100" value="25">
 </div>
 
-<div id="coordinates">Tap or click the map for coordinates</div>
+<div id="coordinates">Click on Map for Coordinates</div>
+<div id="gpsCoordinates">GPS: Off — tap GPS to start</div>
 
 <button id="gpsButton" type="button"
         aria-pressed="false"
@@ -363,6 +401,202 @@ html, body {
     }, 200);
   }
 
+  // NIFC / IRWIN incidents reported in the last 24 hours.
+  // This NIFC view is already time-windowed; query only Oregon to avoid
+  // repeatedly sending a relative-time query to the national service.
+  const nifc24hUrl =
+    "https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/WFIGS_Incident_Locations_Last24h/FeatureServer/0/query";
+
+  const nifcFireLayer = L.layerGroup().addTo(map);
+  let nifcRefreshInProgress = false;
+
+  function escapeHtml(value) {
+    return String(value == null || value === "" ? "Not reported" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function fireTypeLabel(code) {
+    if (code === "WF") return "Wildfire";
+    if (code === "RX") return "Prescribed fire";
+    if (code === "CX") return "Incident complex";
+    return code || "Fire activity";
+  }
+
+  function fireMarkerColor(code) {
+    if (code === "RX") return "#2e9d50"; // Prescribed fire: green
+    if (code === "CX") return "#f28c00"; // Incident complex: orange
+    if (code === "WF") return "#d62828"; // Wildfire: red
+    return "#555555";
+  }
+
+  function formatFireDate(value) {
+    if (value == null || value === "") return "Not reported";
+    const date = new Date(Number(value));
+    if (Number.isNaN(date.getTime())) return escapeHtml(value);
+    return date.toLocaleString();
+  }
+
+  async function updateNifcFires() {
+    if (nifcRefreshInProgress || !map.hasLayer(nifcFireLayer)) return;
+    nifcRefreshInProgress = true;
+
+    // Use the user's trimmed query: only Oregon and only the fields shown
+    // in the fire marker popups. The service itself limits results to 24 hours.
+    const params = new URLSearchParams({
+      where: "POOState = 'US-OR'",
+      outFields: "IncidentName,IncidentTypeCategory,InitialLatitude,InitialLongitude,POOCounty,POOProtectingAgency,POOState",
+      outSR: "4326",
+      f: "json"
+    });
+
+    try {
+      const response = await fetch(nifc24hUrl + "?" + params.toString());
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      const data = await response.json();
+      if (data.error) throw new Error(data.error.message || "NIFC query failed");
+
+      const replacementLayer = L.layerGroup();
+      const features = Array.isArray(data.features) ? data.features : [];
+
+      features.forEach(function (feature) {
+        const props = feature.attributes || {};
+        // ArcGIS JSON point geometry uses x=longitude and y=latitude.
+        // Fall back to the selected InitialLatitude/InitialLongitude fields.
+        const geometry = feature.geometry || {};
+        const lat = Number(geometry.y != null ? geometry.y : props.InitialLatitude);
+        const lng = Number(geometry.x != null ? geometry.x : props.InitialLongitude);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+        const type = props.IncidentTypeCategory || "";
+        const name = props.IncidentName || "Unnamed incident";
+        const marker = L.circleMarker([lat, lng], {
+          radius: 7,
+          color: "#ffffff",
+          weight: 1.5,
+          fillColor: fireMarkerColor(type),
+          fillOpacity: 0.95
+        });
+
+        const popup =
+          "<div style='min-width:180px'>" +
+          "<strong>" + escapeHtml(name) + "</strong><br>" +
+          "Type: " + escapeHtml(fireTypeLabel(type)) + "<br>" +
+          "County: " + escapeHtml(props.POOCounty) + "<br>" +
+          "Protecting agency: " + escapeHtml(props.POOProtectingAgency) + "<br>" +
+          "State: " + escapeHtml(props.POOState) +
+          "</div>";
+        marker.bindPopup(popup);
+        marker.addTo(replacementLayer);
+      });
+
+      // Swap in the new set only after a successful response.
+      nifcFireLayer.clearLayers();
+      replacementLayer.eachLayer(function (layer) {
+        layer.addTo(nifcFireLayer);
+      });
+      console.info("NIFC/IRWIN Oregon incidents in last-24-hour feed:", features.length);
+    } catch (error) {
+      console.error("Could not refresh NIFC/IRWIN fire activity:", error);
+    } finally {
+      nifcRefreshInProgress = false;
+    }
+  }
+
+  updateNifcFires();
+  setInterval(updateNifcFires, 5 * 60 * 1000);
+
+  // Current NIFC interagency fire perimeters for Jackson and Josephine counties.
+  const perimeterQueryUrl =
+    "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters_Current/FeatureServer/0/query";
+  const firePerimeterLayer = L.layerGroup().addTo(map);
+  let perimeterRefreshInProgress = false;
+  let perimeterFillOpacity = 0.25;
+
+  function perimeterStyle() {
+    return {
+      color: "#ff2100",
+      weight: 3,
+      opacity: 0.95,
+      fillColor: "#ff1600",
+      fillOpacity: perimeterFillOpacity,
+      className: "fire-perimeter-glow",
+      lineCap: "round",
+      lineJoin: "round"
+    };
+  }
+
+  function formatAcres(value) {
+    const acres = Number(value);
+    return Number.isFinite(acres)
+      ? acres.toLocaleString(undefined, { maximumFractionDigits: 1 }) + " acres"
+      : "Not reported";
+  }
+
+  async function updateFirePerimeters() {
+    if (perimeterRefreshInProgress || !map.hasLayer(firePerimeterLayer)) return;
+    perimeterRefreshInProgress = true;
+
+    const params = new URLSearchParams({
+      where: "attr_POOCounty = 'JACKSON' OR attr_POOCounty = 'JOSEPHINE'",
+      outFields: "poly_IncidentName,poly_GISAcres,attr_POOCounty",
+      outSR: "4326",
+      returnGeometry: "true",
+      f: "json"
+    });
+
+    try {
+      const response = await fetch(perimeterQueryUrl + "?" + params.toString());
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      const data = await response.json();
+      if (data.error) throw new Error(data.error.message || "Perimeter query failed");
+
+      const replacementLayer = L.layerGroup();
+      const features = Array.isArray(data.features) ? data.features : [];
+
+      features.forEach(function (feature) {
+        const attrs = feature.attributes || {};
+        const geometry = feature.geometry || {};
+        const rings = Array.isArray(geometry.rings) ? geometry.rings : [];
+        if (!rings.length) return;
+
+        // ArcGIS rings use [longitude, latitude]; Leaflet uses [latitude, longitude].
+        const latLngRings = rings.map(function (ring) {
+          return ring.map(function (point) {
+            return [Number(point[1]), Number(point[0])];
+          });
+        });
+        if (!latLngRings[0] || latLngRings[0].length < 3) return;
+
+        const polygon = L.polygon(latLngRings, perimeterStyle());
+        const popup =
+          "<div style='min-width:180px'>" +
+          "<strong>" + escapeHtml(attrs.poly_IncidentName || "Unnamed fire perimeter") + "</strong><br>" +
+          "County: " + escapeHtml(attrs.attr_POOCounty) + "<br>" +
+          "Reported size: " + escapeHtml(formatAcres(attrs.poly_GISAcres)) +
+          "</div>";
+        polygon.bindPopup(popup);
+        polygon.addTo(replacementLayer);
+      });
+
+      firePerimeterLayer.clearLayers();
+      replacementLayer.eachLayer(function (layer) {
+        layer.addTo(firePerimeterLayer);
+      });
+      console.info("NIFC fire perimeters for Jackson/Josephine counties:", features.length);
+    } catch (error) {
+      console.error("Could not refresh NIFC fire perimeters:", error);
+    } finally {
+      perimeterRefreshInProgress = false;
+    }
+  }
+
+  updateFirePerimeters();
+  setInterval(updateFirePerimeters, 5 * 60 * 1000);
+
   // Layer menu
   L.control.layers(
     {
@@ -370,8 +604,10 @@ html, body {
       "OpenTopoMap": topoMap
     },
     {
-      "DOGAMI Hillshade": hillshade,
-      "PLSS Sections": plss
+      "DOGAMI LiDAR": hillshade,
+      "PLSS Sections": plss,
+      "NIFC/IRWIN Fire Activity (24h)": nifcFireLayer,
+      "Fire Perimeters (Jackson + Josephine)": firePerimeterLayer
     },
     {
       collapsed: false,
@@ -382,6 +618,8 @@ html, body {
   map.on("overlayadd", function (event) {
     if (event.layer === hillshade) updateHillshade();
     if (event.layer === plss) updatePLSS();
+    if (event.layer === nifcFireLayer) updateNifcFires();
+    if (event.layer === firePerimeterLayer) updateFirePerimeters();
   });
 
   map.on("moveend", refreshVisibleOverlays);
@@ -414,6 +652,16 @@ html, body {
     opacityValue.textContent = opacitySlider.value + "%";
   });
 
+  const perimeterOpacitySlider = document.getElementById("perimeterOpacitySlider");
+  const perimeterOpacityValue = document.getElementById("perimeterOpacityValue");
+  perimeterOpacitySlider.addEventListener("input", function () {
+    perimeterFillOpacity = Number(perimeterOpacitySlider.value) / 100;
+    perimeterOpacityValue.textContent = perimeterOpacitySlider.value + "%";
+    firePerimeterLayer.eachLayer(function (layer) {
+      layer.setStyle({ fillOpacity: perimeterFillOpacity });
+    });
+  });
+
   // Degrees and decimal minutes (DDM) only.
   // Negative values indicate south or west.
   function toDDM(value) {
@@ -427,6 +675,8 @@ html, body {
 
   const coordinatesDisplay =
     document.getElementById("coordinates");
+  const gpsCoordinatesDisplay =
+    document.getElementById("gpsCoordinates");
 
   map.on("click", function (event) {
     coordinatesDisplay.textContent =
@@ -461,23 +711,24 @@ html, body {
     gpsButton.setAttribute("aria-pressed", "false");
     gpsButton.textContent = "◎ GPS";
     gpsButton.title = "Show my phone's GPS location";
+    gpsCoordinatesDisplay.textContent = "GPS: Off — tap GPS to start";
   }
 
   function gpsError(error) {
     stopGpsTracking();
 
     if (error.code === 1) {
-      coordinatesDisplay.textContent =
-        "Location permission denied. Allow location access in your browser, then try again.";
+      gpsCoordinatesDisplay.textContent =
+        "GPS: Permission denied. Allow browser location access, then try again.";
     } else if (error.code === 2) {
-      coordinatesDisplay.textContent =
-        "Could not determine location. Check your phone's location services.";
+      gpsCoordinatesDisplay.textContent =
+        "GPS: Could not determine location. Check device location services.";
     } else if (error.code === 3) {
-      coordinatesDisplay.textContent =
-        "GPS timed out. Tap GPS to try again.";
+      gpsCoordinatesDisplay.textContent =
+        "GPS: Timed out. Tap GPS to try again.";
     } else {
-      coordinatesDisplay.textContent =
-        "Unable to get GPS location.";
+      gpsCoordinatesDisplay.textContent =
+        "GPS: Unable to get location.";
     }
   }
 
@@ -489,14 +740,14 @@ html, body {
     }
 
     if (!("geolocation" in navigator)) {
-      coordinatesDisplay.textContent =
-        "This browser does not support location access.";
+      gpsCoordinatesDisplay.textContent =
+        "GPS: This browser does not support location access.";
       return;
     }
 
     if (!window.isSecureContext) {
-      coordinatesDisplay.textContent =
-        "GPS requires a secure HTTPS page. Open the map using its HTTPS address.";
+      gpsCoordinatesDisplay.textContent =
+        "GPS: Requires a secure HTTPS page. Open the map using HTTPS.";
       return;
     }
 
@@ -504,8 +755,8 @@ html, body {
     gpsButton.setAttribute("aria-pressed", "true");
     gpsButton.textContent = "GPS…";
     gpsButton.title = "Stop GPS tracking";
-    coordinatesDisplay.textContent =
-      "Waiting for phone GPS location…";
+    gpsCoordinatesDisplay.textContent =
+      "GPS: Waiting for device location…";
 
     gpsWatchId = navigator.geolocation.watchPosition(
       function (position) {
@@ -540,9 +791,9 @@ html, body {
           gpsMarker.setLatLng(location);
         }
 
-        coordinatesDisplay.textContent =
-          toDDM(lat) + "  " + toDDM(lng) +
-          "  (GPS ±" + Math.round(accuracy) + " m)";
+        gpsCoordinatesDisplay.textContent =
+          "GPS: " + toDDM(lat) + "  " + toDDM(lng) +
+          "  (±" + Math.round(accuracy) + " m)";
 
         gpsButton.textContent = "GPS ON";
 

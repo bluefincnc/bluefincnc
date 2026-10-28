@@ -1597,7 +1597,7 @@ html, body {
 
 // GPS TRACK — TEMPORARY BROWSER MEMORY ONLY
 
-const gpsTrackLayer = L.layerGroup();
+const gpsTrackLayer = L.layerGroup().addTo(map);
 
 const gpsTrackLine = L.polyline([], {
   color: "#00a6ff",
@@ -1881,7 +1881,7 @@ if (
         if (!gpsHasCentered) {
           map.setView(
             location,
-            Math.max(map.getZoom(), 15)
+            Math.max(map.getZoom(), 17)
           );
 
           gpsHasCentered = true;

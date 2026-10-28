@@ -138,6 +138,37 @@ html, body {
   outline: 2px solid #1769d2;
 }
 
+
+/* Clear GPS track button */
+#clearTrackButton {
+  position: absolute;
+  left: 10px;
+  bottom: 82px;
+  z-index: 1100;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: rgba(255,255,255,0.97);
+  box-shadow: 0 1px 6px #777;
+  color: #b42318;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+#clearTrackButton:active {
+  background: #fee2e2;
+}
+
+@media (max-width: 600px) {
+  #clearTrackButton {
+    left: 8px;
+    bottom: 76px;
+  }
+}
+
 /* GPS accuracy circle */
 .gps-accuracy-circle {
   stroke: #2478e5;
@@ -245,6 +276,11 @@ html, body {
 <button id="gpsButton" type="button"
         aria-pressed="false"
         title="Show my phone's GPS location">◎ GPS</button>
+
+<button id="clearTrackButton" type="button"
+        title="Delete the entire GPS track">
+  CLEAR TRACK
+</button>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -1558,6 +1594,32 @@ html, body {
     }, 300);
   }
 
+
+// GPS TRACK — TEMPORARY BROWSER MEMORY ONLY
+
+const gpsTrackLayer = L.layerGroup();
+
+const gpsTrackLine = L.polyline([], {
+  color: "#00a6ff",
+  weight: 5,
+  opacity: 0.9,
+  lineCap: "round",
+  lineJoin: "round"
+}).addTo(gpsTrackLayer);
+
+let gpsTrackPoints = [];
+
+const clearTrackButton =
+  document.getElementById("clearTrackButton");
+
+L.DomEvent.disableClickPropagation(clearTrackButton);
+L.DomEvent.disableScrollPropagation(clearTrackButton);
+
+clearTrackButton.addEventListener("click", function () {
+  gpsTrackPoints = [];
+  gpsTrackLine.setLatLngs([]);
+});
+
   // =========================================================
   // LAYER MENU
   // =========================================================
@@ -1569,6 +1631,7 @@ html, body {
       "Esri Aerial Imagery": aerialMap
     },
     {
+      "GPS Track": gpsTrackLayer,
       "DOGAMI LiDAR": hillshade,
       "PLSS Sections": plss,
       "NIFC Fires (24h)": nifcFireLayer,
@@ -1769,6 +1832,22 @@ html, body {
         );
 
         const location = L.latLng(lat, lng);
+
+ // Record each new GPS position for the track.
+const previousPoint =
+  gpsTrackPoints.length > 0
+    ? gpsTrackPoints[gpsTrackPoints.length - 1]
+    : null;
+
+if (
+  !previousPoint ||
+  previousPoint.lat !== lat ||
+  previousPoint.lng !== lng
+) {
+  gpsTrackPoints.push(location);
+  gpsTrackLine.setLatLngs(gpsTrackPoints);
+}
+
 
         if (!gpsAccuracy) {
           gpsAccuracy = L.circle(location, {

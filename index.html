@@ -1595,30 +1595,70 @@ html, body {
   }
 
 
-// GPS TRACK — TEMPORARY BROWSER MEMORY ONLY
 
-const gpsTrackLayer = L.layerGroup().addTo(map);
+  // =========================================================
+  // GPS TRACK — SEPARATE SEGMENT FOR EACH GPS SESSION
+  // =========================================================
 
-const gpsTrackLine = L.polyline([], {
-  color: "#00a6ff",
-  weight: 5,
-  opacity: 0.9,
-  lineCap: "round",
-  lineJoin: "round"
-}).addTo(gpsTrackLayer);
+  // Visible by default. Layer visibility does not control recording.
+  const gpsTrackLayer = L.layerGroup().addTo(map);
 
-let gpsTrackPoints = [];
+  const gpsTrackStyle = {
+    color: "#00a6ff",
+    weight: 5,
+    opacity: 0.9,
+    lineCap: "round",
+    lineJoin: "round"
+  };
 
-const clearTrackButton =
-  document.getElementById("clearTrackButton");
+  // Each GPS session gets its own polyline.
+  let gpsTrackLine = null;
+  let gpsTrackPoints = [];
 
-L.DomEvent.disableClickPropagation(clearTrackButton);
-L.DomEvent.disableScrollPropagation(clearTrackButton);
+  function recordGpsTrackPoint(location) {
+    // Create a new line when a session starts or restarts.
+    if (!gpsTrackLine) {
+      gpsTrackPoints = [];
+      gpsTrackLine = L.polyline([], gpsTrackStyle);
+      gpsTrackLine.addTo(gpsTrackLayer);
+    }
 
-clearTrackButton.addEventListener("click", function () {
-  gpsTrackPoints = [];
-  gpsTrackLine.setLatLngs([]);
-});
+    const previousPoint =
+      gpsTrackPoints.length > 0
+        ? gpsTrackPoints[gpsTrackPoints.length - 1]
+        : null;
+
+    // Ignore duplicate consecutive positions.
+    if (
+      !previousPoint ||
+      previousPoint.lat !== location.lat ||
+      previousPoint.lng !== location.lng
+    ) {
+      gpsTrackPoints.push(location);
+      gpsTrackLine.setLatLngs(gpsTrackPoints);
+    }
+  }
+
+  // End the current segment without deleting its line.
+  function endGpsTrackSegment() {
+    gpsTrackLine = null;
+    gpsTrackPoints = [];
+  }
+
+  const clearTrackButton =
+    document.getElementById("clearTrackButton");
+
+  L.DomEvent.disableClickPropagation(clearTrackButton);
+  L.DomEvent.disableScrollPropagation(clearTrackButton);
+
+  clearTrackButton.addEventListener("click", function () {
+    // Delete every segment, including earlier GPS sessions.
+    gpsTrackLayer.clearLayers();
+
+    // If GPS is still on, the next position starts a fresh line.
+    endGpsTrackSegment();
+  });
+
 
   // =========================================================
   // LAYER MENU
@@ -1752,6 +1792,7 @@ clearTrackButton.addEventListener("click", function () {
   L.DomEvent.disableClickPropagation(gpsButton);
 
   function stopGpsTracking() {
+  endGpsTrackSegment();
     if (gpsWatchId !== null && navigator.geolocation) {
       navigator.geolocation.clearWatch(gpsWatchId);
     }
@@ -1834,20 +1875,8 @@ clearTrackButton.addEventListener("click", function () {
         const location = L.latLng(lat, lng);
 
  // Record each new GPS position for the track.
-const previousPoint =
-  gpsTrackPoints.length > 0
-    ? gpsTrackPoints[gpsTrackPoints.length - 1]
-    : null;
 
-if (
-  !previousPoint ||
-  previousPoint.lat !== lat ||
-  previousPoint.lng !== lng
-) {
-  gpsTrackPoints.push(location);
-  gpsTrackLine.setLatLngs(gpsTrackPoints);
-}
-
+     recordGpsTrackPoint(location);
 
         if (!gpsAccuracy) {
           gpsAccuracy = L.circle(location, {

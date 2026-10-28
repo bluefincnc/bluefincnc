@@ -52,7 +52,7 @@ html, body {
   margin: 8px 0;
 }
 
-/* DOGAMI opacity */
+/* DOGAMI opacity and fire perimeter fill controls */
 #opacityControl {
   position: absolute;
   top: 10px;
@@ -81,12 +81,12 @@ html, body {
   margin-top: 7px;
 }
 
-/* Fire perimeter glow */
+/* Bright red fire perimeter outline with subtle glow */
 .fire-perimeter-glow {
-  filter: drop-shadow(0 0 4px rgba(255,20,0,0.9));
+  filter: drop-shadow(0 0 4px rgba(255, 20, 0, 0.9));
 }
 
-/* Map coordinate display */
+/* Map-click coordinate display */
 #coordinates {
   position: absolute;
   top: 135px;
@@ -167,42 +167,12 @@ html, body {
   box-sizing: border-box;
 }
 
-/* ADS-B aircraft icon: nose points north; rotate to track heading */
-.aircraft-icon {
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform-origin: center center;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.9));
-}
-
-.aircraft-icon svg {
-  width: 27px;
-  height: 27px;
-  overflow: visible;
-}
-
-.aircraft-icon path {
-  fill: #ffdf38;
-  stroke: #202020;
-  stroke-width: 1.4;
-  stroke-linejoin: round;
-}
-
-.aircraft-popup {
-  min-width: 190px;
-  line-height: 1.55;
-}
-
-.aircraft-popup strong {
-  font-size: 15px;
-}
-
-.aircraft-popup .aircraft-heading {
-  color: #555;
-  font-size: 12px;
+/* RAWS station marker */
+.raws-station-marker {
+  stroke: #ffffff;
+  stroke-width: 1.5;
+  fill: #087f8c;
+  fill-opacity: 1;
 }
 
 @media (max-width: 600px) {
@@ -245,6 +215,17 @@ html, body {
     min-height: 48px;
   }
 }
+
+.fire-label {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #777;
+  border-radius: 3px;
+  color: #111;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 4px;
+  box-shadow: 0 1px 3px #777;
+}
 </style>
 </head>
 
@@ -257,8 +238,9 @@ html, body {
     <span id="opacityValue">60%</span>
   </div>
   <input id="opacitySlider" type="range" min="0" max="100" value="60">
+
   <label class="opacity-row-label" for="perimeterOpacitySlider">
-    <strong>Fire perimeter fill:</strong>
+    <strong>SWO Current fill:</strong>
     <span id="perimeterOpacityValue">25%</span>
   </label>
   <input id="perimeterOpacitySlider" type="range" min="0" max="100" value="25">
@@ -282,9 +264,9 @@ html, body {
     doubleClickZoom: true
   }).setView([42.4368, -123.1400], 11);
 
-  // ============================================================
+  // =========================================================
   // BASE MAPS
-  // ============================================================
+  // =========================================================
 
   const streetMap = L.tileLayer(
     "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
@@ -302,9 +284,17 @@ html, body {
     }
   );
 
-  // ============================================================
-  // DOGAMI HILLSHADE
-  // ============================================================
+  const aerialMap = L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    {
+      attribution: "Imagery &copy; Esri, Vantor, Earthstar Geographics, and the GIS User Community",
+      maxZoom: 19
+    }
+  );
+
+  // =========================================================
+  // DOGAMI LIDAR HILLSHADE
+  // =========================================================
 
   const dogamiUrl =
     "https://gis.dogami.oregon.gov/arcgis/rest/services/lidar/DIGITAL_TERRAIN_MODEL_MOSAIC_HS/ImageServer/exportImage";
@@ -318,9 +308,13 @@ html, body {
     }
   );
 
-  // ============================================================
+  // =========================================================
   // PLSS SECTIONS
-  // ============================================================
+  // Layer 0 = Township Range
+  // Layer 1 = Sections
+  // Layer 2 = Quarter Quarters
+  // Request sections ONLY.
+  // =========================================================
 
   const plssUrl =
     "https://gis.odf.oregon.gov/ags1/rest/services/WebMercator/PLSS/MapServer/export";
@@ -339,8 +333,7 @@ html, body {
   let refreshTimer = null;
 
   function makeExportUrl(serviceUrl, params) {
-    return serviceUrl + "?" +
-      new URLSearchParams(params).toString();
+    return serviceUrl + "?" + new URLSearchParams(params).toString();
   }
 
   function updateHillshade() {
@@ -360,10 +353,13 @@ html, body {
       [north, east]
     );
 
+    const sw = L.CRS.EPSG3857.project(L.latLng(south, west));
+    const ne = L.CRS.EPSG3857.project(L.latLng(north, east));
+
     const params = {
-      bbox: [west, south, east, north].join(","),
-      bboxSR: "4326",
-      imageSR: "4326",
+      bbox: [sw.x, sw.y, ne.x, ne.y].join(","),
+      bboxSR: "3857",
+      imageSR: "3857",
       size: Math.max(1, Math.round(size.x)) + "," +
             Math.max(1, Math.round(size.y)),
       format: "png32",
@@ -378,13 +374,14 @@ html, body {
     testImage.onload = function () {
       if (requestNumber !== hillshadeRequest) return;
       if (!map.hasLayer(hillshade)) return;
+
       hillshade.setBounds(imageBounds);
       hillshade.setUrl(url);
     };
 
     testImage.onerror = function () {
       if (requestNumber !== hillshadeRequest) return;
-      console.error("DOGAMI hillshade request failed:", url);
+      console.error("DOGAMI hillshade image request failed:", url);
     };
 
     testImage.src = url;
@@ -415,7 +412,10 @@ html, body {
             Math.max(1, Math.round(size.y)),
       format: "png32",
       transparent: "true",
-      layers: "show:0,1",
+
+      // FIX B: Sections only. No Township Range or Quarter Quarters.
+      layers: "show:1",
+
       f: "image"
     };
 
@@ -426,6 +426,7 @@ html, body {
     testImage.onload = function () {
       if (requestNumber !== plssRequest) return;
       if (!map.hasLayer(plss)) return;
+
       plss.setBounds(imageBounds);
       plss.setUrl(url);
     };
@@ -447,13 +448,12 @@ html, body {
     }, 200);
   }
 
-  // ============================================================
-  // SHARED HELPERS
-  // ============================================================
+  // =========================================================
+  // SHARED HTML ESCAPING
+  // =========================================================
 
   function escapeHtml(value) {
-    return String(value == null || value === ""
-      ? "Not reported" : value)
+    return String(value == null || value === "" ? "Not reported" : value)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
@@ -461,227 +461,9 @@ html, body {
       .replace(/'/g, "&#39;");
   }
 
-  // ============================================================
-  // ADS-B AIRCRAFT
-  // ============================================================
-
-  // Fixed Rogue River area, 100 nautical mile radius.
-  const adsbUrl =
-    "https://avioadsb.org/v1/point/42.44/-123.17/100";
-
-  const aircraftLayer = L.layerGroup().addTo(map);
-  const aircraftMarkers = new Map();
-
-  const AIRCRAFT_REFRESH_MS = 60000;
-  let aircraftRequestInProgress = false;
-  let aircraftRefreshTimer = null;
-  let lastAircraftSuccess = 0;
-
-  // ADS-B "track" is degrees clockwise from north.
-  // SVG airplane shape points north at zero degrees.
-  function makeAircraftIcon(track) {
-    const heading = Number.isFinite(Number(track))
-      ? Number(track) : 0;
-
-    return L.divIcon({
-      className: "",
-      html:
-        '<div class="aircraft-icon" style="transform:rotate(' +
-        heading + 'deg)">' +
-        '<svg viewBox="0 0 24 28" aria-hidden="true">' +
-        '<path d="M12 1 L15 10 L22 14 L22 17 L15 15 ' +
-        'L15 22 L18 24 L18 26 L12 24 L6 26 L6 24 ' +
-        'L9 22 L9 15 L2 17 L2 14 L9 10 Z"/>' +
-        '</svg></div>',
-      iconSize: [30, 30],
-      iconAnchor: [15, 15],
-      popupAnchor: [0, -13]
-    });
-  }
-
-  function formatAltitude(value) {
-    if (value === "ground") return "On ground";
-
-    const altitude = Number(value);
-
-    return Number.isFinite(altitude)
-      ? Math.round(altitude).toLocaleString() + " ft"
-      : "Not reported";
-  }
-
-  function formatSpeed(value) {
-    const speed = Number(value);
-
-    return Number.isFinite(speed)
-      ? Math.round(speed) + " knots"
-      : "Not reported";
-  }
-
-  function formatHeading(value) {
-    const heading = Number(value);
-
-    return Number.isFinite(heading)
-      ? Math.round(heading) + "°"
-      : "Not reported";
-  }
-
-  function aircraftPopup(ac) {
-    const callsign = String(ac.flight || "").trim() || "Unknown";
-    const registration = ac.r || "Not reported";
-    const type = ac.t || "Not reported";
-    const altitude = formatAltitude(ac.alt_baro);
-    const speed = formatSpeed(ac.gs);
-    const heading = formatHeading(ac.track);
-
-    const verticalRate = Number(ac.geom_rate);
-    const climb = Number.isFinite(verticalRate)
-      ? Math.round(verticalRate) + " ft/min"
-      : "Not reported";
-
-    return (
-      '<div class="aircraft-popup">' +
-      '<strong>' + escapeHtml(callsign) + '</strong><br>' +
-      '<span class="aircraft-heading">ADS-B aircraft</span><br>' +
-      '<b>Registration:</b> ' + escapeHtml(registration) + '<br>' +
-      '<b>Aircraft type:</b> ' + escapeHtml(type) + '<br>' +
-      '<b>Altitude:</b> ' + escapeHtml(altitude) + '<br>' +
-      '<b>Ground speed:</b> ' + escapeHtml(speed) + '<br>' +
-      '<b>Heading:</b> ' + escapeHtml(heading) + '<br>' +
-      '<b>Vertical rate:</b> ' + escapeHtml(climb) +
-      '</div>'
-    );
-  }
-
-  async function updateAircraft() {
-    if (!map.hasLayer(aircraftLayer)) return;
-
-    if (aircraftRequestInProgress) return;
-    aircraftRequestInProgress = true;
-
-    try {
-      const response = await fetch(adsbUrl, {
-        method: "GET",
-        cache: "no-store"
-      });
-
-      if (!response.ok) {
-        throw new Error("HTTP " + response.status);
-      }
-
-      const data = await response.json();
-
-      if (!Array.isArray(data.ac)) {
-        throw new Error(data.msg || "Unexpected ADS-B response");
-      }
-
-      // If the layer was hidden while the request was running,
-      // don't add markers back to it.
-      if (!map.hasLayer(aircraftLayer)) return;
-
-      const now = Date.now();
-      const seenAircraft = new Set();
-      let updatedCount = 0;
-
-      data.ac.forEach(function (ac) {
-        const lat = Number(ac.lat);
-        const lng = Number(ac.lon);
-
-        // Aircraft without a valid position cannot be mapped.
-        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-        if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return;
-
-        // Ignore positions that are more than two minutes old.
-        // Some aircraft may not have a position timestamp.
-        const seenPosition = Number(ac.seen_pos);
-
-        if (Number.isFinite(seenPosition) &&
-            seenPosition > 120) return;
-
-        // ICAO hex is the primary stable identifier.
-        // Fall back to registration if necessary.
-        const id = String(ac.hex || ac.r || "").trim();
-        if (!id) return;
-
-        seenAircraft.add(id);
-        updatedCount++;
-
-        let marker = aircraftMarkers.get(id);
-
-        if (!marker) {
-          marker = L.marker([lat, lng], {
-            icon: makeAircraftIcon(ac.track),
-            keyboard: true,
-            riseOnHover: true,
-            zIndexOffset: 500
-          });
-
-          marker.bindPopup(aircraftPopup(ac));
-          marker.addTo(aircraftLayer);
-          aircraftMarkers.set(id, marker);
-        } else {
-          // Move the existing marker; don't create duplicates.
-          marker.setLatLng([lat, lng]);
-          marker.setIcon(makeAircraftIcon(ac.track));
-          marker.setPopupContent(aircraftPopup(ac));
-
-          // If its popup is open, refresh the displayed details.
-          if (marker.isPopupOpen()) {
-            marker.setPopupContent(aircraftPopup(ac));
-          }
-        }
-
-        marker.options.lastSeenUpdate = now;
-      });
-
-      // Remove aircraft that disappeared from the feed or have
-      // stale positions. Keep the marker set synchronized.
-      aircraftMarkers.forEach(function (marker, id) {
-        if (!seenAircraft.has(id)) {
-          aircraftLayer.removeLayer(marker);
-          aircraftMarkers.delete(id);
-        }
-      });
-
-      lastAircraftSuccess = now;
-
-      console.info(
-        "AvioADSB: " + updatedCount + " aircraft mapped."
-      );
-
-    } catch (error) {
-      // Keep existing markers if a temporary refresh fails.
-      console.error("Could not refresh ADS-B aircraft:", error);
-    } finally {
-      aircraftRequestInProgress = false;
-    }
-  }
-
-  function startAircraftRefresh() {
-    if (aircraftRefreshTimer !== null) {
-      clearInterval(aircraftRefreshTimer);
-    }
-
-    updateAircraft();
-
-    aircraftRefreshTimer = setInterval(
-      updateAircraft,
-      AIRCRAFT_REFRESH_MS
-    );
-  }
-
-  function stopAircraftRefresh() {
-    if (aircraftRefreshTimer !== null) {
-      clearInterval(aircraftRefreshTimer);
-      aircraftRefreshTimer = null;
-    }
-  }
-
-  // Start immediately because the aircraft layer is enabled by default.
-  startAircraftRefresh();
-
-  // ============================================================
-  // NIFC / IRWIN FIRE ACTIVITY - LAST 24 HOURS
-  // ============================================================
+  // =========================================================
+  // NIFC / IRWIN FIRE ACTIVITY — LAST 24 HOURS
+  // =========================================================
 
   const nifc24hUrl =
     "https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/WFIGS_Incident_Locations_Last24h/FeatureServer/0/query";
@@ -705,6 +487,7 @@ html, body {
 
   async function updateNifcFires() {
     if (nifcRefreshInProgress || !map.hasLayer(nifcFireLayer)) return;
+
     nifcRefreshInProgress = true;
 
     const params = new URLSearchParams({
@@ -715,13 +498,22 @@ html, body {
     });
 
     try {
-      const response = await fetch(nifc24hUrl + "?" + params.toString());
-      if (!response.ok) throw new Error("HTTP " + response.status);
+      const response = await fetch(
+        nifc24hUrl + "?" + params.toString()
+      );
+
+      if (!response.ok) {
+        throw new Error("HTTP " + response.status);
+      }
 
       const data = await response.json();
-      if (data.error) throw new Error(data.error.message || "NIFC query failed");
+
+      if (data.error) {
+        throw new Error(data.error.message || "NIFC query failed");
+      }
 
       const replacementLayer = L.layerGroup();
+      const seenFireLocations = new Map();
       const features = Array.isArray(data.features) ? data.features : [];
 
       features.forEach(function (feature) {
@@ -731,42 +523,68 @@ html, body {
         const lat = Number(
           geometry.y != null ? geometry.y : props.InitialLatitude
         );
+
         const lng = Number(
           geometry.x != null ? geometry.x : props.InitialLongitude
         );
 
-        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+        if (
+          !Number.isFinite(lat) ||
+          !Number.isFinite(lng) ||
+          lat < -90 || lat > 90 ||
+          lng < -180 || lng > 180 ||
+          (lat === 0 && lng === 0)
+        ) return;
 
         const type = props.IncidentTypeCategory || "";
-        const name = props.IncidentName || "Unnamed incident";
+        const fireName = props.IncidentName || "Unnamed Fire";
+        const fireLabel = `${type || "Fire"}-${fireName}`;
 
         const marker = L.circleMarker([lat, lng], {
-          radius: 7,
+          radius: 6,
           color: "#ffffff",
           weight: 1.5,
           fillColor: fireMarkerColor(type),
-          fillOpacity: 0.95
+          fillOpacity: 1
         });
 
-        marker.bindPopup(
+        const locationKey = `${lat.toFixed(5)},${lng.toFixed(5)}`;
+        const duplicateCount = seenFireLocations.get(locationKey) || 0;
+
+        seenFireLocations.set(locationKey, duplicateCount + 1);
+
+        const labelOffsetY = duplicateCount * 25;
+
+        marker.bindTooltip(fireLabel, {
+          permanent: true,
+          direction: "right",
+          offset: [7, -labelOffsetY],
+          className: "fire-label"
+        });
+
+        const popup =
           "<div style='min-width:180px'>" +
-          "<strong>" + escapeHtml(name) + "</strong><br>" +
+          "<strong>" + escapeHtml(fireName) + "</strong><br>" +
           "Type: " + escapeHtml(fireTypeLabel(type)) + "<br>" +
           "County: " + escapeHtml(props.POOCounty) + "<br>" +
           "Protecting agency: " + escapeHtml(props.POOProtectingAgency) + "<br>" +
           "State: " + escapeHtml(props.POOState) +
-          "</div>"
-        );
+          "</div>";
 
+        marker.bindPopup(popup);
         marker.addTo(replacementLayer);
       });
 
       nifcFireLayer.clearLayers();
+
       replacementLayer.eachLayer(function (layer) {
         layer.addTo(nifcFireLayer);
       });
 
-      console.info("NIFC/IRWIN Oregon incidents:", features.length);
+      console.info(
+        "NIFC/IRWIN Oregon incidents in last-24-hour feed:",
+        features.length
+      );
 
     } catch (error) {
       console.error("Could not refresh NIFC/IRWIN fire activity:", error);
@@ -778,9 +596,10 @@ html, body {
   updateNifcFires();
   setInterval(updateNifcFires, 5 * 60 * 1000);
 
-  // ============================================================
-  // CURRENT FIRE PERIMETERS
-  // ============================================================
+  // =========================================================
+  // CURRENT NIFC FIRE PERIMETERS
+  // Jackson and Josephine counties
+  // =========================================================
 
   const perimeterQueryUrl =
     "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters_Current/FeatureServer/0/query";
@@ -806,12 +625,18 @@ html, body {
     const acres = Number(value);
 
     return Number.isFinite(acres)
-      ? acres.toLocaleString(undefined, { maximumFractionDigits: 1 }) + " acres"
+      ? acres.toLocaleString(undefined, {
+          maximumFractionDigits: 1
+        }) + " acres"
       : "Not reported";
   }
 
   async function updateFirePerimeters() {
-    if (perimeterRefreshInProgress || !map.hasLayer(firePerimeterLayer)) return;
+    if (
+      perimeterRefreshInProgress ||
+      !map.hasLayer(firePerimeterLayer)
+    ) return;
+
     perimeterRefreshInProgress = true;
 
     const params = new URLSearchParams({
@@ -823,11 +648,19 @@ html, body {
     });
 
     try {
-      const response = await fetch(perimeterQueryUrl + "?" + params.toString());
-      if (!response.ok) throw new Error("HTTP " + response.status);
+      const response = await fetch(
+        perimeterQueryUrl + "?" + params.toString()
+      );
+
+      if (!response.ok) {
+        throw new Error("HTTP " + response.status);
+      }
 
       const data = await response.json();
-      if (data.error) throw new Error(data.error.message || "Perimeter query failed");
+
+      if (data.error) {
+        throw new Error(data.error.message || "Perimeter query failed");
+      }
 
       const replacementLayer = L.layerGroup();
       const features = Array.isArray(data.features) ? data.features : [];
@@ -849,23 +682,29 @@ html, body {
 
         const polygon = L.polygon(latLngRings, perimeterStyle());
 
-        polygon.bindPopup(
+        const popup =
           "<div style='min-width:180px'>" +
-          "<strong>" + escapeHtml(attrs.poly_IncidentName || "Unnamed fire perimeter") + "</strong><br>" +
+          "<strong>" +
+          escapeHtml(attrs.poly_IncidentName || "Unnamed fire perimeter") +
+          "</strong><br>" +
           "County: " + escapeHtml(attrs.attr_POOCounty) + "<br>" +
           "Reported size: " + escapeHtml(formatAcres(attrs.poly_GISAcres)) +
-          "</div>"
-        );
+          "</div>";
 
+        polygon.bindPopup(popup);
         polygon.addTo(replacementLayer);
       });
 
       firePerimeterLayer.clearLayers();
+
       replacementLayer.eachLayer(function (layer) {
         layer.addTo(firePerimeterLayer);
       });
 
-      console.info("NIFC fire perimeters:", features.length);
+      console.info(
+        "NIFC fire perimeters for Jackson/Josephine counties:",
+        features.length
+      );
 
     } catch (error) {
       console.error("Could not refresh NIFC fire perimeters:", error);
@@ -877,21 +716,532 @@ html, body {
   updateFirePerimeters();
   setInterval(updateFirePerimeters, 5 * 60 * 1000);
 
-  // ============================================================
+  // =========================================================
+  // HISTORICAL FIRE PERIMETERS
+  // Jackson and Josephine counties, 2020 onward
+  // =========================================================
+
+  const historicalPerimeterQueryUrl =
+    "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters/FeatureServer/0/query";
+
+  const historicalFirePerimeterLayer = L.layerGroup();
+  let historicalPerimeterRefreshInProgress = false;
+
+  function formatHistoricalDate(value) {
+    if (value == null || value === "") return "Not reported";
+
+    const timestamp = Number(value);
+
+    if (!Number.isFinite(timestamp) || timestamp <= 0) {
+      return "Not reported";
+    }
+
+    const date = new Date(timestamp);
+
+    if (Number.isNaN(date.getTime())) return "Not reported";
+
+    return escapeHtml(date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    }));
+  }
+
+  function formatHistoricalDateTime(value) {
+    if (value == null || value === "") return "Not reported";
+
+    const timestamp = Number(value);
+
+    if (!Number.isFinite(timestamp) || timestamp <= 0) {
+      return "Not reported";
+    }
+
+    const date = new Date(timestamp);
+
+    if (Number.isNaN(date.getTime())) return "Not reported";
+
+    return escapeHtml(date.toLocaleString());
+  }
+
+  function formatHistoricalCoordinate(value) {
+    const number = Number(value);
+
+    if (!Number.isFinite(number)) return "Not reported";
+
+    const sign = number < 0 ? "-" : "";
+    const absolute = Math.abs(number);
+    const degrees = Math.floor(absolute);
+    const minutes = ((absolute - degrees) * 60).toFixed(3);
+
+    return sign + degrees + "° " + minutes + "'";
+  }
+
+  function historicalFireType(code) {
+    if (code === "WF") return "Wildfire";
+    if (code === "RX") return "Prescribed fire";
+    if (code === "CX") return "Incident complex";
+    return code || "Not reported";
+  }
+
+  function historicalPerimeterStyle() {
+    return {
+      color: "#174ea6",
+      weight: 2,
+      opacity: 0.95,
+      fillColor: "#4285f4",
+      fillOpacity: 0.12,
+      dashArray: "6 4",
+      lineCap: "round",
+      lineJoin: "round"
+    };
+  }
+
+  async function updateHistoricalFirePerimeters() {
+    if (
+      historicalPerimeterRefreshInProgress ||
+      !map.hasLayer(historicalFirePerimeterLayer)
+    ) return;
+
+    historicalPerimeterRefreshInProgress = true;
+
+    const params = new URLSearchParams({
+      where:
+        "(attr_POOCounty = 'JACKSON' OR attr_POOCounty = 'JOSEPHINE') " +
+        "AND attr_POOState = 'US-OR' " +
+        "AND attr_FireDiscoveryDateTime >= TIMESTAMP '2020-01-01 00:00:00'",
+      outFields:
+        "poly_IncidentName,poly_GISAcres,poly_CreateDate," +
+        "poly_DateCurrent,poly_PolygonDateTime," +
+        "attr_IncidentName,attr_IncidentTypeCategory," +
+        "attr_IncidentTypeKind,attr_IncidentSize," +
+        "attr_FireDiscoveryDateTime,attr_InitialLatitude," +
+        "attr_InitialLongitude,attr_PercentContained," +
+        "attr_POOCounty,attr_POOState," +
+        "attr_ContainmentDateTime,attr_FireOutDateTime",
+      outSR: "4326",
+      returnGeometry: "true",
+      resultRecordCount: "2000",
+      f: "json"
+    });
+
+    try {
+      const response = await fetch(
+        historicalPerimeterQueryUrl + "?" + params.toString()
+      );
+
+      if (!response.ok) {
+        throw new Error("HTTP " + response.status);
+      }
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(
+          data.error.message || "Historical perimeter query failed"
+        );
+      }
+
+      const features = Array.isArray(data.features) ? data.features : [];
+      const replacementLayer = L.layerGroup();
+
+      features.forEach(function (feature) {
+        const a = feature.attributes || {};
+        const g = feature.geometry || {};
+        const rings = Array.isArray(g.rings) ? g.rings : [];
+
+        if (!rings.length) return;
+
+        const latLngRings = rings.map(function (ring) {
+          return ring.map(function (point) {
+            return [Number(point[1]), Number(point[0])];
+          });
+        });
+
+        if (!latLngRings[0] || latLngRings[0].length < 3) return;
+
+        const fireName =
+          a.poly_IncidentName ||
+          a.attr_IncidentName ||
+          "Unnamed historical fire";
+
+        const polygon = L.polygon(
+          latLngRings,
+          historicalPerimeterStyle()
+        );
+
+        const discoveryDate =
+          formatHistoricalDate(a.attr_FireDiscoveryDateTime);
+
+        const popup =
+          "<div style='min-width:210px;max-width:280px;line-height:1.5'>" +
+          "<strong style='font-size:15px'>" +
+          escapeHtml(fireName) +
+          "</strong><br>" +
+
+          "<span style='color:#174ea6;font-weight:bold'>" +
+          "Historical Fire Perimeter</span><br>" +
+
+          "<strong>County:</strong> " +
+          escapeHtml(a.attr_POOCounty) + "<br>" +
+
+          "<strong>Fire type:</strong> " +
+          escapeHtml(historicalFireType(a.attr_IncidentTypeCategory)) +
+          "<br>" +
+
+          "<strong>GIS acres:</strong> " +
+          escapeHtml(formatAcres(a.poly_GISAcres)) + "<br>" +
+
+          "<strong>Reported incident size:</strong> " +
+          escapeHtml(formatAcres(a.attr_IncidentSize)) + "<br>" +
+
+          "<strong>Discovered:</strong> " +
+          discoveryDate + "<br>" +
+
+          "<strong>Perimeter date:</strong> " +
+          formatHistoricalDate(a.poly_PolygonDateTime) + "<br>" +
+
+          "<strong>Perimeter created:</strong> " +
+          formatHistoricalDate(a.poly_CreateDate) + "<br>" +
+
+          "<strong>Perimeter current as of:</strong> " +
+          formatHistoricalDate(a.poly_DateCurrent) + "<br>" +
+
+          "<strong>Initial latitude:</strong> " +
+          escapeHtml(formatHistoricalCoordinate(a.attr_InitialLatitude)) +
+          "<br>" +
+
+          "<strong>Initial longitude:</strong> " +
+          escapeHtml(formatHistoricalCoordinate(a.attr_InitialLongitude)) +
+          "<br>" +
+
+          "<strong>Percent contained:</strong> " +
+          (
+            a.attr_PercentContained == null
+              ? "Not reported"
+              : escapeHtml(a.attr_PercentContained) + "%"
+          ) + "<br>" +
+
+          "<strong>Containment date:</strong> " +
+          formatHistoricalDateTime(a.attr_ContainmentDateTime) + "<br>" +
+
+          "<strong>Fire out date:</strong> " +
+          formatHistoricalDateTime(a.attr_FireOutDateTime) +
+
+          "</div>";
+
+        polygon.bindPopup(popup);
+        polygon.addTo(replacementLayer);
+      });
+
+      // Replace displayed data only after a successful request.
+      historicalFirePerimeterLayer.clearLayers();
+
+      replacementLayer.eachLayer(function (layer) {
+        layer.addTo(historicalFirePerimeterLayer);
+      });
+
+      console.info(
+        "Historical Jackson/Josephine fire perimeters loaded:",
+        features.length
+      );
+
+      if (data.exceededTransferLimit) {
+        console.warn(
+          "Historical perimeter results exceeded the service record limit. " +
+          "Additional paging may be needed to retrieve every record."
+        );
+      }
+
+    } catch (error) {
+      console.error(
+        "Could not refresh historical fire perimeters:",
+        error
+      );
+    } finally {
+      historicalPerimeterRefreshInProgress = false;
+    }
+  }
+
+  // Refresh only while the historical layer is switched on.
+  setInterval(updateHistoricalFirePerimeters, 15 * 60 * 1000);
+
+  // =========================================================
+  // RAWS WEATHER STATIONS
+  // Active Oregon stations in Jackson and Josephine counties
+  // =========================================================
+
+  const rawsQueryUrl =
+    "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/PublicView_RAWS/FeatureServer/1/query";
+
+  const rawsLayer = L.layerGroup().addTo(map);
+  let rawsRefreshInProgress = false;
+
+  function rawsValue(value, suffix) {
+    if (
+      value == null ||
+      String(value).trim() === "" ||
+      String(value).trim().toUpperCase() === "NO DATA"
+    ) {
+      return "Not reported";
+    }
+
+    return escapeHtml(String(value).trim()) + (suffix || "");
+  }
+
+  function rawsTemperature(value) {
+    if (
+      value == null ||
+      String(value).trim() === "" ||
+      String(value).trim().toUpperCase() === "NO DATA"
+    ) {
+      return "Not reported";
+    }
+
+    // RAWS AirTempStandPlace readings are Fahrenheit.
+    const temperature = String(value)
+      .trim()
+      .replace(/ deg\. F/i, "")
+      .replace(/°\s*F/i, "")
+      .trim();
+
+    return escapeHtml(temperature) + "F";
+  }
+
+  function rawsWindDirection(value) {
+    if (
+      value == null ||
+      String(value).trim() === "" ||
+      String(value).trim().toUpperCase() === "NO DATA"
+    ) {
+      return "Not reported";
+    }
+
+    const degrees = Number(value);
+
+    if (!Number.isFinite(degrees)) {
+      return rawsValue(value, "");
+    }
+
+    const directions = [
+      "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+      "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"
+    ];
+
+    const compass = directions[
+      Math.round((((degrees % 360) + 360) % 360) / 22.5) % 16
+    ];
+
+    return compass + " (" + degrees + "°)";
+  }
+
+  function rawsObservationTime(value) {
+    if (value == null || value === "") return "Not reported";
+
+    const timestamp = Number(value);
+
+    // Some stations use a 1900 date as a missing-time sentinel.
+    if (
+      !Number.isFinite(timestamp) ||
+      timestamp <= 0 ||
+      timestamp < Date.UTC(2000, 0, 1)
+    ) {
+      return "Not reported";
+    }
+
+    const date = new Date(timestamp);
+
+    if (Number.isNaN(date.getTime())) return "Not reported";
+
+    return escapeHtml(date.toLocaleString());
+  }
+
+  async function updateRawsStations() {
+    if (rawsRefreshInProgress || !map.hasLayer(rawsLayer)) return;
+
+    rawsRefreshInProgress = true;
+
+    const params = new URLSearchParams({
+      where:
+        "Status = 'A' AND State = 'OR' AND " +
+        "(County = 'JOSEPHINE' OR County = 'JACKSON')",
+      outFields:
+        "StationName,ObservedDate,Elevation,Latitude,Longitude," +
+        "State,County,Status,RainAccumulation,WindSpeedMPH," +
+        "WindDirDegrees,AirTempStandPlace,RelativeHumidity," +
+        "WindSpeedPeak,WindDirPeak,StationID,MesoWestStationID," +
+        "WXID,MesoWestURL",
+      outSR: "4326",
+      returnGeometry: "true",
+      f: "json"
+    });
+
+    try {
+      const response = await fetch(
+        rawsQueryUrl + "?" + params.toString()
+      );
+
+      if (!response.ok) {
+        throw new Error("HTTP " + response.status);
+      }
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error.message || "RAWS query failed");
+      }
+
+      const replacementLayer = L.layerGroup();
+      const features = Array.isArray(data.features) ? data.features : [];
+
+      features.forEach(function (feature) {
+        const a = feature.attributes || {};
+        const g = feature.geometry || {};
+
+        const lat = Number(
+          g.y != null ? g.y : a.Latitude
+        );
+
+        const lng = Number(
+          g.x != null ? g.x : a.Longitude
+        );
+
+        if (
+          !Number.isFinite(lat) ||
+          !Number.isFinite(lng) ||
+          lat < -90 || lat > 90 ||
+          lng < -180 || lng > 180 ||
+          (lat === 0 && lng === 0)
+        ) return;
+
+        // FIX A: Use the existing missing-data-safe formatter.
+        // Missing readings display "Not reported".
+        const tempText = rawsTemperature(a.AirTempStandPlace);
+
+        const marker = L.marker([lat, lng], {
+          icon: L.divIcon({
+            className: "",
+            html: `
+              <div style="display:flex;align-items:center;gap:3px;white-space:nowrap;">
+                <div style="
+                  width:12px;
+                  height:12px;
+                  flex-shrink:0;
+                  background:#008CFF;
+                  border:2px solid white;
+                  box-shadow:0 1px 4px #555;
+                  box-sizing:border-box;
+                "></div>
+                <span style="
+                  color:#111;
+                  background:rgba(255,255,255,0.9);
+                  padding:1px 3px;
+                  border-radius:3px;
+                  font-size:12px;
+                  font-weight:bold;
+                ">${tempText}</span>
+              </div>
+            `,
+            iconSize: [150, 18],
+            iconAnchor: [6, 9]
+          })
+        });
+
+        let popup =
+          "<div style='min-width:210px;max-width:270px;line-height:1.5'>" +
+          "<strong style='font-size:15px'>" +
+          escapeHtml(a.StationName || "Unnamed RAWS station") +
+          "</strong><br>" +
+
+          "<span style='color:#555'>" +
+          escapeHtml(a.County || "Oregon") + " County RAWS</span>" +
+
+          "<hr style='margin:6px 0'>" +
+
+          "<strong>Temperature:</strong> " +
+          rawsTemperature(a.AirTempStandPlace) + "<br>" +
+
+          "<strong>Relative humidity:</strong> " +
+          rawsValue(a.RelativeHumidity, "").replace(/\s*%$/, "") +
+          (a.RelativeHumidity == null ||
+           String(a.RelativeHumidity).trim() === "" ||
+           String(a.RelativeHumidity).trim().toUpperCase() === "NO DATA"
+            ? ""
+            : "%") + "<br>" +
+
+          "<strong>Wind:</strong> " +
+          rawsValue(a.WindSpeedMPH, "") + " · " +
+          rawsWindDirection(a.WindDirDegrees) + "<br>" +
+
+          "<strong>Peak wind:</strong> " +
+          rawsValue(a.WindSpeedPeak, "") + " · " +
+          rawsWindDirection(a.WindDirPeak) + "<br>" +
+
+          "<strong>Rain accumulation:</strong> " +
+          rawsValue(a.RainAccumulation, "") + "<br>" +
+
+          "<strong>Elevation:</strong> " +
+          rawsValue(a.Elevation, " ft") + "<br>" +
+
+          "<strong>Observation:</strong> " +
+          rawsObservationTime(a.ObservedDate);
+
+        if (a.MesoWestURL) {
+          const weatherUrl = String(a.MesoWestURL);
+
+          if (/^https:\/\/[^\s"'<>]+$/i.test(weatherUrl)) {
+            popup +=
+              "<br><a href='" + escapeHtml(weatherUrl) +
+              "' target='_blank' rel='noopener noreferrer'>" +
+              "Detailed station weather</a>";
+          }
+        }
+
+        popup += "</div>";
+
+        marker.bindPopup(popup);
+        marker.addTo(replacementLayer);
+      });
+
+      // Keep old markers if the request fails; replace only after success.
+      rawsLayer.clearLayers();
+
+      replacementLayer.eachLayer(function (layer) {
+        layer.addTo(rawsLayer);
+      });
+
+      console.info(
+        "Active Jackson/Josephine RAWS stations loaded:",
+        features.length
+      );
+
+    } catch (error) {
+      console.error("Could not refresh RAWS weather stations:", error);
+    } finally {
+      rawsRefreshInProgress = false;
+    }
+  }
+
+  // Load at startup; refresh RAWS data every 15 minutes.
+  updateRawsStations();
+  setInterval(updateRawsStations, 15 * 60 * 1000);
+
+  // =========================================================
   // LAYER MENU
-  // ============================================================
+  // =========================================================
 
   L.control.layers(
     {
       "Esri Street Map": streetMap,
-      "OpenTopoMap": topoMap
+      "OpenTopoMap": topoMap,
+      "Esri Aerial Imagery": aerialMap
     },
     {
       "DOGAMI LiDAR": hillshade,
       "PLSS Sections": plss,
       "NIFC Fires (24h)": nifcFireLayer,
-      "SWO Perimeters": firePerimeterLayer,
-      "ADS-B Aircraft": aircraftLayer
+      "SWO Current": firePerimeterLayer,
+      "SWO Historical": historicalFirePerimeterLayer,
+      "RAWS WX Stations": rawsLayer
     },
     {
       collapsed: true,
@@ -905,23 +1255,18 @@ html, body {
     if (event.layer === nifcFireLayer) updateNifcFires();
     if (event.layer === firePerimeterLayer) updateFirePerimeters();
 
-    if (event.layer === aircraftLayer) {
-      startAircraftRefresh();
+    if (event.layer === historicalFirePerimeterLayer) {
+      updateHistoricalFirePerimeters();
     }
-  });
 
-  map.on("overlayremove", function (event) {
-    if (event.layer === aircraftLayer) {
-      stopAircraftRefresh();
+    if (event.layer === rawsLayer) {
+      updateRawsStations();
     }
   });
 
   map.on("moveend", refreshVisibleOverlays);
   map.on("zoomend", refreshVisibleOverlays);
-
-  map.on("resize", function () {
-    refreshVisibleOverlays();
-  });
+  map.on("resize", refreshVisibleOverlays);
 
   if (typeof ResizeObserver !== "undefined") {
     const observer = new ResizeObserver(function () {
@@ -932,9 +1277,9 @@ html, body {
     observer.observe(document.getElementById("map"));
   }
 
-  // ============================================================
-  // OPACITY CONTROLS
-  // ============================================================
+  // =========================================================
+  // DOGAMI OPACITY SLIDER
+  // =========================================================
 
   const opacitySlider = document.getElementById("opacitySlider");
   const opacityValue = document.getElementById("opacityValue");
@@ -945,9 +1290,14 @@ html, body {
 
   opacitySlider.addEventListener("input", function () {
     const opacity = Number(opacitySlider.value) / 100;
+
     hillshade.setOpacity(opacity);
     opacityValue.textContent = opacitySlider.value + "%";
   });
+
+  // =========================================================
+  // CURRENT FIRE PERIMETER FILL OPACITY SLIDER
+  // =========================================================
 
   const perimeterOpacitySlider =
     document.getElementById("perimeterOpacitySlider");
@@ -957,16 +1307,21 @@ html, body {
 
   perimeterOpacitySlider.addEventListener("input", function () {
     perimeterFillOpacity = Number(perimeterOpacitySlider.value) / 100;
-    perimeterOpacityValue.textContent = perimeterOpacitySlider.value + "%";
+
+    perimeterOpacityValue.textContent =
+      perimeterOpacitySlider.value + "%";
 
     firePerimeterLayer.eachLayer(function (layer) {
-      layer.setStyle({ fillOpacity: perimeterFillOpacity });
+      layer.setStyle({
+        fillOpacity: perimeterFillOpacity
+      });
     });
   });
 
-  // ============================================================
-  // COORDINATES: DEGREES AND DECIMAL MINUTES ONLY
-  // ============================================================
+  // =========================================================
+  // COORDINATES — DEGREES AND DECIMAL MINUTES ONLY
+  // Negative values indicate south or west.
+  // =========================================================
 
   function toDDM(value) {
     const sign = value < 0 ? "-" : "";
@@ -977,8 +1332,11 @@ html, body {
     return sign + degrees + "° " + minutes.toFixed(3) + "'";
   }
 
-  const coordinatesDisplay = document.getElementById("coordinates");
-  const gpsCoordinatesDisplay = document.getElementById("gpsCoordinates");
+  const coordinatesDisplay =
+    document.getElementById("coordinates");
+
+  const gpsCoordinatesDisplay =
+    document.getElementById("gpsCoordinates");
 
   map.on("click", function (event) {
     coordinatesDisplay.textContent =
@@ -986,9 +1344,9 @@ html, body {
       toDDM(event.latlng.lng);
   });
 
-  // ============================================================
+  // =========================================================
   // PHONE GPS
-  // ============================================================
+  // =========================================================
 
   const gpsButton = document.getElementById("gpsButton");
 
@@ -1014,14 +1372,28 @@ html, body {
     gpsWatchId = null;
     gpsHasCentered = false;
 
+    // FIX C: Remove the GPS dot when tracking stops.
+    if (gpsMarker) {
+      map.removeLayer(gpsMarker);
+      gpsMarker = null;
+    }
+
+    // FIX C: Remove the GPS accuracy circle when tracking stops.
+    if (gpsAccuracy) {
+      map.removeLayer(gpsAccuracy);
+      gpsAccuracy = null;
+    }
+
     gpsButton.setAttribute("aria-pressed", "false");
     gpsButton.textContent = "◎ GPS";
     gpsButton.title = "Show my phone's GPS location";
 
-    gpsCoordinatesDisplay.textContent = "GPS: Off — tap GPS to start";
+    gpsCoordinatesDisplay.textContent =
+      "GPS: Off — tap GPS to start";
   }
 
   function gpsError(error) {
+    // Also cleans up the marker and circle on a GPS error.
     stopGpsTracking();
 
     if (error.code === 1) {
@@ -1034,7 +1406,8 @@ html, body {
       gpsCoordinatesDisplay.textContent =
         "GPS: Timed out. Tap GPS to try again.";
     } else {
-      gpsCoordinatesDisplay.textContent = "GPS: Unable to get location.";
+      gpsCoordinatesDisplay.textContent =
+        "GPS: Unable to get location.";
     }
   }
 
@@ -1069,7 +1442,11 @@ html, body {
       function (position) {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        const accuracy = Math.max(0, position.coords.accuracy || 0);
+        const accuracy = Math.max(
+          0,
+          position.coords.accuracy || 0
+        );
+
         const location = L.latLng(lat, lng);
 
         if (!gpsAccuracy) {
@@ -1095,14 +1472,20 @@ html, body {
         }
 
         gpsCoordinatesDisplay.textContent =
-          "GPS: " + toDDM(lat) + "  " + toDDM(lng) +
+          "GPS: " + toDDM(lat) + "  " +
+          toDDM(lng) +
           "  (±" + Math.round(accuracy) + " m)";
 
         gpsButton.textContent = "GPS ON";
 
-        // Center only on the first GPS fix.
+        // Center on the first GPS fix only.
+        // Subsequent fixes move the dot without recentering.
         if (!gpsHasCentered) {
-          map.setView(location, Math.max(map.getZoom(), 15));
+          map.setView(
+            location,
+            Math.max(map.getZoom(), 15)
+          );
+
           gpsHasCentered = true;
         }
       },
@@ -1115,7 +1498,10 @@ html, body {
     );
   });
 
-  // Initial map sizing
+  // =========================================================
+  // INITIAL MAP SIZING
+  // =========================================================
+
   setTimeout(function () {
     map.invalidateSize();
   }, 500);

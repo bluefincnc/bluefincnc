@@ -55,7 +55,7 @@ html, body {
 /* DOGAMI opacity and fire perimeter fill controls */
 #opacityControl {
   position: absolute;
-  top: 10px;
+  top: 12px;
   left: 10px;
   z-index: 1000;
   width: 180px;
@@ -72,15 +72,6 @@ html, body {
   margin: 5px 0 8px;
 }
 
-#opacityValue, #perimeterOpacityValue {
-  font-weight: bold;
-}
-
-.opacity-row-label {
-  display: block;
-  margin-top: 7px;
-}
-
 /* Bright red fire perimeter outline with subtle glow */
 .fire-perimeter-glow {
   filter: drop-shadow(0 0 4px rgba(255, 20, 0, 0.9));
@@ -89,7 +80,7 @@ html, body {
 /* Map-click coordinate display */
 #coordinates {
   position: absolute;
-  top: 135px;
+  top: 80px;
   left: 10px;
   z-index: 1000;
   max-width: calc(100vw - 40px);
@@ -105,7 +96,7 @@ html, body {
 /* Live GPS coordinate display */
 #gpsCoordinates {
   position: absolute;
-  top: 185px;
+  top: 115px;
   left: 10px;
   z-index: 1000;
   max-width: calc(100vw - 40px);
@@ -175,6 +166,14 @@ html, body {
   fill-opacity: 1;
 }
 
+/* USGS waterbody polygons */
+.usgs-waterbody {
+  color: #1769d2;
+  weight: 1.5;
+  fillColor: #42a5f5;
+  fillOpacity: 0.55;
+}
+
 @media (max-width: 600px) {
   .leaflet-top.leaflet-right {
     top: 10px;
@@ -238,12 +237,6 @@ html, body {
     <span id="opacityValue">60%</span>
   </div>
   <input id="opacitySlider" type="range" min="0" max="100" value="60">
-
-  <label class="opacity-row-label" for="perimeterOpacitySlider">
-    <strong>SWO Current fill:</strong>
-    <span id="perimeterOpacityValue">25%</span>
-  </label>
-  <input id="perimeterOpacitySlider" type="range" min="0" max="100" value="25">
 </div>
 
 <div id="coordinates">Click Map for Coordinates</div>
@@ -310,10 +303,6 @@ html, body {
 
   // =========================================================
   // PLSS SECTIONS
-  // Layer 0 = Township Range
-  // Layer 1 = Sections
-  // Layer 2 = Quarter Quarters
-  // Request sections ONLY.
   // =========================================================
 
   const plssUrl =
@@ -412,10 +401,7 @@ html, body {
             Math.max(1, Math.round(size.y)),
       format: "png32",
       transparent: "true",
-
-      // FIX B: Sections only. No Township Range or Quarter Quarters.
       layers: "show:1",
-
       f: "image"
     };
 
@@ -445,6 +431,10 @@ html, body {
     refreshTimer = setTimeout(function () {
       updateHillshade();
       updatePLSS();
+
+      if (typeof scheduleWaterbodyRefresh === "function") {
+        scheduleWaterbodyRefresh();
+      }
     }, 200);
   }
 
@@ -606,7 +596,7 @@ html, body {
 
   const firePerimeterLayer = L.layerGroup().addTo(map);
   let perimeterRefreshInProgress = false;
-  let perimeterFillOpacity = 0.25;
+  let perimeterFillOpacity = 0.10;
 
   function perimeterStyle() {
     return {
@@ -877,63 +867,47 @@ html, body {
           "<strong style='font-size:15px'>" +
           escapeHtml(fireName) +
           "</strong><br>" +
-
           "<span style='color:#174ea6;font-weight:bold'>" +
           "Historical Fire Perimeter</span><br>" +
-
           "<strong>County:</strong> " +
           escapeHtml(a.attr_POOCounty) + "<br>" +
-
           "<strong>Fire type:</strong> " +
           escapeHtml(historicalFireType(a.attr_IncidentTypeCategory)) +
           "<br>" +
-
           "<strong>GIS acres:</strong> " +
           escapeHtml(formatAcres(a.poly_GISAcres)) + "<br>" +
-
           "<strong>Reported incident size:</strong> " +
           escapeHtml(formatAcres(a.attr_IncidentSize)) + "<br>" +
-
           "<strong>Discovered:</strong> " +
           discoveryDate + "<br>" +
-
           "<strong>Perimeter date:</strong> " +
           formatHistoricalDate(a.poly_PolygonDateTime) + "<br>" +
-
           "<strong>Perimeter created:</strong> " +
           formatHistoricalDate(a.poly_CreateDate) + "<br>" +
-
           "<strong>Perimeter current as of:</strong> " +
           formatHistoricalDate(a.poly_DateCurrent) + "<br>" +
-
           "<strong>Initial latitude:</strong> " +
           escapeHtml(formatHistoricalCoordinate(a.attr_InitialLatitude)) +
           "<br>" +
-
           "<strong>Initial longitude:</strong> " +
           escapeHtml(formatHistoricalCoordinate(a.attr_InitialLongitude)) +
           "<br>" +
-
           "<strong>Percent contained:</strong> " +
           (
             a.attr_PercentContained == null
               ? "Not reported"
               : escapeHtml(a.attr_PercentContained) + "%"
           ) + "<br>" +
-
           "<strong>Containment date:</strong> " +
           formatHistoricalDateTime(a.attr_ContainmentDateTime) + "<br>" +
-
           "<strong>Fire out date:</strong> " +
           formatHistoricalDateTime(a.attr_FireOutDateTime) +
-
           "</div>";
 
         polygon.bindPopup(popup);
         polygon.addTo(replacementLayer);
       });
 
-      // Replace displayed data only after a successful request.
       historicalFirePerimeterLayer.clearLayers();
 
       replacementLayer.eachLayer(function (layer) {
@@ -962,7 +936,6 @@ html, body {
     }
   }
 
-  // Refresh only while the historical layer is switched on.
   setInterval(updateHistoricalFirePerimeters, 15 * 60 * 1000);
 
   // =========================================================
@@ -997,7 +970,6 @@ html, body {
       return "Not reported";
     }
 
-    // RAWS AirTempStandPlace readings are Fahrenheit.
     const temperature = String(value)
       .trim()
       .replace(/ deg\. F/i, "")
@@ -1039,7 +1011,6 @@ html, body {
 
     const timestamp = Number(value);
 
-    // Some stations use a 1900 date as a missing-time sentinel.
     if (
       !Number.isFinite(timestamp) ||
       timestamp <= 0 ||
@@ -1097,13 +1068,8 @@ html, body {
         const a = feature.attributes || {};
         const g = feature.geometry || {};
 
-        const lat = Number(
-          g.y != null ? g.y : a.Latitude
-        );
-
-        const lng = Number(
-          g.x != null ? g.x : a.Longitude
-        );
+        const lat = Number(g.y != null ? g.y : a.Latitude);
+        const lng = Number(g.x != null ? g.x : a.Longitude);
 
         if (
           !Number.isFinite(lat) ||
@@ -1113,8 +1079,6 @@ html, body {
           (lat === 0 && lng === 0)
         ) return;
 
-        // FIX A: Use the existing missing-data-safe formatter.
-        // Missing readings display "Not reported".
         const tempText = rawsTemperature(a.AirTempStandPlace);
 
         const marker = L.marker([lat, lng], {
@@ -1151,15 +1115,11 @@ html, body {
           "<strong style='font-size:15px'>" +
           escapeHtml(a.StationName || "Unnamed RAWS station") +
           "</strong><br>" +
-
           "<span style='color:#555'>" +
           escapeHtml(a.County || "Oregon") + " County RAWS</span>" +
-
           "<hr style='margin:6px 0'>" +
-
           "<strong>Temperature:</strong> " +
           rawsTemperature(a.AirTempStandPlace) + "<br>" +
-
           "<strong>Relative humidity:</strong> " +
           rawsValue(a.RelativeHumidity, "").replace(/\s*%$/, "") +
           (a.RelativeHumidity == null ||
@@ -1167,21 +1127,16 @@ html, body {
            String(a.RelativeHumidity).trim().toUpperCase() === "NO DATA"
             ? ""
             : "%") + "<br>" +
-
           "<strong>Wind:</strong> " +
           rawsValue(a.WindSpeedMPH, "") + " · " +
           rawsWindDirection(a.WindDirDegrees) + "<br>" +
-
           "<strong>Peak wind:</strong> " +
           rawsValue(a.WindSpeedPeak, "") + " · " +
           rawsWindDirection(a.WindDirPeak) + "<br>" +
-
           "<strong>Rain accumulation:</strong> " +
           rawsValue(a.RainAccumulation, "") + "<br>" +
-
           "<strong>Elevation:</strong> " +
           rawsValue(a.Elevation, " ft") + "<br>" +
-
           "<strong>Observation:</strong> " +
           rawsObservationTime(a.ObservedDate);
 
@@ -1202,7 +1157,6 @@ html, body {
         marker.addTo(replacementLayer);
       });
 
-      // Keep old markers if the request fails; replace only after success.
       rawsLayer.clearLayers();
 
       replacementLayer.eachLayer(function (layer) {
@@ -1221,9 +1175,388 @@ html, body {
     }
   }
 
-  // Load at startup; refresh RAWS data every 15 minutes.
   updateRawsStations();
   setInterval(updateRawsStations, 15 * 60 * 1000);
+
+  // =========================================================
+  // USGS LAKES & PONDS
+  //
+  // featuretype = 3: Lake
+  // Minimum size = 0.25 acre
+  // Only Jackson and Josephine counties
+  // Only fetch waterbody geometry for the current map view
+  // =========================================================
+
+  const usgsWaterbodyQueryUrl =
+    "https://3dhp.nationalmap.gov/arcgis/rest/services/usgs_3dhp_all/FeatureServer/60/query";
+
+  const oregonCountyQueryUrl =
+    "https://gis.wrd.state.or.us/server/rest/services/adm/Counties_WGS84/FeatureServer/0/query";
+
+  // 0.5 acre converted to square kilometers.
+  const waterbodyMinimumAreaSqKm = 0.0010117;
+
+  const waterbodyWhere =
+    "featuretype = 3 AND areasqkm >= " +
+    waterbodyMinimumAreaSqKm;
+
+  const usgsWaterbodyLayer = L.layerGroup();
+
+  // The list of eligible waterbody IDs is fetched once per page load.
+  let waterbodyObjectIds = null;
+  let waterbodyIdLoadPromise = null;
+  let waterbodyRefreshSequence = 0;
+  let waterbodyRefreshTimer = null;
+  let waterbodyLastViewKey = "";
+
+  async function arcgisPost(url, params) {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+      },
+      body: new URLSearchParams(params).toString()
+    });
+
+    if (!response.ok) {
+      throw new Error("ArcGIS HTTP " + response.status);
+    }
+
+    const data = await response.json();
+
+    if (data.error) {
+      throw new Error(
+        data.error.message || "ArcGIS query failed"
+      );
+    }
+
+    return data;
+  }
+
+  function waterbodyCountyGeometryParams(countyGeometry) {
+    return {
+      where: waterbodyWhere,
+      geometry: JSON.stringify(countyGeometry),
+      geometryType: "esriGeometryPolygon",
+      inSR: "4326",
+      spatialRel: "esriSpatialRelIntersects",
+      returnIdsOnly: "true",
+      f: "json"
+    };
+  }
+
+  async function loadWaterbodyObjectIds() {
+    if (waterbodyObjectIds !== null) {
+      return waterbodyObjectIds;
+    }
+
+    if (waterbodyIdLoadPromise) {
+      return waterbodyIdLoadPromise;
+    }
+
+    waterbodyIdLoadPromise = (async function () {
+      console.info(
+        "USGS waterbodies: loading Jackson and Josephine county boundaries..."
+      );
+
+      const countyData = await arcgisPost(
+        oregonCountyQueryUrl,
+        {
+          where: "county_name IN ('Jackson','Josephine')",
+          outFields: "OBJECTID,county_name",
+          returnGeometry: "true",
+          outSR: "4326",
+          f: "json"
+        }
+      );
+
+      const counties = Array.isArray(countyData.features)
+        ? countyData.features
+        : [];
+
+      if (counties.length === 0) {
+        throw new Error(
+          "No Jackson/Josephine county boundaries were returned."
+        );
+      }
+
+      const allIds = new Set();
+
+      for (const countyFeature of counties) {
+        const countyAttributes = countyFeature.attributes || {};
+        const countyGeometry = countyFeature.geometry;
+
+        if (
+          !countyGeometry ||
+          !Array.isArray(countyGeometry.rings) ||
+          countyGeometry.rings.length === 0
+        ) {
+          console.warn(
+            "County geometry was missing:",
+            countyAttributes.county_name
+          );
+          continue;
+        }
+
+        // Ensure the geometry explicitly declares geographic coordinates.
+        const queryGeometry = {
+          rings: countyGeometry.rings,
+          spatialReference: { wkid: 4326 }
+        };
+
+        const idData = await arcgisPost(
+          usgsWaterbodyQueryUrl,
+          waterbodyCountyGeometryParams(queryGeometry)
+        );
+
+        const ids = Array.isArray(idData.objectIds)
+          ? idData.objectIds
+          : [];
+
+        ids.forEach(function (id) {
+          allIds.add(id);
+        });
+
+        console.info(
+          "USGS eligible waterbodies intersecting " +
+          countyAttributes.county_name + " County:",
+          ids.length
+        );
+      }
+
+      waterbodyObjectIds = Array.from(allIds);
+
+      console.info(
+        "USGS eligible waterbodies across both counties:",
+        waterbodyObjectIds.length
+      );
+
+      return waterbodyObjectIds;
+    })();
+
+    try {
+      return await waterbodyIdLoadPromise;
+    } catch (error) {
+      // Permit a later attempt if the first county/ID request fails.
+      waterbodyIdLoadPromise = null;
+      throw error;
+    }
+  }
+
+  function formatWaterbodyAcres(areaSqKm) {
+    const squareKm = Number(areaSqKm);
+
+    if (!Number.isFinite(squareKm) || squareKm < 0) {
+      return "Not reported";
+    }
+
+    const acres = squareKm * 247.105381;
+
+    return acres.toLocaleString(undefined, {
+      maximumFractionDigits: 2
+    }) + " acres";
+  }
+
+  function formatWaterbodyDate(value) {
+    if (value == null || value === "") return "Not reported";
+
+    const timestamp = Number(value);
+
+    if (!Number.isFinite(timestamp)) return "Not reported";
+
+    const date = new Date(timestamp);
+
+    if (Number.isNaN(date.getTime())) return "Not reported";
+
+    return escapeHtml(date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    }));
+  }
+
+  function waterbodyPopup(attributes) {
+    const name =
+      attributes.gnisidlabel ||
+      attributes.id3dhp ||
+      "Unnamed lake or pond";
+
+    const type = attributes.featuretypelabel || "Lake";
+
+    return (
+      "<div style='min-width:190px;max-width:260px;line-height:1.5'>" +
+      "<strong style='font-size:15px'>" +
+      escapeHtml(name) +
+      "</strong><br>" +
+      "<span style='color:#1769d2;font-weight:bold'>" +
+      "USGS Waterbody</span><br>" +
+      "<strong>Type:</strong> " +
+      escapeHtml(type) + "<br>" +
+      "<strong>Mapped area:</strong> " +
+      escapeHtml(formatWaterbodyAcres(attributes.areasqkm)) + "<br>" +
+      "<strong>Feature ID:</strong> " +
+      escapeHtml(attributes.id3dhp) + "<br>" +
+      "<strong>Feature date:</strong> " +
+      formatWaterbodyDate(attributes.featuredate) +
+      "</div>"
+    );
+  }
+
+  function addWaterbodyFeature(feature, targetLayer) {
+    const attributes = feature.attributes || {};
+    const geometry = feature.geometry || {};
+    const rings = Array.isArray(geometry.rings) ? geometry.rings : [];
+
+    if (!rings.length) return;
+
+    const latLngRings = rings.map(function (ring) {
+      return ring.map(function (point) {
+        return [Number(point[1]), Number(point[0])];
+      });
+    });
+
+    if (!latLngRings[0] || latLngRings[0].length < 3) return;
+
+    const polygon = L.polygon(latLngRings, {
+      color: "#1769d2",
+      weight: 1.5,
+      opacity: 0.95,
+      fillColor: "#42a5f5",
+      fillOpacity: 0.55
+    });
+
+    polygon.bindPopup(waterbodyPopup(attributes));
+    polygon.addTo(targetLayer);
+  }
+
+  function currentWaterbodyViewKey() {
+    const bounds = map.getBounds();
+
+    // Rounded key avoids needless requests for tiny movement differences.
+    return [
+      bounds.getWest().toFixed(5),
+      bounds.getSouth().toFixed(5),
+      bounds.getEast().toFixed(5),
+      bounds.getNorth().toFixed(5),
+      map.getZoom()
+    ].join(",");
+  }
+
+  async function updateWaterbodiesInView() {
+    if (!map.hasLayer(usgsWaterbodyLayer)) return;
+
+    const viewKey = currentWaterbodyViewKey();
+
+    if (viewKey === waterbodyLastViewKey) return;
+    waterbodyLastViewKey = viewKey;
+
+    const requestSequence = ++waterbodyRefreshSequence;
+
+    try {
+      const objectIds = await loadWaterbodyObjectIds();
+
+      if (
+        requestSequence !== waterbodyRefreshSequence ||
+        !map.hasLayer(usgsWaterbodyLayer)
+      ) return;
+
+      if (objectIds.length === 0) {
+        usgsWaterbodyLayer.clearLayers();
+        console.info("No qualifying USGS waterbodies found in the counties.");
+        return;
+      }
+
+      const bounds = map.getBounds();
+
+      const viewGeometry = {
+        xmin: bounds.getWest(),
+        ymin: bounds.getSouth(),
+        xmax: bounds.getEast(),
+        ymax: bounds.getNorth(),
+        spatialReference: { wkid: 4326 }
+      };
+
+      // Keep each query manageable. The server also filters by the current
+      // map extent, so geometry outside the view is not returned.
+      const batchSize = 400;
+      const replacementLayer = L.layerGroup();
+      const loadedIds = new Set();
+
+      for (let start = 0; start < objectIds.length; start += batchSize) {
+        if (
+          requestSequence !== waterbodyRefreshSequence ||
+          !map.hasLayer(usgsWaterbodyLayer)
+        ) return;
+
+        const batchIds = objectIds.slice(start, start + batchSize);
+
+        const data = await arcgisPost(
+          usgsWaterbodyQueryUrl,
+          {
+            objectIds: batchIds.join(","),
+            where: waterbodyWhere,
+            geometry: JSON.stringify(viewGeometry),
+            geometryType: "esriGeometryEnvelope",
+            inSR: "4326",
+            spatialRel: "esriSpatialRelIntersects",
+            outFields:
+              "OBJECTID,id3dhp,gnisidlabel,featuretype," +
+              "featuretypelabel,areasqkm,featuredate",
+            returnGeometry: "true",
+            outSR: "4326",
+            f: "json"
+          }
+        );
+
+        const features = Array.isArray(data.features)
+          ? data.features
+          : [];
+
+        features.forEach(function (feature) {
+          const id = feature.attributes
+            ? feature.attributes.OBJECTID
+            : null;
+
+          if (id != null && loadedIds.has(id)) return;
+          if (id != null) loadedIds.add(id);
+
+          addWaterbodyFeature(feature, replacementLayer);
+        });
+      }
+
+      if (
+        requestSequence !== waterbodyRefreshSequence ||
+        !map.hasLayer(usgsWaterbodyLayer)
+      ) return;
+
+      // Replace the displayed features only after the complete view query
+      // succeeds, so a failed request doesn't leave a half-drawn layer.
+      usgsWaterbodyLayer.clearLayers();
+
+      replacementLayer.eachLayer(function (layer) {
+        layer.addTo(usgsWaterbodyLayer);
+      });
+
+      console.info(
+        "USGS waterbodies drawn for current map view:",
+        loadedIds.size
+      );
+
+    } catch (error) {
+      console.error("Could not load USGS waterbodies:", error);
+      waterbodyLastViewKey = "";
+    }
+  }
+
+  function scheduleWaterbodyRefresh() {
+    if (!map.hasLayer(usgsWaterbodyLayer)) return;
+
+    clearTimeout(waterbodyRefreshTimer);
+
+    waterbodyRefreshTimer = setTimeout(function () {
+      updateWaterbodiesInView();
+    }, 300);
+  }
 
   // =========================================================
   // LAYER MENU
@@ -1241,7 +1574,8 @@ html, body {
       "NIFC Fires (24h)": nifcFireLayer,
       "SWO Current": firePerimeterLayer,
       "SWO Historical": historicalFirePerimeterLayer,
-      "RAWS WX Stations": rawsLayer
+      "RAWS WX Stations": rawsLayer,
+      "Lake/Pond ¼ Acre+": usgsWaterbodyLayer
     },
     {
       collapsed: true,
@@ -1261,6 +1595,19 @@ html, body {
 
     if (event.layer === rawsLayer) {
       updateRawsStations();
+    }
+
+    if (event.layer === usgsWaterbodyLayer) {
+      waterbodyLastViewKey = "";
+      updateWaterbodiesInView();
+    }
+  });
+
+  map.on("overlayremove", function (event) {
+    if (event.layer === usgsWaterbodyLayer) {
+      // Ignore any older request that finishes after the layer is turned off.
+      waterbodyRefreshSequence++;
+      clearTimeout(waterbodyRefreshTimer);
     }
   });
 
@@ -1293,29 +1640,6 @@ html, body {
 
     hillshade.setOpacity(opacity);
     opacityValue.textContent = opacitySlider.value + "%";
-  });
-
-  // =========================================================
-  // CURRENT FIRE PERIMETER FILL OPACITY SLIDER
-  // =========================================================
-
-  const perimeterOpacitySlider =
-    document.getElementById("perimeterOpacitySlider");
-
-  const perimeterOpacityValue =
-    document.getElementById("perimeterOpacityValue");
-
-  perimeterOpacitySlider.addEventListener("input", function () {
-    perimeterFillOpacity = Number(perimeterOpacitySlider.value) / 100;
-
-    perimeterOpacityValue.textContent =
-      perimeterOpacitySlider.value + "%";
-
-    firePerimeterLayer.eachLayer(function (layer) {
-      layer.setStyle({
-        fillOpacity: perimeterFillOpacity
-      });
-    });
   });
 
   // =========================================================
@@ -1372,13 +1696,11 @@ html, body {
     gpsWatchId = null;
     gpsHasCentered = false;
 
-    // FIX C: Remove the GPS dot when tracking stops.
     if (gpsMarker) {
       map.removeLayer(gpsMarker);
       gpsMarker = null;
     }
 
-    // FIX C: Remove the GPS accuracy circle when tracking stops.
     if (gpsAccuracy) {
       map.removeLayer(gpsAccuracy);
       gpsAccuracy = null;
@@ -1393,7 +1715,6 @@ html, body {
   }
 
   function gpsError(error) {
-    // Also cleans up the marker and circle on a GPS error.
     stopGpsTracking();
 
     if (error.code === 1) {
@@ -1478,8 +1799,6 @@ html, body {
 
         gpsButton.textContent = "GPS ON";
 
-        // Center on the first GPS fix only.
-        // Subsequent fixes move the dot without recentering.
         if (!gpsHasCentered) {
           map.setView(
             location,

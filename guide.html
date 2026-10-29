@@ -170,7 +170,7 @@ footer a { margin-right: 14px; }
     <div class="eyebrow">Blue Maps · Field Reference</div>
     <h1>Oregon LiDAR Map</h1>
     <p>
-      A practical guide to terrain, land-survey sections, fire activity,
+      A practical guide to terrain, public land ownership, land-survey sections, fire activity,
       weather stations, waterbodies, GPS positioning, and track files.
     </p>
     <div class="actions">
@@ -307,6 +307,26 @@ footer a { margin-right: 14px; }
 
     <section class="card">
       <div class="art">
+        <svg viewBox="0 0 100 70" role="img" aria-label="Public land ownership illustration">
+          <rect width="100" height="70" rx="8" fill="#dbe6d4"/>
+          <path d="M8 10 H52 V37 H28 V62 H8 Z" fill="#82b68a" stroke="#426d4d" stroke-width="2"/>
+          <path d="M55 9 H91 V39 H55 Z" fill="#dfc18c" stroke="#90774e" stroke-width="2"/>
+          <path d="M32 42 H91 V62 H32 Z" fill="#a4b9db" stroke="#58779f" stroke-width="2"/>
+        </svg>
+        <div>
+          <h3>Public Land Ownership</h3>
+          <p>Oregon Department of Forestry ownership overlay.</p>
+        </div>
+      </div>
+      Displays public land ownership information from the Oregon Department
+      of Forestry map service. Use it to compare mapped ownership areas
+      with roads, terrain, and PLSS sections. Coverage and categories depend
+      on the source data. This layer is a general reference, not a legal
+      property boundary or proof of public access.
+    </section>
+
+    <section class="card">
+      <div class="art">
         <svg viewBox="0 0 100 70" role="img" aria-label="Blue lake illustration">
           <rect width="100" height="70" rx="8" fill="#dbe4d0"/>
           <path d="M14 13 Q35 1 48 17 T85 16 L92 37 Q72 48 55 39 T19 47Z"
@@ -329,7 +349,7 @@ footer a { margin-right: 14px; }
   <div class="grid">
     <section class="card">
       <h3>NIFC Fires (24h)</h3>
-      <p>Recent incident locations from the NIFC/IRWIN feed.</p>
+      <p>Recent incident locations across Oregon from the NIFC/IRWIN feed.</p>
       <div class="legend-row"><span class="dot" style="background:#d62828"></span>
         <strong>Red:</strong> Wildfire (WF)</div>
       <div class="legend-row"><span class="dot" style="background:#2e9d50"></span>
@@ -376,7 +396,7 @@ footer a { margin-right: 14px; }
           <path d="M50 6 V17 M50 53 V64 M21 35 H32 M68 35 H79"
                 stroke="#087f8c" stroke-width="2"/>
         </svg>
-        <p>Active Oregon stations in Jackson and Josephine counties.</p>
+        <p>Active RAWS weather stations throughout Oregon.</p>
       </div>
       Blue station markers include a temperature label when data is
       available. Click a station for its reported temperature, humidity,

@@ -1,1 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#14251f">
+<title>Oregon LiDAR Map — Guide</title>
 
+<style>
+:root {
+  --bg: #101915;
+  --panel: #192720;
+  --panel2: #22342a;
+  --text: #edf4ee;
+  --muted: #b6c6ba;
+  --green: #83c69a;
+  --line: #3b5043;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.65 Arial, sans-serif;
+}
+a { color: #a8dcb8; }
+a:hover { color: white; }
+header {
+  position: relative;
+  overflow: hidden;
+  padding: 38px 20px 34px;
+  background: linear-gradient(135deg, #1c382b, #101915 75%);
+  border-bottom: 1px solid var(--line);
+}
+header::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 38%;
+  opacity: .23;
+  pointer-events: none;
+  background:
+    repeating-radial-gradient(
+      ellipse at 65% 50%,
+      transparent 0 17px,
+      #8fb49a 18px 19px,
+      transparent 20px 31px
+    );
+  mask-image: linear-gradient(90deg, transparent, black);
+}
+.header-inner, main, footer {
+  width: min(1050px, calc(100% - 32px));
+  margin: auto;
+}
+.header-inner { position: relative; z-index: 1; }
+.eyebrow {
+  color: var(--green);
+  font-size: .78rem;
+  font-weight: bold;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+h1 {
+  max-width: 700px;
+  margin: 8px 0;
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  line-height: 1.08;
+}
+header p { max-width: 650px; color: var(--muted); }
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+.button {
+  display: inline-block;
+  padding: 10px 16px;
+  border: 1px solid #719982;
+  border-radius: 8px;
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+.button.primary { background: #326a48; }
+main { padding: 26px 0 48px; }
+.intro {
+  margin: 0 0 22px;
+  color: var(--muted);
+}
+.section-title {
+  margin: 34px 0 14px;
+  font-size: 1.45rem;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.card {
+  min-width: 0;
+  padding: 19px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--panel);
+}
+.card h3 { margin: 0 0 8px; font-size: 1.12rem; }
+.card p { margin: 8px 0; color: var(--muted); }
+.card ul { padding-left: 21px; margin-bottom: 0; }
+.card li { margin: 5px 0; }
+.art {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 62px;
+  margin-bottom: 12px;
+}
+.art svg { width: 76px; height: 62px; flex: 0 0 76px; }
+.swatch {
+  display: inline-block;
+  width: 25px;
+  height: 12px;
+  margin-right: 7px;
+  border: 1px solid #dce6df;
+  vertical-align: middle;
+}
+.dot {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  margin-right: 8px;
+  border: 2px solid white;
+  border-radius: 50%;
+  vertical-align: -2px;
+}
+.legend-row { margin: 8px 0; }
+.callout {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--green);
+  border-radius: 0 8px 8px 0;
+  background: var(--panel2);
+}
+kbd {
+  padding: 2px 6px;
+  border: 1px solid #647568;
+  border-radius: 5px;
+  background: #26362c;
+  font: inherit;
+  font-size: .9em;
+}
+footer {
+  padding: 20px 0 34px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: .9rem;
+}
+footer a { margin-right: 14px; }
+@media (max-width: 650px) {
+  .grid { grid-template-columns: 1fr; }
+  header { padding-top: 28px; }
+  .card { padding: 16px; }
+}
+</style>
+</head>
+
+<body>
+<header>
+  <div class="header-inner">
+    <div class="eyebrow">Bluefin CNC · Field Reference</div>
+    <h1>Oregon LiDAR Map</h1>
+    <p>
+      A practical guide to terrain, land-survey sections, fire activity,
+      weather stations, waterbodies, GPS positioning, and track files.
+    </p>
+    <div class="actions">
+      <a class="button primary" href="https://bluefincnc.github.io/">
+        ← Return to Map
+      </a>
+      <a class="button" href="#layers">Explore Map Layers ↓</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <p class="intro">
+    Use the layer menu in the map’s upper-right corner to turn overlays
+    on and off. You can combine useful layers, change the base map, and
+    click map features to view their available details.
+  </p>
+
+  <h2 class="section-title" id="layers">Base maps and terrain</h2>
+  <div class="grid">
+    <section class="card">
+      <div class="art">
+        <svg viewBox="0 0 100 70" role="img" aria-label="Road map illustration">
+          <rect width="100" height="70" rx="8" fill="#e8e8d7"/>
+          <path d="M-5 55 L35 30 57 40 105 8" fill="none" stroke="#b3c4a8" stroke-width="15"/>
+          <path d="M-5 55 L35 30 57 40 105 8" fill="none" stroke="#fff" stroke-width="9"/>
+          <path d="M8 -5 L45 75 M74 -5 L48 75" fill="none" stroke="#e3b969" stroke-width="4"/>
+          <path d="M0 16 L100 55" fill="none" stroke="#c7d4df" stroke-width="5"/>
+        </svg>
+        <div>
+          <h3>Esri Street Map</h3>
+          <p>Roads and place references.</p>
+        </div>
+      </div>
+      Use this as a general-purpose background for finding roads,
+      communities, and geographic context.
+    </section>
+
+    <section class="card">
+      <div class="art">
+        <svg viewBox="0 0 100 70" role="img" aria-label="Topographic terrain illustration">
+          <rect width="100" height="70" rx="8" fill="#d8e5c4"/>
+          <path d="M-8 48 Q15 8 38 38 T78 25 T110 12" fill="none" stroke="#8fae7d" stroke-width="2"/>
+          <path d="M-8 57 Q15 17 38 47 T78 34 T110 21" fill="none" stroke="#8fae7d" stroke-width="2"/>
+          <path d="M-8 67 Q15 27 38 57 T78 44 T110 31" fill="none" stroke="#8fae7d" stroke-width="2"/>
+          <path d="M20 70 L48 16 78 70" fill="#b8c7a0" stroke="#7f9871" stroke-width="2"/>
+          <path d="M37 39 L48 16 60 39" fill="#f1f0dc"/>
+        </svg>
+        <div>
+          <h3>OpenTopoMap</h3>
+          <p>Terrain and topographic context.</p>
+        </div>
+      </div>
+      Use this to help interpret the surrounding terrain and landscape.
+      Detail and availability depend on the map provider and zoom level.
+    </section>
+
+    <section class="card">
+      <div class="art">
+        <svg viewBox="0 0 100 70" role="img" aria-label="Aerial imagery illustration">
+          <rect width="100" height="70" rx="8" fill="#496c50"/>
+          <path d="M-8 12 L38 0 62 70 18 70Z" fill="#71906a"/>
+          <path d="M60 -5 L48 30 100 48" fill="none" stroke="#b8b7a1" stroke-width="9"/>
+          <path d="M-5 49 L100 12" fill="none" stroke="#b8b7a1" stroke-width="7"/>
+          <path d="M-5 49 L100 12" fill="none" stroke="#e3d6b5" stroke-width="2"/>
+          <path d="M22 4 L37 18 26 32 13 23Z" fill="#9caa73"/>
+          <path d="M68 45 L81 34 93 47 84 62Z" fill="#8a9e67"/>
+        </svg>
+        <div>
+          <h3>Esri Aerial Imagery</h3>
+          <p>Satellite and aerial-style imagery.</p>
+        </div>
+      </div>
+      Switch to imagery when you want to compare mapped features
+      against visible ground conditions.
+    </section>
+
+    <section class="card">
+      <div class="art">
+        <svg viewBox="0 0 100 70" role="img" aria-label="Hillshade terrain illustration">
+          <defs>
+            <linearGradient id="shade" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#f2f0df"/>
+              <stop offset=".48" stop-color="#a4ad9b"/>
+              <stop offset="1" stop-color="#555f57"/>
+            </linearGradient>
+          </defs>
+          <rect width="100" height="70" rx="8" fill="url(#shade)"/>
+          <path d="M-5 54 Q25 5 48 38 T105 12" fill="none" stroke="#e6e5d6" stroke-width="2"/>
+          <path d="M-5 62 Q25 13 48 46 T105 20" fill="none" stroke="#59695b" stroke-width="2"/>
+          <path d="M-5 70 Q25 21 48 54 T105 28" fill="none" stroke="#59695b" stroke-width="2"/>
+        </svg>
+        <div>
+          <h3>DOGAMI LiDAR</h3>
+          <p>Terrain hillshade overlay.</p>
+        </div>
+      </div>
+      LiDAR hillshade emphasizes landform and terrain shape. Use the
+      <strong>DOGAMI opacity</strong> slider to adjust its visibility
+      over the selected base map.
+      <div class="callout">
+        A hillshade is a shaded terrain visualization; it is not
+        the same thing as a survey-grade elevation measurement.
+      </div>
+    </section>
+  </div>
+
+  <h2 class="section-title">Land-survey and natural features</h2>
+  <div class="grid">
+    <section class="card">
+      <div class="art">
+        <svg viewBox="0 0 100 70" role="img" aria-label="Township and section grid">
+          <rect width="100" height="70" rx="8" fill="#e5e6df"/>
+          <g stroke="#555d58" stroke-width="1.5" fill="none">
+            <path d="M8 8 H92 V62 H8 Z M36 8 V62 M64 8 V62 M8 35 H92"/>
+          </g>
+          <g fill="#333" font-size="10" font-family="Arial" text-anchor="middle">
+            <text x="22" y="25">1</text><text x="50" y="25">2</text>
+            <text x="78" y="25">3</text><text x="22" y="52">4</text>
+            <text x="50" y="52">5</text><text x="78" y="52">6</text>
+          </g>
+        </svg>
+        <div>
+          <h3>PLSS Sections</h3>
+          <p>Public Land Survey System overlay.</p>
+        </div>
+      </div>
+      Displays section boundaries to help identify survey-section locations.
+      Use the underlying map and available survey records for additional
+      context; the overlay is not a substitute for a legal survey.
+    </section>
+
+    <section class="card">
+      <div class="art">
+        <svg viewBox="0 0 100 70" role="img" aria-label="Blue lake illustration">
+          <rect width="100" height="70" rx="8" fill="#dbe4d0"/>
+          <path d="M14 13 Q35 1 48 17 T85 16 L92 37 Q72 48 55 39 T19 47Z"
+                fill="#42a5f5" stroke="#1769d2" stroke-width="2"/>
+          <path d="M26 24 Q40 15 51 25 T79 25" fill="none" stroke="#bfe7ff" stroke-width="2"/>
+          <path d="M10 57 Q32 49 48 58 T91 54" fill="none" stroke="#91ac7c" stroke-width="3"/>
+        </svg>
+        <div>
+          <h3>Lake/Pond ¼ Acre+</h3>
+          <p>USGS mapped waterbodies.</p>
+        </div>
+      </div>
+      The layer displays qualifying mapped lakes and ponds in Jackson
+      and Josephine counties. Waterbody polygons load for the current
+      map view; click a polygon for the attributes provided.
+    </section>
+  </div>
+
+  <h2 class="section-title">Fire and weather overlays</h2>
+  <div class="grid">
+    <section class="card">
+      <h3>NIFC Fires (24h)</h3>
+      <p>Recent incident locations from the NIFC/IRWIN feed.</p>
+      <div class="legend-row"><span class="dot" style="background:#d62828"></span>
+        <strong>Red:</strong> Wildfire (WF)</div>
+      <div class="legend-row"><span class="dot" style="background:#2e9d50"></span>
+        <strong>Green:</strong> Prescribed fire (RX)</div>
+      <div class="legend-row"><span class="dot" style="background:#f28c00"></span>
+        <strong>Orange:</strong> Incident complex (CX)</div>
+      <p>Click a marker for the incident name, type, discovery date/time,
+      county, and protecting agency when reported. The layer refreshes
+      periodically; feed information may be incomplete or delayed.</p>
+    </section>
+
+    <section class="card">
+      <h3>SWO Current</h3>
+      <div class="legend-row">
+        <span class="swatch" style="background:rgba(255,22,0,.3);border:2px solid #ff2100"></span>
+        Current fire perimeter styling
+      </div>
+      <p>Shows current NIFC perimeter features filtered to Jackson and
+      Josephine counties. Click a perimeter for its reported name,
+      county, and mapped acreage when available.</p>
+      <p>The outline and fill indicate the mapped perimeter, not necessarily
+      the exact location of active flames or the current evacuation boundary.</p>
+    </section>
+
+    <section class="card">
+      <h3>SWO Historical</h3>
+      <div class="legend-row">
+        <span class="swatch" style="background:rgba(66,133,244,.12);border:2px dashed #174ea6"></span>
+        Historical perimeter styling
+      </div>
+      <p>Displays historical fire perimeters from 2020 onward for Jackson
+      and Josephine counties, subject to the records returned by the service.</p>
+      <p>Click a polygon to view available incident information, discovery
+      and perimeter dates, acreage, containment information, and coordinates.</p>
+    </section>
+
+    <section class="card">
+      <h3>RAWS WX Stations</h3>
+      <div class="art">
+        <svg viewBox="0 0 100 70" role="img" aria-label="Weather station marker">
+          <rect width="100" height="70" rx="8" fill="#e4e9e5"/>
+          <circle cx="50" cy="35" r="20" fill="#087f8c" opacity=".18"/>
+          <circle cx="50" cy="35" r="10" fill="#008cff" stroke="white" stroke-width="3"/>
+          <path d="M50 6 V17 M50 53 V64 M21 35 H32 M68 35 H79"
+                stroke="#087f8c" stroke-width="2"/>
+        </svg>
+        <p>Active Oregon stations in Jackson and Josephine counties.</p>
+      </div>
+      Blue station markers include a temperature label when data is
+      available. Click a station for its reported temperature, humidity,
+      wind speed and direction, peak wind, rain accumulation, elevation,
+      observation time, and any available detailed-weather link.
+      <div class="callout">
+        Weather values depend on the station's latest returned observation.
+        Missing or stale readings may occur.
+      </div>
+    </section>
+  </div>
+
+  <h2 class="section-title">GPS and track tools</h2>
+  <div class="grid">
+    <section class="card">
+      <h3>◎ GPS / GPS Track</h3>
+      <div class="legend-row">
+        <span class="dot" style="background:#2583ff"></span>
+        Your device's current GPS position
+      </div>
+      <div class="legend-row">
+        <span class="swatch" style="background:#00a6ff"></span>
+        Recorded GPS track
+      </div>
+      <ul>
+        <li>Tap <kbd>◎ GPS</kbd> to request device location access.</li>
+        <li>The map centers on the first reported position.</li>
+        <li>The coordinate display uses degrees and decimal minutes (DDM);
+            west longitudes are negative.</li>
+        <li>The blue circle represents reported GPS accuracy.</li>
+        <li>GPS Track can be switched on or off in the layer menu.
+            Turning its display off does not itself stop recording.</li>
+        <li>Tap <kbd>CLEAR TRACK</kbd> to erase the recorded GPS lines.</li>
+      </ul>
+      <div class="callout">
+        GPS requires a supported browser, device location services,
+        permission, and a secure HTTPS page. Keep location sharing
+        enabled only when you want to use it.
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>OPEN GPX / CLEAR GPX</h3>
+      <div class="art">
+        <svg viewBox="0 0 100 70" role="img" aria-label="GPX route illustration">
+          <rect width="100" height="70" rx="8" fill="#e6e9df"/>
+          <path d="M12 52 L31 20 52 43 72 14 89 34"
+                fill="none" stroke="#7b2cbf" stroke-width="4"
+                stroke-linejoin="round" stroke-linecap="round"/>
+          <circle cx="12" cy="52" r="5" fill="#16803c" stroke="white" stroke-width="2"/>
+          <circle cx="89" cy="34" r="5" fill="#d62828" stroke="white" stroke-width="2"/>
+        </svg>
+        <p>Import tracks and routes from GPX files stored on your device.</p>
+      </div>
+      <ul>
+        <li>Tap <kbd>OPEN GPX</kbd> and select one or more GPX files.</li>
+        <li>Each imported file gets its own checkbox in the layer menu.</li>
+        <li>Track and route lines are drawn separately where the file
+            contains separate segments.</li>
+        <li>Named waypoints and start/end markers may also be displayed.</li>
+        <li>The map zooms to the imported track's extent.</li>
+        <li>Tap <kbd>CLEAR GPX</kbd> to remove all imported GPX layers
+            from the map and layer menu.</li>
+      </ul>
+      <div class="callout">
+        GPX files are read locally in your browser by this map code;
+        the import function does not upload them to the map server.
+      </div>
+    </section>
+  </div>
+
+  <h2 class="section-title">Coordinate display</h2>
+  <section class="card">
+    <p>
+      <strong>Click Map for Coordinates:</strong> click a point on the map
+      to display its latitude and longitude in degrees and decimal minutes.
+    </p>
+    <p>
+      Example format: <kbd>42° 26.208' &nbsp; -123° 08.400'</kbd>
+    </p>
+    <p>
+      Negative longitude values indicate west. The coordinate display
+      is intended as a convenient location reference; confirm coordinates
+      and boundaries against authoritative data when precision matters.
+    </p>
+  </section>
+
+  <div class="actions">
+    <a class="button primary" href="https://bluefincnc.github.io/">
+      ← Return to Oregon LiDAR Map
+    </a>
+    <a class="button" href="#top" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">
+      Back to Top ↑
+    </a>
+  </div>
+</main>
+
+<footer>
+  <p>
+    Bluefin CNC · Oregon LiDAR Map Guide
+  </p>
+  <p>
+    Map layers rely on external data services. Availability, accuracy,
+    coverage, and update timing are controlled by their respective providers.
+  </p>
+  <a href="https://bluefincnc.github.io/">Open Map</a>
+</footer>
+</body>
+</html>

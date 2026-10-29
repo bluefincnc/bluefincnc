@@ -30,7 +30,7 @@ html, body {
   right: 8px;
 }
 
-.leaflet-control-layers {
+.leaflet-control- {
   max-width: min(230px, calc(100vw - 28px));
   max-height: 48vh;
   overflow-y: auto;
@@ -40,15 +40,15 @@ html, body {
   font-size: 14px;
 }
 
-.leaflet-control-layers-expanded {
+.leaflet-control--expanded {
   padding: 10px 12px;
 }
 
-.leaflet-control-layers label {
+.leaflet-control- label {
   margin: 6px 0;
 }
 
-.leaflet-control-layers-separator {
+.leaflet-control--separator {
   margin: 8px 0;
 }
 
@@ -255,7 +255,7 @@ html, body {
     right: 6px;
   }
 
-  .leaflet-control-layers {
+  .leaflet-control- {
     max-height: 42vh;
     font-size: 13px;
   }
@@ -530,7 +530,7 @@ html, body {
             Math.max(1, Math.round(size.y)),
       format: "png32",
       transparent: "true",
-      layers: "show:1",
+      layers: "show:0,1",
       f: "image"
     };
 

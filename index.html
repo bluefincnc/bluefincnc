@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Oregon LiDAR Map V0.5</title>
+<title>Oregon LiDAR Map V 0.5</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
@@ -169,6 +169,50 @@ html, body {
   }
 }
 
+/* GPX import controls */
+.gpx-button {
+  position: absolute;
+  left: 10px;
+  z-index: 1100;
+  min-height: 40px;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: rgba(255,255,255,0.97);
+  box-shadow: 0 1px 6px #777;
+  color: #1f2937;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+#gpxImportButton { bottom: 136px; }
+#clearGpxButton { bottom: 184px; color: #b42318; }
+#gpxFileInput { display: none; }
+#gpxStatus {
+  position: absolute;
+  left: 10px;
+  bottom: 234px;
+  z-index: 1000;
+  max-width: min(300px, calc(100vw - 30px));
+  padding: 7px 9px;
+  box-sizing: border-box;
+  background: rgba(255,255,255,0.96);
+  border-radius: 6px;
+  box-shadow: 0 1px 6px #777;
+  font-size: 12px;
+  display: none;
+}
+.gpx-start-marker, .gpx-end-marker {
+  width: 12px;
+  height: 12px;
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.6);
+}
+.gpx-start-marker { background: #16803c; }
+.gpx-end-marker { background: #d62828; }
+
 /* GPS accuracy circle */
 .gps-accuracy-circle {
   stroke: #2478e5;
@@ -244,6 +288,19 @@ html, body {
     min-width: 48px;
     min-height: 48px;
   }
+  .gpx-button {
+    left: 8px;
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+  #gpxImportButton { bottom: 132px; }
+  #clearGpxButton { bottom: 178px; }
+  #gpxStatus {
+    left: 6px;
+    bottom: 226px;
+    max-width: 155px;
+    font-size: 11px;
+  }
 }
 
 .fire-label {
@@ -256,10 +313,39 @@ html, body {
   padding: 2px 4px;
   box-shadow: 0 1px 3px #777;
 }
+
+
+#mapGuideButton {
+  position: absolute;
+  top: 12px;
+  left: 205px;
+  z-index: 1000;
+  padding: 8px 12px;
+  background: #263746;
+  color: white;
+  border: 1px solid white;
+  border-radius: 5px;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+@media (max-width: 600px) {
+  #mapGuideButton {
+    top: 62px;
+    left: 6px;
+  }
+}
+
+
 </style>
 </head>
 
 <body>
+
+<a id="mapGuideButton"
+   href="guide.html"
+   title="Open the map guide">MAP GUIDE</a>
 
 <div id="map"></div>
 
@@ -281,6 +367,13 @@ html, body {
         title="Delete the entire GPS track">
   CLEAR TRACK
 </button>
+
+<button id="gpxImportButton" class="gpx-button" type="button"
+        title="Open a GPX track file from this device">OPEN GPX</button>
+<button id="clearGpxButton" class="gpx-button" type="button"
+        title="Remove imported GPX tracks from the map">CLEAR GPX</button>
+<input id="gpxFileInput" type="file" accept=".gpx,application/gpx+xml,application/xml,text/xml" multiple>
+<div id="gpxStatus" role="status" aria-live="polite"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -309,7 +402,7 @@ html, body {
     "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
     {
       attribution: "&copy; OpenTopoMap contributors",
-      maxZoom: 17
+      maxZoom: 19
     }
   );
 
@@ -518,7 +611,7 @@ html, body {
 
     const params = new URLSearchParams({
       where: "POOState = 'US-OR'",
-      outFields: "IncidentName,IncidentTypeCategory,InitialLatitude,InitialLongitude,POOCounty,POOProtectingAgency,POOState",
+      outFields: "IncidentName,IncidentTypeCategory,InitialLatitude,InitialLongitude,POOCounty,POOProtectingAgency,POOState,FireDiscoveryDateTime",
       outSR: "4326",
       f: "json"
     });
@@ -563,6 +656,9 @@ html, body {
         ) return;
 
         const type = props.IncidentTypeCategory || "";
+        const discoveryDate = props.FireDiscoveryDateTime
+        ? new Date(props.FireDiscoveryDateTime).toLocaleString()
+        : "Not reported";
         const fireName = props.IncidentName || "Unnamed Fire";
         const fireLabel = `${type || "Fire"}-${fireName}`;
 
@@ -592,6 +688,7 @@ html, body {
           "<div style='min-width:180px'>" +
           "<strong>" + escapeHtml(fireName) + "</strong><br>" +
           "Type: " + escapeHtml(fireTypeLabel(type)) + "<br>" +
+          "Discovery date/time: " + escapeHtml(discoveryDate) + "<br>" +
           "County: " + escapeHtml(props.POOCounty) + "<br>" +
           "Protecting agency: " + escapeHtml(props.POOProtectingAgency) + "<br>" +
           "State: " + escapeHtml(props.POOState) +
@@ -1661,10 +1758,18 @@ html, body {
 
 
   // =========================================================
+  // GPX IMPORT LAYER
+  // =========================================================
+
+  // Master checkbox; its behavior is handled below.
+  const gpxTrackLayer = L.layerGroup();
+  const gpxOverlayLayers = [];
+
+  // =========================================================
   // LAYER MENU
   // =========================================================
 
-  L.control.layers(
+  const layerControl = L.control.layers(
     {
       "Esri Street Map": streetMap,
       "OpenTopoMap": topoMap,
@@ -1686,7 +1791,207 @@ html, body {
     }
   ).addTo(map);
 
+  // =========================================================
+  // GPX IMPORT — local files, rendered as a separate map layer
+  // Files are read in this browser only; they are not uploaded.
+  // =========================================================
+
+  const gpxFileInput = document.getElementById("gpxFileInput");
+  const gpxImportButton = document.getElementById("gpxImportButton");
+  const clearGpxButton = document.getElementById("clearGpxButton");
+  const gpxStatus = document.getElementById("gpxStatus");
+  let gpxTrackCount = 0;
+  const gpxColors = [
+    "#7b2cbf", "#0077b6", "#d97706", "#008148",
+    "#c1121f", "#5a189a", "#0f766e", "#c026d3"
+  ];
+
+  function showGpxStatus(message, show) {
+    gpxStatus.textContent = message;
+    gpxStatus.style.display = show === false ? "none" : "block";
+  }
+
+  function gpxText(node, tagName) {
+    const child = node.getElementsByTagName(tagName)[0];
+    return child ? child.textContent.trim() : "";
+  }
+
+  function gpxPointFromNode(node) {
+    const lat = Number(node.getAttribute("lat"));
+    const lon = Number(node.getAttribute("lon"));
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) ||
+        lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+      return null;
+    }
+    return L.latLng(lat, lon);
+  }
+
+  function gpxDistanceMeters(points) {
+    let distance = 0;
+    for (let i = 1; i < points.length; i++) {
+      distance += points[i - 1].distanceTo(points[i]);
+    }
+    return distance;
+  }
+
+  function formatGpxDistance(meters) {
+    const miles = meters / 1609.344;
+    if (miles < 0.1) return Math.round(meters) + " m";
+    return miles.toFixed(2) + " mi";
+  }
+
+  function makeGpxEndpointIcon(kind) {
+    return L.divIcon({
+      className: "",
+      html: '<div class="gpx-' + kind + '-marker"></div>',
+      iconSize: [16, 16],
+      iconAnchor: [8, 8]
+    });
+  }
+
+  async function addGpxFile(file) {
+    const text = await file.text();
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(text, "application/xml");
+
+    if (xml.getElementsByTagName("parsererror").length) {
+      throw new Error("That file is not valid GPX/XML.");
+    }
+    const root = xml.documentElement;
+    if (!root || root.localName.toLowerCase() !== "gpx") {
+      throw new Error("That file does not appear to be a GPX file.");
+    }
+
+    const fileName = file.name || "Imported GPX";
+    const trackName = gpxText(xml, "name") ||
+      fileName.replace(/\.gpx$/i, "");
+    const color = gpxColors[gpxTrackCount % gpxColors.length];
+    const thisFileLayer = L.layerGroup();
+    const allPoints = [];
+    let lineCount = 0;
+
+    // Keep separate track segments separate; don't draw across gaps.
+    Array.from(xml.getElementsByTagName("trkseg")).forEach(function (segment) {
+      const points = Array.from(segment.getElementsByTagName("trkpt"))
+        .map(gpxPointFromNode).filter(Boolean);
+      if (points.length < 2) return;
+
+      L.polyline(points, {
+        color: color, weight: 4, opacity: 0.9,
+        lineCap: "round", lineJoin: "round"
+      }).addTo(thisFileLayer);
+
+      allPoints.push.apply(allPoints, points);
+      lineCount++;
+    });
+
+    // Also support GPX route files that use rtept instead of trkpt.
+    if (lineCount === 0) {
+      Array.from(xml.getElementsByTagName("rte")).forEach(function (route) {
+        const points = Array.from(route.getElementsByTagName("rtept"))
+          .map(gpxPointFromNode).filter(Boolean);
+        if (points.length < 2) return;
+
+        L.polyline(points, {
+          color: color, weight: 4, opacity: 0.9,
+          lineCap: "round", lineJoin: "round", dashArray: "7 5"
+        }).addTo(thisFileLayer);
+
+        allPoints.push.apply(allPoints, points);
+        lineCount++;
+      });
+    }
+
+    // Add named waypoints if the GPX contains them.
+    Array.from(xml.getElementsByTagName("wpt")).forEach(function (node) {
+      const point = gpxPointFromNode(node);
+      if (!point) return;
+      const name = gpxText(node, "name") || "Waypoint";
+      L.marker(point).bindPopup(
+        "<strong>" + escapeHtml(name) + "</strong><br>GPX waypoint"
+      ).addTo(thisFileLayer);
+    });
+
+    if (!allPoints.length) {
+      throw new Error("No usable track or route points were found in " + fileName + ".");
+    }
+
+    const firstPoint = allPoints[0];
+    const lastPoint = allPoints[allPoints.length - 1];
+    L.marker(firstPoint, { icon: makeGpxEndpointIcon("start") })
+      .bindPopup("<strong>Start</strong><br>" + escapeHtml(trackName))
+      .addTo(thisFileLayer);
+    L.marker(lastPoint, { icon: makeGpxEndpointIcon("end") })
+      .bindPopup("<strong>End</strong><br>" + escapeHtml(trackName))
+      .addTo(thisFileLayer);
+
+    const distance = gpxDistanceMeters(allPoints);
+   // Display this imported file immediately and track it
+   // separately so its own checkbox works independently.
+   thisFileLayer.addTo(map);
+   gpxOverlayLayers.push(thisFileLayer);
+   gpxTrackCount++;
+
+    layerControl.addOverlay(
+      thisFileLayer,
+      escapeHtml(trackName) + " (" + formatGpxDistance(distance) + ")"
+    );
+
+    const bounds = L.latLngBounds(allPoints);
+    if (bounds.isValid()) map.fitBounds(bounds.pad(0.08), { maxZoom: 16 });
+
+    return trackName + ": " + allPoints.length + " points, " +
+      formatGpxDistance(distance);
+  }
+
+  gpxImportButton.addEventListener("click", function () {
+    gpxFileInput.click();
+  });
+
+  gpxFileInput.addEventListener("change", async function () {
+    const files = Array.from(gpxFileInput.files || []);
+    if (!files.length) return;
+
+    const messages = [];
+    showGpxStatus("Loading GPX file(s)…");
+
+    for (const file of files) {
+      try {
+        messages.push(await addGpxFile(file));
+      } catch (error) {
+        messages.push((file.name || "GPX file") + ": " +
+          (error && error.message ? error.message : "Could not import file."));
+      }
+    }
+
+    showGpxStatus(messages.join(" | "));
+    gpxFileInput.value = "";
+  });
+
+clearGpxButton.addEventListener("click", function () {
+    // Remove every imported GPX track from the map and layer menu.
+    gpxOverlayLayers.forEach(function (layer) {
+        if (map.hasLayer(layer)) {
+            map.removeLayer(layer);
+        }
+
+        layerControl.removeLayer(layer);
+    });
+
+    // Empty the list of imported GPX layers.
+    gpxOverlayLayers.length = 0;
+    gpxTrackCount = 0;
+
+    // Update the status message.
+    showGpxStatus("Imported GPX tracks cleared.");
+});
+
+  L.DomEvent.disableClickPropagation(gpxImportButton);
+  L.DomEvent.disableClickPropagation(clearGpxButton);
+  L.DomEvent.disableClickPropagation(gpxStatus);
+
   map.on("overlayadd", function (event) {
+
     if (event.layer === hillshade) updateHillshade();
     if (event.layer === plss) updatePLSS();
     if (event.layer === nifcFireLayer) updateNifcFires();
@@ -1707,6 +2012,8 @@ html, body {
   });
 
   map.on("overlayremove", function (event) {
+
+
     if (event.layer === usgsWaterbodyLayer) {
       // Ignore any older request that finishes after the layer is turned off.
       waterbodyRefreshSequence++;

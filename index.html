@@ -255,11 +255,12 @@ html, body {
     right: 6px;
   }
 
-  .leaflet-control- {
-    max-height: 42vh;
-    font-size: 13px;
-  }
-
+.leaflet-control-layers {
+  max-height: 42vh;
+  max-width: 210px;
+  overflow-y: auto;
+  font-size: 13px;
+}
   #opacityControl {
     top: 10px;
     left: 6px;
@@ -340,12 +341,20 @@ html, body {
 /* PHONE LANDSCAPE LAYOUT */
 @media (max-width: 900px) and (orientation: landscape) {
 
-  /* Keep the layer menu compact */
+  /* Keep the layer menu in the upper-right */
+  .leaflet-top.leaflet-right {
+    top: 10px;
+    right: 6px;
+  }
+
   .leaflet-control-layers {
     max-height: 65vh;
     max-width: 210px;
+    overflow-y: auto;
+    font-size: 12px;
   }
 
+  /* TOP ROW: opacity, map coordinates, GPS coordinates */
   #opacityControl {
     top: 8px;
     left: 6px;
@@ -375,45 +384,54 @@ html, body {
     font-size: 11px;
   }
 
-  /* Put GPX buttons in a row along the bottom */
+  /* MAP GUIDE: below opacity, against the left edge */
+  #mapGuideButton {
+    top: 78px;
+    left: 6px;
+  }
+
+  /* BOTTOM ROW: OPEN GPX, CLEAR GPX, GPS, CLEAR TRACK */
   .gpx-button {
     bottom: 8px;
-    min-height: 36px;
+    min-height: 40px;
+    box-sizing: border-box;
     padding: 6px 9px;
     font-size: 11px;
   }
 
   #gpxImportButton {
     left: 8px;
+    bottom: 8px;
   }
 
   #clearGpxButton {
     left: 105px;
+    bottom: 8px;
   }
 
-  /* GPS button */
   #gpsButton {
     left: 220px;
     bottom: 8px;
+    min-width: 48px;
     min-height: 40px;
-    min-width: 44px;
+    box-sizing: border-box;
     padding: 6px 9px;
     font-size: 12px;
   }
 
-  /* Clear track button */
   #clearTrackButton {
     left: 280px;
     bottom: 8px;
-    min-height: 36px;
+    min-height: 40px;
+    box-sizing: border-box;
     padding: 6px 9px;
     font-size: 11px;
   }
 
-  /* Show GPX status above the bottom buttons */
+  /* GPX status above the bottom row */
   #gpxStatus {
     left: 8px;
-    bottom: 50px;
+    bottom: 54px;
     max-width: 210px;
     font-size: 10px;
   }

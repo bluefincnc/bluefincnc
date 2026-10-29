@@ -1391,9 +1391,7 @@ function historicalPerimeterStyle() {
     rawsRefreshInProgress = true;
 
     const params = new URLSearchParams({
-      where:
-        "Status = 'A' AND State = 'OR' AND " +
-        "(County = 'JOSEPHINE' OR County = 'JACKSON')",
+      where: "Status = 'A' AND State = 'OR'",
       outFields:
         "StationName,ObservedDate,Elevation,Latitude,Longitude," +
         "State,County,Status,RainAccumulation,WindSpeedMPH," +

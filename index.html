@@ -565,6 +565,22 @@ html, body {
   );
 
   // =========================================================
+  // PUBLIC LAND OWNERSHIP
+  // =========================================================
+
+  const publicLandUrl =
+    "https://gis.odf.oregon.gov/ags1/rest/services/WebMercator/PublicOwnership/MapServer/export";
+
+  const publicLand = L.imageOverlay(
+    "",
+    [[42.0, -124.0], [43.0, -122.0]],
+    {
+      opacity: 0.65,
+      interactive: false
+    }
+  );
+
+  // =========================================================
   // PLSS SECTIONS
   // =========================================================
 
@@ -582,6 +598,7 @@ html, body {
 
   let hillshadeRequest = 0;
   let plssRequest = 0;
+  let publicLandRequest = 0;
   let refreshTimer = null;
 
   function makeExportUrl(serviceUrl, params) {
@@ -639,54 +656,128 @@ html, body {
     testImage.src = url;
   }
 
-  function updatePLSS() {
+// =========================================================
+// UPDATE PLSS
+// =========================================================
+
+function updatePLSS() {
+  if (!map.hasLayer(plss)) return;
+
+  const size = map.getSize();
+  if (size.x < 1 || size.y < 1) return;
+
+  const bounds = map.getBounds();
+
+  // Convert map bounds to Web Mercator meters (EPSG:3857)
+  const southwest = L.CRS.EPSG3857.project(bounds.getSouthWest());
+  const northeast = L.CRS.EPSG3857.project(bounds.getNorthEast());
+
+  const imageBounds = L.latLngBounds(
+    bounds.getSouthWest(),
+    bounds.getNorthEast()
+  );
+
+  const params = {
+    bbox: [
+      southwest.x,
+      southwest.y,
+      northeast.x,
+      northeast.y
+    ].join(","),
+
+    bboxSR: "3857",
+    imageSR: "3857",
+
+    size: Math.max(1, Math.round(size.x)) + "," +
+          Math.max(1, Math.round(size.y)),
+
+    format: "png32",
+    transparent: "true",
+    layers: "show:0,1",
+    f: "image"
+  };
+
+  const requestNumber = ++plssRequest;
+  const url = makeExportUrl(plssUrl, params);
+  const testImage = new Image();
+
+  testImage.onload = function () {
+    if (requestNumber !== plssRequest) return;
     if (!map.hasLayer(plss)) return;
 
-    const size = map.getSize();
-    if (size.x < 1 || size.y < 1) return;
+    plss.setBounds(imageBounds);
+    plss.setUrl(url);
+  };
 
-    const bounds = map.getBounds();
-    const south = bounds.getSouth();
-    const west = bounds.getWest();
-    const north = bounds.getNorth();
-    const east = bounds.getEast();
+  testImage.onerror = function () {
+    if (requestNumber !== plssRequest) return;
+    console.error("PLSS image request failed:", url);
+  };
 
-    const imageBounds = L.latLngBounds(
-      [south, west],
-      [north, east]
-    );
+  testImage.src = url;
+}
 
-    const params = {
-      bbox: [west, south, east, north].join(","),
-      bboxSR: "4326",
-      imageSR: "4326",
-      size: Math.max(1, Math.round(size.x)) + "," +
-            Math.max(1, Math.round(size.y)),
-      format: "png32",
-      transparent: "true",
-      layers: "show:0,1",
-      f: "image"
-    };
 
-    const requestNumber = ++plssRequest;
-    const url = makeExportUrl(plssUrl, params);
-    const testImage = new Image();
+// =========================================================
+// UPDATE PUBLIC LAND OWNERSHIP
+// =========================================================
+function updatePublicLand() {
+  if (!map.hasLayer(publicLand)) return;
 
-    testImage.onload = function () {
-      if (requestNumber !== plssRequest) return;
-      if (!map.hasLayer(plss)) return;
+  const size = map.getSize();
+  if (size.x < 1 || size.y < 1) return;
 
-      plss.setBounds(imageBounds);
-      plss.setUrl(url);
-    };
+  const bounds = map.getBounds();
 
-    testImage.onerror = function () {
-      if (requestNumber !== plssRequest) return;
-      console.error("PLSS image request failed:", url);
-    };
+  // Convert map bounds to Web Mercator meters (EPSG:3857)
+  const southwest = L.CRS.EPSG3857.project(bounds.getSouthWest());
+  const northeast = L.CRS.EPSG3857.project(bounds.getNorthEast());
 
-    testImage.src = url;
-  }
+  const imageBounds = L.latLngBounds(
+    bounds.getSouthWest(),
+    bounds.getNorthEast()
+  );
+
+  const params = {
+    bbox: [
+      southwest.x,
+      southwest.y,
+      northeast.x,
+      northeast.y
+    ].join(","),
+
+    bboxSR: "3857",
+    imageSR: "3857",
+
+    size: Math.max(1, Math.round(size.x)) + "," +
+          Math.max(1, Math.round(size.y)),
+
+    format: "png32",
+    transparent: "true",
+    layers: "show:6",
+    f: "image"
+  };
+
+  const requestNumber = ++publicLandRequest;
+  const url = makeExportUrl(publicLandUrl, params);
+  const testImage = new Image();
+
+  testImage.onload = function () {
+    if (requestNumber !== publicLandRequest) return;
+    if (!map.hasLayer(publicLand)) return;
+
+    publicLand.setBounds(imageBounds);
+    publicLand.setUrl(url);
+  };
+
+  testImage.onerror = function () {
+    if (requestNumber !== publicLandRequest) return;
+    console.error("Public Land Ownership image request failed:", url);
+  };
+
+  testImage.src = url;
+}
+
 
   function refreshVisibleOverlays() {
     clearTimeout(refreshTimer);
@@ -694,6 +785,7 @@ html, body {
     refreshTimer = setTimeout(function () {
       updateHillshade();
       updatePLSS();
+      updatePublicLand();
 
       if (typeof scheduleWaterbodyRefresh === "function") {
         scheduleWaterbodyRefresh();
@@ -1042,8 +1134,8 @@ html, body {
 
 function historicalPerimeterStyle() {
   return {
-    color: "#228B22",
-    weight: 2,
+    color: "#000000",
+    weight: 2.5,
     opacity: 0.95,
     fillColor: "#32CD32",
     fillOpacity: 0.12,
@@ -1460,7 +1552,7 @@ function historicalPerimeterStyle() {
   const oregonCountyQueryUrl =
     "https://gis.wrd.state.or.us/server/rest/services/adm/Counties_WGS84/FeatureServer/0/query";
 
-  // 0.5 acre converted to square kilometers.
+  // 0.25 acre converted to square kilometers.
   const waterbodyMinimumAreaSqKm = 0.0010117;
 
   const waterbodyWhere =
@@ -1912,6 +2004,7 @@ function historicalPerimeterStyle() {
     {
       "GPS Track": gpsTrackLayer,
       "DOGAMI LiDAR": hillshade,
+      "Public Land Ownership": publicLand,
       "PLSS Sections": plss,
       "NIFC Fires (24h)": nifcFireLayer,
       "SWO Current": firePerimeterLayer,
@@ -2127,6 +2220,7 @@ clearGpxButton.addEventListener("click", function () {
   map.on("overlayadd", function (event) {
 
     if (event.layer === hillshade) updateHillshade();
+    if (event.layer === publicLand) updatePublicLand();
     if (event.layer === plss) updatePLSS();
     if (event.layer === nifcFireLayer) updateNifcFires();
     if (event.layer === firePerimeterLayer) updateFirePerimeters();
@@ -2146,6 +2240,10 @@ clearGpxButton.addEventListener("click", function () {
   });
 
   map.on("overlayremove", function (event) {
+
+    if (event.layer === publicLand) {
+      publicLandRequest++;
+    }
 
 
     if (event.layer === usgsWaterbodyLayer) {

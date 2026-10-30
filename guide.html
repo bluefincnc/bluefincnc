@@ -171,7 +171,7 @@ footer a { margin-right: 14px; }
     <h1>Oregon LiDAR Map</h1>
     <p>
       A practical guide to terrain, public land ownership, land-survey sections, fire activity,
-      weather stations, waterbodies, GPS positioning, and track files.
+      weather stations, waterbodies, tax lots, GPS positioning, parcel addresses, and track files.
     </p>
     <div class="actions">
       <a class="button primary" href="https://bluefincnc.github.io/bluefincnc/">
@@ -225,7 +225,7 @@ footer a { margin-right: 14px; }
         </div>
       </div>
       Use this to help interpret the surrounding terrain and landscape in a topography
-      format. Max zoom is 17.
+      format. The map currently allows zoom level 19, although source tiles may not be available at every zoom level.
     </section>
 
     <section class="card">
@@ -273,9 +273,7 @@ footer a { margin-right: 14px; }
       over the selected base map.
       <div class="callout">
         A hillshade is a shaded terrain visualization; it is not
-        the same thing as a survey-grade elevation measurement. This data
-        is collected from airborne laser range finding equipment measuring
-        differences in ground elevation in minuscule detail.
+        the same thing as a survey-grade elevation measurement. The underlying terrain model is derived from airborne laser measurements; displayed hillshade is a visualization, not a legal survey.
       </div>
     </section>
   </div>
@@ -339,9 +337,24 @@ footer a { margin-right: 14px; }
           <p>USGS mapped waterbodies.</p>
         </div>
       </div>
-      The layer displays qualifying mapped lakes and ponds in Jackson
+      The layer displays qualifying mapped lakes and ponds (at least approximately ¼ acre) in Jackson
       and Josephine counties. Waterbody polygons load for the current
       map view; click a polygon for the attributes provided.
+    </section>
+  </div>
+
+  <h2 class="section-title">Tax lots and parcel addresses</h2>
+  <div class="grid">
+    <section class="card">
+      <h3>Oregon Tax Lots</h3>
+      <p>Displays tax lot boundaries from the Oregon Department of Forestry statewide map service. The overlay requests an image for the visible map area and is displayed at zoom 14 and higher.</p>
+      <p>With the layer enabled, click a parcel at zoom 14 or higher to request available situs address, tax lot identifier, acreage, and source details. Parcel attributes are retrieved separately from query-enabled public services, so coverage and completeness vary.</p>
+      <div class="callout">Tax lot outlines and situs addresses are reference information only. They do not establish ownership, property boundaries, access rights, or the legal location of an address.</div>
+    </section>
+    <section class="card">
+      <h3>GPS Situs Address</h3>
+      <p>When GPS is active, the <strong>Situs</strong> panel attempts to identify the parcel address at the reported GPS position. Queries are limited to avoid repeating them for very small movements over short periods.</p>
+      <p>A missing address does not mean there is no parcel. GPS accuracy and the availability of the external parcel services affect the result.</p>
     </section>
   </div>
 
@@ -396,7 +409,7 @@ footer a { margin-right: 14px; }
           <path d="M50 6 V17 M50 53 V64 M21 35 H32 M68 35 H79"
                 stroke="#087f8c" stroke-width="2"/>
         </svg>
-        <p>Active RAWS weather stations throughout Oregon.</p>
+        <p>Active RAWS weather stations throughout Oregon (the current query is statewide).</p>
       </div>
       Blue station markers include a temperature label when data is
       available. Click a station for its reported temperature, humidity,
@@ -429,7 +442,7 @@ footer a { margin-right: 14px; }
         <li>The blue circle represents reported GPS accuracy.</li>
         <li>GPS Track can be switched on or off in the layer menu.
             Turning its display off does not itself stop recording.</li>
-        <li>Tap <kbd>CLEAR TRACK</kbd> to erase the recorded GPS lines.</li>
+        <li>Tap <kbd>CLEAR GPS</kbd> to erase the recorded GPS lines. This does not turn GPS positioning off.</li>
       </ul>
       <div class="callout">
         GPS requires a supported browser, device location services,
@@ -467,6 +480,14 @@ footer a { margin-right: 14px; }
       </div>
     </section>
   </div>
+
+  <h2 class="section-title">How map data is loaded</h2>
+  <section class="card">
+    <p><strong>Visible-area requests:</strong> Esri and OpenTopoMap base maps load tiles around the current view. DOGAMI LiDAR, Public Land Ownership, PLSS Sections, and Oregon Tax Lots request rendered images for the visible extent. Tax lots are hidden below zoom 14. Lake/Pond geometry is filtered to the visible extent, after a one-time county-wide ID lookup.</p>
+    <p><strong>Broader-area requests:</strong> NIFC Fires (24h) and RAWS stations query Oregon statewide; SWO Current and SWO Historical query Jackson and Josephine counties. These vector layers are not limited to the visible map bounds.</p>
+    <p><strong>On-demand requests:</strong> Tax lot parcel details are queried for the clicked point; GPS situs addresses are queried for the reported GPS position. Imported GPX files are read locally.</p>
+    <p>Remote data layers generally load only when enabled. NIFC fires and current perimeters refresh every 5 minutes; historical perimeters and RAWS refresh every 15 minutes while enabled. Data availability and provider limits may affect completeness.</p>
+  </section>
 
   <h2 class="section-title">Coordinate display</h2>
   <section class="card">

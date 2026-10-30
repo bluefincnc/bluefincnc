@@ -498,6 +498,14 @@ footer a { margin-right: 14px; }
     </section>
   </div>
 
+  <h2 class="section-title">Oregon Dog Parks</h2>
+  <section class="card">
+    <h3>OR Dog Parks</h3>
+    <p>Enable the final checkbox in the layer menu to display Oregon dog parks as purple point markers. Tap a marker for its name and available operator, access, and website information.</p>
+    <p>The layer loads <strong>oregon_dogparks.geojson</strong> from the same folder as index.html when first enabled, and keeps it in memory while the map remains open. It does not use Overpass or require a minimum zoom.</p>
+    <div class="callout">Source: OpenStreetMap contributors (ODbL). Locations and access details may be incomplete or outdated; verify rules before visiting.</div>
+  </section>
+
   <h2 class="section-title">How map data is loaded</h2>
   <section class="card">
     <p><strong>Visible-area requests:</strong> Base maps request tiles around the current view. DOGAMI LiDAR, OR Public Land Ownership, OR PLSS Sections, and Oregon Tax Lots request images for the visible extent. Tax lots display at zoom 14 or higher. US Current Fires and Lakes/Ponds ¼ Acre+ query the visible area at zoom 9 or higher; their source services are not restricted to Oregon.</p>

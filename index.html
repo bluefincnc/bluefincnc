@@ -482,6 +482,29 @@ html, body {
   }
 }
   
+
+/* Phone layout spacing refinements — no map or GPS logic changed. */
+@media (max-width: 600px) and (orientation: portrait) {
+  #mapGuideButton { top: 76px; }
+  #coordinates { top: 116px; }
+  #gpsCoordinates { top: 166px; }
+  #situsAddress { top: 211px; }
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  #mapGuideButton { top: 65px; }
+  #gpsButton { left: 190px; }
+  #clearTrackButton { left: 270px; }
+  #situsAddress {
+    top: auto;
+    bottom: 8px;
+    left: 375px;
+    max-width: calc(100vw - 385px);
+    box-sizing: border-box;
+    font-size: 11px;
+  }
+}
+
 </style>
 </head>
 

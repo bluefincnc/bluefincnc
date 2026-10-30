@@ -29,7 +29,7 @@ a:hover { color: white; }
 header {
   position: relative;
   overflow: hidden;
-  padding: 38px 20px 34px;
+  padding: 42px 20px 38px;
   background: linear-gradient(135deg, #352015, #111113 75%);
   border-bottom: 1px solid var(--line);
 }
@@ -53,6 +53,13 @@ header::after {
   margin: auto;
 }
 .header-inner { position: relative; z-index: 1; }
+.brand-line { display: flex; align-items: center; gap: 18px; }
+.brand-target { width: 62px; height: 62px; flex: 0 0 62px; color: #f97316; }
+.brand-name { margin: 0; font-size: clamp(2.7rem, 8vw, 5rem); line-height: 1; letter-spacing: -.045em; font-weight: 800; }
+.brand-name .tac { color: #f97316; }
+.brand-subtitle { margin: 16px 0 0; font-size: clamp(.85rem, 2vw, 1.08rem); font-weight: 700; letter-spacing: .16em; color: #fff; }
+.brand-divider { width: min(460px, 100%); height: 1px; background: #484848; margin: 18px 0 12px; }
+.brand-tagline { margin: 0; font-size: .8rem; letter-spacing: .12em; color: #bcbcbc; font-weight: 600; }
 .eyebrow {
   color: var(--green);
   font-size: .78rem;
@@ -160,6 +167,9 @@ footer a { margin-right: 14px; }
   .grid { grid-template-columns: 1fr; }
   header { padding-top: 28px; }
   .card { padding: 16px; }
+  .brand-target { width: 46px; height: 46px; flex-basis: 46px; }
+  .brand-line { gap: 11px; }
+  .brand-tagline { font-size: .67rem; letter-spacing: .06em; }
 }
 </style>
 </head>
@@ -167,12 +177,18 @@ footer a { margin-right: 14px; }
 <body>
 <header>
   <div class="header-inner">
-    <div class="eyebrow">TOPOTAC · Tactical Field Reference</div>
-    <h1>TOPOTAC</h1>
-    <p>
-      A practical guide to terrain, public land ownership, land-survey sections, fire activity,
-      weather stations, waterbodies, tax lots, GPS positioning, parcel addresses, and track files.
-    </p>
+    <div class="brand-line">
+      <svg class="brand-target" viewBox="0 0 64 64" role="img" aria-label="Orange GPS target icon" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="32" cy="32" r="20" fill="none" stroke="currentColor" stroke-width="3"/>
+        <circle cx="32" cy="32" r="10" fill="none" stroke="currentColor" stroke-width="3"/>
+        <circle cx="32" cy="32" r="3.5" fill="currentColor"/>
+        <path d="M32 2v15 M32 47v15 M2 32h15 M47 32h15" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <h1 class="brand-name"><span>TOPO</span><span class="tac">TAC</span></h1>
+    </div>
+    <div class="brand-subtitle">TACTICAL MAPPING SYSTEM</div>
+    <div class="brand-divider"></div>
+    <p class="brand-tagline">TERRAIN / INTELLIGENCE / OPERATIONS</p>
     <div class="actions">
       <a class="button primary" href="https://bluefincnc.github.io/bluefincnc/">
         ← Return to Map

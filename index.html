@@ -221,7 +221,7 @@ html, body {
   border-radius: 6px;
   box-shadow: 0 1px 6px #777;
   font-size: 12px;
-  display: none;
+  display: none !important;
 }
 .gpx-start-marker, .gpx-end-marker {
   width: 12px;
@@ -505,6 +505,33 @@ html, body {
 #mapGuideButton { background:#171717; border-color:#ff861c; color:#fff; }
 #mapGuideButton:hover { background:#df6900; }
 #gpsButton[aria-pressed="true"] { outline-color:#f47a13; }
+
+/* Marked points: independent from GPS and GPX */
+.point-button {position:absolute;left:10px;z-index:1100;min-height:40px;padding:8px 11px;border:0;border-radius:7px;background:rgba(255,255,255,.97);box-shadow:0 1px 6px #777;font-size:12px;font-weight:bold;cursor:pointer;touch-action:manipulation}
+#addPointButton {bottom:284px}
+#clearPointsButton {bottom:332px;color:#b42318}
+#enterCoordsButton {bottom:380px}
+#addPointButton[aria-pressed="true"] {background:#ff861c;color:#111;outline:2px solid #111}
+.marked-point-pin {width:26px;height:26px;border-radius:50%;background:#ff861c;color:#111;border:2px solid #fff;box-shadow:0 1px 5px #333;display:flex;align-items:center;justify-content:center;font:bold 12px Arial}
+#pointEntryPanel {position:absolute;left:10px;bottom:430px;z-index:1500;background:#fff;padding:12px;border-radius:8px;box-shadow:0 2px 12px #555;width:min(285px,calc(100vw - 25px));font-size:13px;box-sizing:border-box}
+#pointEntryPanel[hidden] {display:none}
+#pointEntryPanel input,#pointEntryPanel select {box-sizing:border-box;width:100%;padding:7px;margin:4px 0 8px;border:1px solid #aaa;border-radius:4px}
+#pointEntryPanel button {padding:7px 9px;margin-right:5px}
+#pointEntryError {color:#a02020;min-height:15px}
+@media(max-width:600px) and (orientation:portrait) {
+ #addPointButton {left:8px;bottom:220px}
+ #clearPointsButton {left:8px;bottom:268px}
+ #enterCoordsButton {left:8px;bottom:316px}
+ #pointEntryPanel {left:8px;bottom:365px}
+}
+@media(max-width:900px) and (orientation:landscape) {
+ #addPointButton {left:343px;bottom:8px}
+ #clearPointsButton {left:438px;bottom:8px}
+ #enterCoordsButton {left:550px;bottom:8px}
+ #pointEntryPanel {left:auto;right:8px;bottom:58px}
+ #situsAddress {bottom:57px;left:343px;max-width:210px}
+}
+
 </style>
 </head>
 
@@ -542,6 +569,30 @@ html, body {
   
 <input id="gpxFileInput" type="file" accept=".gpx,application/gpx+xml,application/xml,text/xml" multiple>
 <div id="gpxStatus" role="status" aria-live="polite"></div>
+
+
+<button id="addPointButton" class="point-button" type="button" aria-pressed="false">ADD POINT</button>
+<button id="clearPointsButton" class="point-button" type="button">CLEAR POINTS</button>
+<button id="enterCoordsButton" class="point-button" type="button">ENTER COORDS</button>
+<div id="pointEntryPanel" hidden>
+  <strong>Enter Coordinates</strong>
+  <label for="pointFormat">Format</label>
+
+<select id="pointFormat">
+  <option value="ddm">Degrees / decimal minutes (DDM)</option>
+  <option value="dd">Decimal degrees (DD)</option>
+</select>
+
+  <label for="pointLat">Latitude (N positive, S negative)</label>
+  <input id="pointLat" type="text" placeholder="42° 26.208' N">
+  <label for="pointLng">Longitude (W negative)</label>
+  <input id="pointLng" type="text" placeholder="123° 08.400' W">
+  <label for="pointName">Name (optional)</label>
+  <input id="pointName" type="text" maxlength="80" placeholder="Water source">
+  <div id="pointEntryError" role="status"></div>
+  <button id="placeEnteredPoint" type="button">PLACE POINT</button>
+  <button id="closePointEntry" type="button">CANCEL</button>
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -2137,6 +2188,8 @@ function historicalPerimeterStyle() {
   const gpxTrackLayer = L.layerGroup();
   const gpxOverlayLayers = [];
 
+  const markedPointsLayer = L.layerGroup().addTo(map);
+
   // =========================================================
   // LAYER MENU
   // =========================================================
@@ -2157,7 +2210,8 @@ function historicalPerimeterStyle() {
       "OR Historical Fires": historicalFirePerimeterLayer,
       "OR RAWS WX": rawsLayer,
       "Lakes/Ponds ¼ Acre+": usgsWaterbodyLayer,
-      "GPS Tracks": gpsTrackLayer
+      "GPS Tracks": gpsTrackLayer,
+      "Marked Points": markedPointsLayer
     },
     {
       collapsed: true,
@@ -2471,10 +2525,175 @@ clearGpxButton.addEventListener("click", function () {
     document.getElementById("gpsCoordinates");
 
   map.on("click", function (event) {
+    if (Date.now() < suppressPointClicksUntil ||
+        (event.originalEvent && event.originalEvent.target.closest &&
+         event.originalEvent.target.closest(".leaflet-popup"))) return;
     coordinatesDisplay.textContent =
       toDDM(event.latlng.lat) + "  " +
       toDDM(event.latlng.lng);
-    identifyClickedParcel(event.latlng);
+    if (pointPlacementActive) {
+      addMarkedPoint(event.latlng.lat, event.latlng.lng);
+    } else {
+      identifyClickedParcel(event.latlng);
+    }
+  });
+
+
+  // =========================================================
+  // MARKED POINTS — persistent user-created waypoints
+  // =========================================================
+  const pointStorageKey = "topotac.markedPoints.v1";
+  const addPointButton = document.getElementById("addPointButton");
+  const clearPointsButton = document.getElementById("clearPointsButton");
+  const enterCoordsButton = document.getElementById("enterCoordsButton");
+  const pointEntryPanel = document.getElementById("pointEntryPanel");
+  const pointFormat = document.getElementById("pointFormat");
+  const pointLat = document.getElementById("pointLat");
+  const pointLng = document.getElementById("pointLng");
+  const pointName = document.getElementById("pointName");
+  const pointEntryError = document.getElementById("pointEntryError");
+  let pointPlacementActive = false;
+  let suppressPointClicksUntil = 0;
+  function blockDialogClickThrough() { suppressPointClicksUntil = Date.now() + 650; }
+  let markedPoints = [];
+  let nextPointId = 1;
+  const pointMarkers = new Map();
+
+  function saveMarkedPoints() {
+    try { localStorage.setItem(pointStorageKey, JSON.stringify({points:markedPoints,nextId:nextPointId})); }
+    catch (err) { console.warn("Marked points could not be saved:", err); }
+  }
+  function pointPopup(p) {
+    const name = p.name ? "<strong>"+escapeHtml(p.name)+"</strong><br>" : "";
+    return '<div style="min-width:190px;line-height:1.6">'+name+
+      '<strong>Point '+p.id+'</strong><br>'+
+      toDDM(Math.abs(p.lat))+(p.lat>=0?' N':' S')+', '+toDDM(Math.abs(p.lng))+(p.lng>=0?' E':' W')+'<br>'+
+      p.lat.toFixed(6)+', '+p.lng.toFixed(6)+'<br>'+
+      '<button type="button" data-point-action="copy" data-point-id="'+p.id+'">COPY</button> '+
+      '<button type="button" data-point-action="rename" data-point-id="'+p.id+'">RENAME</button> '+
+      '<button type="button" data-point-action="delete" data-point-id="'+p.id+'">DELETE POINT</button>'+
+      '<br><small>Drag marker to move</small></div>';
+  }
+  function renderMarkedPoint(p) {
+    const icon = L.divIcon({className:"",html:'<div class="marked-point-pin">'+p.id+'</div>',iconSize:[26,26],iconAnchor:[13,13]});
+    const marker = L.marker([p.lat,p.lng],{icon,draggable:true,bubblingMouseEvents:false});
+    marker.bindPopup(pointPopup(p));
+    marker.on("dragend", () => {
+      const pos = marker.getLatLng();
+      p.lat=pos.lat; p.lng=pos.lng;
+      marker.setPopupContent(pointPopup(p));
+      saveMarkedPoints();
+    });
+    pointMarkers.set(p.id,marker);
+    markedPointsLayer.addLayer(marker);
+    return marker;
+  }
+  function addMarkedPoint(lat,lng,name="") {
+    if (!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180) return;
+    const p={id:nextPointId++,lat,lng,name};
+    markedPoints.push(p);
+    const marker=renderMarkedPoint(p);
+    if (!map.hasLayer(markedPointsLayer)) markedPointsLayer.addTo(map);
+    saveMarkedPoints();
+    marker.openPopup();
+    return marker;
+  }
+  try {
+    const stored=JSON.parse(localStorage.getItem(pointStorageKey)||"null");
+    if (stored && Array.isArray(stored.points)) {
+      markedPoints=stored.points.filter(p=>Number.isSafeInteger(p.id)&&p.id>0&&Number.isFinite(p.lat)&&Number.isFinite(p.lng)&&Math.abs(p.lat)<=90&&Math.abs(p.lng)<=180).map(p=>({id:p.id,lat:p.lat,lng:p.lng,name:String(p.name||"").slice(0,80)}));
+      nextPointId=Math.max(Number.isSafeInteger(stored.nextId)?stored.nextId:1,1,...markedPoints.map(p=>p.id+1));
+      markedPoints.forEach(renderMarkedPoint);
+    }
+  } catch(err) {console.warn("Could not restore marked points:",err);}
+  function setPointMode(active) {
+    pointPlacementActive=active;
+    addPointButton.setAttribute("aria-pressed",String(active));
+    addPointButton.textContent=active?"✓ ADD POINT":"ADD POINT";
+    map.getContainer().style.cursor=active?"crosshair":"";
+  }
+  addPointButton.addEventListener("click",()=>setPointMode(!pointPlacementActive));
+  clearPointsButton.addEventListener("click",()=>{
+    if (!markedPoints.length) return;
+    const confirmed=confirm("Delete all "+markedPoints.length+" marked points?");
+    blockDialogClickThrough();
+    if (!confirmed) return;
+    markedPoints=[];pointMarkers.clear();markedPointsLayer.clearLayers();
+    nextPointId=1;saveMarkedPoints();
+  });
+  enterCoordsButton.addEventListener("click",()=>{pointEntryPanel.hidden=!pointEntryPanel.hidden;pointEntryError.textContent="";});
+  document.getElementById("closePointEntry").addEventListener("click",()=>pointEntryPanel.hidden=true);
+  pointFormat.addEventListener("change",()=>{
+    pointLat.placeholder=pointFormat.value==="dd"?"42.4368":"42° 26.208' N";
+    pointLng.placeholder=pointFormat.value==="dd"?"-123.1400":"123° 08.400' W";
+  });
+  function parsePointCoordinate(input,format,latitude) {
+    const s=input.trim().toUpperCase().replace(/[−–]/g,"-");
+    if (latitude && /[EW]/.test(s)) return NaN;
+    if (!latitude && /[NS]/.test(s)) return NaN;
+    if (format==="dd") {
+      const match=s.match(/^([+-]?\d+(?:\.\d+)?)\s*([NSEW])?$/);
+      if (!match) return NaN;
+      let value=Number(match[1]);
+      if (match[2]) value=Math.abs(value)*(match[2]==="S"||match[2]==="W"?-1:1);
+      return value;
+    }
+    const match=s.match(/^([+-]?\d{1,3})\s*(?:°|D|\s)\s*(\d+(?:\.\d+)?)\s*(?:'|′|M)?\s*([NSEW])?$/);
+    if (!match || Number(match[2])>=60) return NaN;
+    const neg=match[3] ? /[SW]/.test(match[3]) : match[1].startsWith("-");
+    return (Math.abs(Number(match[1]))+Number(match[2])/60)*(neg?-1:1);
+  }
+  document.getElementById("placeEnteredPoint").addEventListener("click",()=>{
+    const lat=parsePointCoordinate(pointLat.value,pointFormat.value,true);
+    const lng=parsePointCoordinate(pointLng.value,pointFormat.value,false);
+    if (!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180) {
+      pointEntryError.textContent="Enter valid latitude (-90 to 90) and longitude (-180 to 180).";
+      return;
+    }
+    const marker=addMarkedPoint(lat,lng,pointName.value.trim());
+    map.setView([lat,lng],Math.max(map.getZoom(),14));
+    marker.openPopup();
+    pointEntryPanel.hidden=true;pointEntryError.textContent="";
+    pointName.value="";
+  });
+  map.on("popupopen",event=>{
+    const root=event.popup.getElement();
+    if (!root) return;
+    L.DomEvent.disableClickPropagation(root);
+    root.querySelectorAll("[data-point-action]").forEach(button=>{
+      button.addEventListener("click",async(event)=>{
+        event.stopPropagation();
+        const id=Number(button.dataset.pointId);
+        const p=markedPoints.find(x=>x.id===id);
+        if (!p) return;
+        const action=button.dataset.pointAction;
+        if (action==="copy") {
+          const coords =
+  toDDM(Math.abs(p.lat)) + (p.lat >= 0 ? " N" : " S") +
+  ", " +
+  toDDM(Math.abs(p.lng)) + (p.lng >= 0 ? " E" : " W");
+          try { await navigator.clipboard.writeText(coords);button.textContent="COPIED"; }
+          catch(err) { window.prompt("Copy coordinates:",coords); }
+        } else if (action==="rename") {
+          const name=prompt("Point name:",p.name||"");
+          blockDialogClickThrough();
+          if (name===null) return;
+          p.name=name.trim().slice(0,80);
+          pointMarkers.get(id).setPopupContent(pointPopup(p));saveMarkedPoints();
+        } else if (action==="delete") {
+          const confirmed=confirm("Delete point "+id+"?");
+          blockDialogClickThrough();
+          if (!confirmed) return;
+          markedPoints=markedPoints.filter(x=>x.id!==id);
+          markedPointsLayer.removeLayer(pointMarkers.get(id));
+          pointMarkers.delete(id);saveMarkedPoints();
+        }
+      });
+    });
+  });
+  [addPointButton,clearPointsButton,enterCoordsButton,pointEntryPanel].forEach(el=>{
+    L.DomEvent.disableClickPropagation(el);
+    L.DomEvent.disableScrollPropagation(el);
   });
 
   // =========================================================

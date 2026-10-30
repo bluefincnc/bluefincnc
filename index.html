@@ -115,8 +115,6 @@ html, body {
   background: rgba(255,255,255,.96); border-radius: 6px;
   box-shadow: 0 1px 6px #777; font-size: 13px; overflow-wrap: anywhere;
 }
-@media (max-width:600px) { #situsAddress {top: 240px; left: 6px; max-width: 190px; font-size: 12px;} }
-@media (max-width:900px) and (orientation:landscape) { #situsAddress {top: 55px; left: 326px; max-width: 220px; font-size: 11px;} }
 
 /* GPS button */
 #gpsButton {
@@ -293,14 +291,21 @@ html, body {
   }
 
   #coordinates {
-    top: 125px;
+    top: 116px;
     left: 6px;
     max-width: 155px;
     font-size: 12px;
   }
 
   #gpsCoordinates {
-    top: 180px;
+    top: 166px;
+    left: 6px;
+    max-width: 190px;
+    font-size: 12px;
+  }
+
+  #situsAddress {
+    top: 211px;
     left: 6px;
     max-width: 190px;
     font-size: 12px;
@@ -376,7 +381,7 @@ html, body {
 
 @media (max-width: 600px) {
   #mapGuideButton {
-    top: 81px;
+    top: 76px;
     left: 6px;
   }
 }
@@ -429,7 +434,7 @@ html, body {
 
   /* MAP GUIDE: below opacity, against the left edge */
   #mapGuideButton {
-    top: 78px;
+    top: 65px;
     left: 6px;
   }
 
@@ -454,7 +459,7 @@ html, body {
   }
 
   #gpsButton {
-    left: 185px;
+    left: 190px;
     bottom: 8px;
     width: 68px;
     min-width: 68px;
@@ -465,11 +470,21 @@ html, body {
   }
 
   #clearTrackButton {
-    left: 265px;
+    left: 270px;
     bottom: 8px;
     min-height: 40px;
     box-sizing: border-box;
     padding: 6px 9px;
+    font-size: 11px;
+  }
+
+  /* Situs address: beside CLEAR GPS in landscape */
+  #situsAddress {
+    top: auto;
+    bottom: 8px;
+    left: 375px;
+    max-width: calc(100vw - 385px);
+    box-sizing: border-box;
     font-size: 11px;
   }
 
@@ -482,28 +497,6 @@ html, body {
   }
 }
   
-
-/* Phone layout spacing refinements — no map or GPS logic changed. */
-@media (max-width: 600px) and (orientation: portrait) {
-  #mapGuideButton { top: 76px; }
-  #coordinates { top: 116px; }
-  #gpsCoordinates { top: 166px; }
-  #situsAddress { top: 211px; }
-}
-
-@media (max-width: 900px) and (orientation: landscape) {
-  #mapGuideButton { top: 65px; }
-  #gpsButton { left: 190px; }
-  #clearTrackButton { left: 270px; }
-  #situsAddress {
-    top: auto;
-    bottom: 8px;
-    left: 345px;
-    max-width: calc(100vw - 385px);
-    box-sizing: border-box;
-    font-size: 11px;
-  }
-}
 
 </style>
 </head>

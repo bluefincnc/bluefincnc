@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#14251f">
-<title>Oregon LiDAR Map — Guide</title>
+<meta name="theme-color" content="#111111">
+<title>TOPOTAC — Field Guide</title>
 
 <style>
 :root {
-  --bg: #101915;
-  --panel: #192720;
-  --panel2: #22342a;
-  --text: #edf4ee;
-  --muted: #b6c6ba;
-  --green: #83c69a;
-  --line: #3b5043;
+  --bg: #0d0e10;
+  --panel: #1a1b1e;
+  --panel2: #252527;
+  --text: #f8f8f8;
+  --muted: #c3c3c3;
+  --green: #ff8a22;
+  --line: #45403b;
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -24,13 +24,13 @@ body {
   color: var(--text);
   font: 16px/1.65 Arial, sans-serif;
 }
-a { color: #a8dcb8; }
+a { color: #ffad60; }
 a:hover { color: white; }
 header {
   position: relative;
   overflow: hidden;
   padding: 38px 20px 34px;
-  background: linear-gradient(135deg, #1c382b, #101915 75%);
+  background: linear-gradient(135deg, #352015, #111113 75%);
   border-bottom: 1px solid var(--line);
 }
 header::after {
@@ -43,7 +43,7 @@ header::after {
     repeating-radial-gradient(
       ellipse at 65% 50%,
       transparent 0 17px,
-      #8fb49a 18px 19px,
+      #ff8a22 18px 19px,
       transparent 20px 31px
     );
   mask-image: linear-gradient(90deg, transparent, black);
@@ -76,13 +76,13 @@ header p { max-width: 650px; color: var(--muted); }
 .button {
   display: inline-block;
   padding: 10px 16px;
-  border: 1px solid #719982;
+  border: 1px solid #f58b2d;
   border-radius: 8px;
   color: white;
   text-decoration: none;
   font-weight: bold;
 }
-.button.primary { background: #326a48; }
+.button.primary { background: #b84e00; }
 main { padding: 26px 0 48px; }
 .intro {
   margin: 0 0 22px;
@@ -143,9 +143,9 @@ main { padding: 26px 0 48px; }
 }
 kbd {
   padding: 2px 6px;
-  border: 1px solid #647568;
+  border: 1px solid #756354;
   border-radius: 5px;
-  background: #26362c;
+  background: #302720;
   font: inherit;
   font-size: .9em;
 }
@@ -167,8 +167,8 @@ footer a { margin-right: 14px; }
 <body>
 <header>
   <div class="header-inner">
-    <div class="eyebrow">Blue Maps · Field Reference</div>
-    <h1>Oregon LiDAR Map</h1>
+    <div class="eyebrow">TOPOTAC · Tactical Field Reference</div>
+    <h1>TOPOTAC</h1>
     <p>
       A practical guide to terrain, public land ownership, land-survey sections, fire activity,
       weather stations, waterbodies, tax lots, GPS positioning, parcel addresses, and track files.
@@ -294,7 +294,7 @@ footer a { margin-right: 14px; }
           </g>
         </svg>
         <div>
-          <h3>PLSS Sections</h3>
+          <h3>OR PLSS Sections</h3>
           <p>Public Land Survey System overlay.</p>
         </div>
       </div>
@@ -312,7 +312,7 @@ footer a { margin-right: 14px; }
           <path d="M32 42 H91 V62 H32 Z" fill="#a4b9db" stroke="#58779f" stroke-width="2"/>
         </svg>
         <div>
-          <h3>Public Land Ownership</h3>
+          <h3>OR Public Land Ownership</h3>
           <p>Oregon Department of Forestry ownership overlay.</p>
         </div>
       </div>
@@ -333,12 +333,12 @@ footer a { margin-right: 14px; }
           <path d="M10 57 Q32 49 48 58 T91 54" fill="none" stroke="#91ac7c" stroke-width="3"/>
         </svg>
         <div>
-          <h3>Lake/Pond ¼ Acre+</h3>
+          <h3>Lakes/Ponds ¼ Acre+</h3>
           <p>USGS mapped waterbodies.</p>
         </div>
       </div>
       The layer displays qualifying mapped lakes and ponds (at least approximately ¼ acre) in Jackson
-      and Josephine counties. Waterbody polygons load for the current
+      and Josephine counties. At zoom 9 and higher, waterbody polygons load for the current
       map view; click a polygon for the attributes provided.
     </section>
   </div>
@@ -361,7 +361,7 @@ footer a { margin-right: 14px; }
   <h2 class="section-title">Fire and weather overlays</h2>
   <div class="grid">
     <section class="card">
-      <h3>NIFC Fires (24h)</h3>
+      <h3>OR NIFC Fires (24h)</h3>
       <p>Recent incident locations across Oregon from the NIFC/IRWIN feed.</p>
       <div class="legend-row"><span class="dot" style="background:#d62828"></span>
         <strong>Red:</strong> Wildfire (WF)</div>
@@ -375,32 +375,30 @@ footer a { margin-right: 14px; }
     </section>
 
     <section class="card">
-      <h3>SWO Current</h3>
+      <h3>US Current Fires</h3>
       <div class="legend-row">
         <span class="swatch" style="background:rgba(255,22,0,.3);border:2px solid #ff2100"></span>
         Current fire perimeter styling
       </div>
-      <p>Shows current NIFC perimeter features filtered to Jackson and
-      Josephine counties. Click a perimeter for its reported name,
+      <p>Shows current NIFC fire perimeters intersecting the visible map area at zoom 9 or higher, wherever the source provides coverage. Click a perimeter for its reported name,
       county, and mapped acreage when available.</p>
       <p>The outline and fill indicate the mapped perimeter, not necessarily
       the exact location of active flames or the current evacuation boundary.</p>
     </section>
 
     <section class="card">
-      <h3>SWO Historical</h3>
+      <h3>Oregon Historical Fires</h3>
       <div class="legend-row">
         <span class="swatch" style="background:rgba(50,205,50,.12);border:2px dashed #228B22"></span>
         Historical perimeter styling
       </div>
-      <p>Displays historical fire perimeters from 2020 onward for Jackson
-      and Josephine counties, subject to the records returned by the service.</p>
+      <p>Displays Oregon-filtered historical fire perimeters from 2020 onward, intersecting the visible map area at zoom 9 or higher, subject to records returned by the service.</p>
       <p>Click a polygon to view available incident information, discovery
       and perimeter dates, acreage, containment information, and coordinates.</p>
     </section>
 
     <section class="card">
-      <h3>RAWS WX Stations</h3>
+      <h3>OR RAWS WX</h3>
       <div class="art">
         <svg viewBox="0 0 100 70" role="img" aria-label="Weather station marker">
           <rect width="100" height="70" rx="8" fill="#e4e9e5"/>
@@ -442,10 +440,12 @@ footer a { margin-right: 14px; }
         <li>The blue circle represents reported GPS accuracy.</li>
         <li>GPS Track can be switched on or off in the layer menu.
             Turning its display off does not itself stop recording.</li>
-        <li>Tap <kbd>CLEAR GPS</kbd> to erase the recorded GPS lines. This does not turn GPS positioning off.</li>
+        <li>GPS track segments are saved locally in this browser and restored after reopening the map, where storage is available.</li>
+        <li>Interruptions and pauses create separate, disconnected segments within the same GPS Track layer.</li>
+        <li>Tap <kbd>CLEAR GPS</kbd> to erase all displayed and locally saved GPS segments. This does not turn GPS positioning off.</li>
       </ul>
       <div class="callout">
-        GPS requires a supported browser, device location services,
+        Browser storage can be cleared by the browser or user; it is not a permanent backup. GPS may stop updating when the screen locks or the browser is backgrounded. This is not a continuous-duty GPS recorder. GPS requires a supported browser, device location services,
         permission, and a secure HTTPS page. Keep location sharing
         enabled only when you want to use it.
       </div>
@@ -483,10 +483,10 @@ footer a { margin-right: 14px; }
 
   <h2 class="section-title">How map data is loaded</h2>
   <section class="card">
-    <p><strong>Visible-area requests:</strong> Esri and OpenTopoMap base maps load tiles around the current view. DOGAMI LiDAR, Public Land Ownership, PLSS Sections, and Oregon Tax Lots request rendered images for the visible extent. Tax lots are hidden below zoom 14. Lake/Pond geometry is filtered to the visible extent, after a one-time county-wide ID lookup.</p>
-    <p><strong>Broader-area requests:</strong> NIFC Fires (24h) and RAWS stations query Oregon statewide; SWO Current and SWO Historical query Jackson and Josephine counties. These vector layers are not limited to the visible map bounds.</p>
-    <p><strong>On-demand requests:</strong> Tax lot parcel details are queried for the clicked point; GPS situs addresses are queried for the reported GPS position. Imported GPX files are read locally.</p>
-    <p>Remote data layers generally load only when enabled. NIFC fires and current perimeters refresh every 5 minutes; historical perimeters and RAWS refresh every 15 minutes while enabled. Data availability and provider limits may affect completeness.</p>
+    <p><strong>Visible-area requests:</strong> Base maps request tiles around the current view. DOGAMI LiDAR, OR Public Land Ownership, OR PLSS Sections, and Oregon Tax Lots request images for the visible extent. Tax lots display at zoom 14 or higher. US Current Fires and Lakes/Ponds ¼ Acre+ query the visible area at zoom 9 or higher; their source services are not restricted to Oregon.</p>
+    <p><strong>Oregon-filtered requests:</strong> Oregon Historical Fires queries Oregon incident records from 2020 onward, within the visible map extent at zoom 9 or higher. OR NIFC Fires (24h) and OR RAWS WX retrieve statewide Oregon point data regardless of zoom.</p>
+    <p><strong>On-demand requests:</strong> Parcel details are queried for clicked locations; GPS situs addresses are queried for the reported GPS position. GPX files are read locally.</p>
+    <p>Remote layers generally load when enabled. The current perimeter layer refreshes periodically; historical perimeter requests are view-driven. Data availability, geographic coverage, and provider limits may affect completeness.</p>
   </section>
 
   <h2 class="section-title">Coordinate display</h2>
@@ -507,7 +507,7 @@ footer a { margin-right: 14px; }
 
   <div class="actions">
     <a class="button primary" href="https://bluefincnc.github.io/bluefincnc/">
-      ← Return to Oregon LiDAR Map
+      ← Return to TOPOTAC
     </a>
     <a class="button" href="#top" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">
       Back to Top ↑
@@ -517,7 +517,7 @@ footer a { margin-right: 14px; }
 
 <footer>
   <p>
-    Blue Maps · Oregon LiDAR Map Guide
+    TOPOTAC · Tactical Mapping System Guide
   </p>
   <p>
     Map layers rely on external data services. Availability, accuracy,

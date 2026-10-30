@@ -108,6 +108,16 @@ html, body {
   overflow-wrap: anywhere;
 }
 
+/* Parcel situs address, below GPS coordinates */
+#situsAddress {
+  position: absolute; top: 160px; left: 10px; z-index: 1000;
+  max-width: min(320px, calc(100vw - 30px)); padding: 8px 10px;
+  background: rgba(255,255,255,.96); border-radius: 6px;
+  box-shadow: 0 1px 6px #777; font-size: 13px; overflow-wrap: anywhere;
+}
+@media (max-width:600px) { #situsAddress {top: 240px; left: 6px; max-width: 190px; font-size: 12px;} }
+@media (max-width:900px) and (orientation:landscape) { #situsAddress {top: 55px; left: 326px; max-width: 220px; font-size: 11px;} }
+
 /* GPS button */
 #gpsButton {
   position: absolute;
@@ -492,6 +502,7 @@ html, body {
 
 <div id="coordinates">Click Map for Coordinates</div>
 <div id="gpsCoordinates">GPS: Off — tap GPS to start</div>
+<div id="situsAddress" role="status" aria-live="polite">Situs: GPS off</div>
 
 <button id="gpsButton" type="button"
         aria-pressed="false"
@@ -595,6 +606,188 @@ html, body {
       interactive: false
     }
   );
+
+  // Statewide ODF tax lot display, rendered only for the visible map extent.
+  const taxlotService = "https://gis.odf.oregon.gov/ags1/rest/services/WebMercator/TaxlotsDisplay/MapServer";
+  const taxlots = L.imageOverlay("", [[42, -124], [43, -122]], {opacity: 0.9, interactive: false});
+  let taxlotRequest = 0;
+  let taxlotMetadataPromise = null;
+  let taxlotLayers = [];
+  let situsRequest = 0;
+  let lastSitusPoint = null;
+  let lastSitusTime = 0;
+  const situsDisplay = document.getElementById("situsAddress");
+
+  function loadTaxlotMetadata() {
+    if (!taxlotMetadataPromise) {
+      taxlotMetadataPromise = fetch(taxlotService + "?f=pjson")
+        .then(r => { if (!r.ok) throw Error("Taxlot metadata HTTP " + r.status); return r.json(); })
+        .then(data => {
+          if (data.error) throw Error(data.error.message || "Taxlot metadata error");
+          taxlotLayers = (data.layers || []).filter(l => l.type === "Feature Layer" ||
+            (l.subLayerIds == null && l.type !== "Group Layer"));
+          return data;
+        }).catch(err => { taxlotMetadataPromise = null; throw err; });
+    }
+    return taxlotMetadataPromise;
+  }
+
+  async function updateTaxlots() {
+    if (!map.hasLayer(taxlots)) return;
+    const request = ++taxlotRequest;
+    if (map.getZoom() < 14) { taxlots.setOpacity(0); return; }
+    taxlots.setOpacity(0.9);
+    const size = map.getSize();
+    const bounds = map.getBounds();
+    const sw = L.CRS.EPSG3857.project(bounds.getSouthWest());
+    const ne = L.CRS.EPSG3857.project(bounds.getNorthEast());
+    const params = {
+      bbox: [sw.x, sw.y, ne.x, ne.y].join(","), bboxSR: "3857", imageSR: "3857",
+      size: Math.round(size.x) + "," + Math.round(size.y), format: "png32",
+      transparent: "true", f: "image"
+    };
+    const url = makeExportUrl(taxlotService + "/export", params);
+    const img = new Image();
+    img.onload = () => {
+      if (request !== taxlotRequest || !map.hasLayer(taxlots)) return;
+      taxlots.setBounds(bounds);
+      taxlots.setUrl(url);
+    };
+    img.onerror = () => console.warn("Tax lot overlay could not load");
+    img.src = url;
+  }
+
+  // ArcGIS REST JSONP fallback for services that do not allow browser CORS.
+  function arcgisJsonp(url, params) {
+    return new Promise((resolve, reject) => {
+      const callback = "__odfTaxlotCallback" + Date.now() + "_" + Math.floor(Math.random() * 1000000);
+      const script = document.createElement("script");
+      let finished = false;
+      const timer = setTimeout(() => finish(new Error("Service timed out")), 12000);
+      function finish(error, result) {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timer);
+        delete window[callback];
+        script.remove();
+        if (error) reject(error); else resolve(result);
+      }
+      window[callback] = data => finish(null, data);
+      script.onerror = () => finish(new Error("Service blocked or unreachable"));
+      const q = new URLSearchParams(params);
+      q.set("f", "json");
+      q.set("callback", callback);
+      script.src = url + "?" + q.toString();
+      document.head.appendChild(script);
+    });
+  }
+
+  async function taxlotRest(url, params) {
+    const query = new URLSearchParams(params);
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 7000);
+      let response;
+      try { response = await fetch(url + "?" + query, {signal: controller.signal}); }
+      finally { clearTimeout(timer); }
+      if (!response.ok) throw Error("HTTP " + response.status);
+      const data = await response.json();
+      if (data.error) throw Error(data.error.message || "ArcGIS service error");
+      return data;
+    } catch (firstError) {
+      console.warn("Tax lot direct request failed; trying JSONP:", firstError);
+      const data = await arcgisJsonp(url, params);
+      if (data.error) throw Error(data.error.message || "ArcGIS service error");
+      return data;
+    }
+  }
+
+  // Query-enabled sources; keep the ODF image overlay for statewide boundaries.
+  const parcelSources = [
+    {name:"Oregon Water Resources", url:"https://gis.wrd.state.or.us/server/rest/services/tax/Tax_Lots_Public_View_WGS84/FeatureServer/2/query"},
+    {name:"Jackson County", url:"https://jcportal.jacksoncountyor.gov/server/rest/services/Property/Taxlots/FeatureServer/2/query"},
+    {name:"Josephine County", url:"https://gis.co.josephine.or.us/arcgis/rest/services/Assessor/Assessor_Taxlots/FeatureServer/0/query"}
+  ];
+  function taxlotField(attrs, pattern) {
+    const key = Object.keys(attrs).find(k => pattern.test(k));
+    const value = key ? attrs[key] : null;
+    return value == null || String(value).trim() === "" || /^null$/i.test(String(value)) ? "" : String(value).trim();
+  }
+  function parcelDetails(a) {
+    const street = taxlotField(a, /^(site_address|SITEADDNAM|SITUS|SITUS_ADDRESS|SitusAddrsFull|SitusAddrs|SITUSADDR|STREETADDRESS)$/i);
+    const cityzip = taxlotField(a, /^(site_citystatezip|SitusCityStateZip)$/i);
+    const city = taxlotField(a, /^(SITEADDCTY|SITUS_CITY|SitusCity)$/i);
+    const zip = taxlotField(a, /^(SITEZIP|SITUS_ZIP|SitusZip1)$/i);
+    const lot = taxlotField(a, /^(maptaxlot|map_taxlot|ortaxlot|taxlot|taxlot_id|MAPNUMBER|MAPNUM|ACCOUNT|ACCOUNTNO|ACCT)$/i);
+    const acres = taxlotField(a, /^(taxlot_acre|ACRES|GISACRES|ACREAGE)$/i);
+    const address = [street, cityzip || [city,zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+    return {address,lot,acres};
+  }
+  // A point query avoids downloading statewide parcel geometry and works independently of map view.
+  async function queryParcelAt(lat,lng) {
+    const params = {
+      where: "1=1", geometry: JSON.stringify({x:lng,y:lat,spatialReference:{wkid:4326}}),
+      geometryType: "esriGeometryPoint", inSR:"4326", spatialRel:"esriSpatialRelIntersects",
+      outFields:"*", returnGeometry:"false", resultRecordCount:"3", f:"json"
+    };
+    let lastError = null;
+    let foundWithoutAddress = null;
+    for (const source of parcelSources) {
+      try {
+        const data = await taxlotRest(source.url,params);
+        const features = Array.isArray(data.features) ? data.features : [];
+        if (features.length) {
+          const matches = features.map(f=>({source:source.name, details:parcelDetails(f.attributes||{})}));
+          const withAddress = matches.find(m=>m.details.address);
+          if (withAddress) return withAddress;
+          if (!foundWithoutAddress) foundWithoutAddress = matches[0];
+        }
+      } catch (err) {
+        lastError = err;
+        console.warn(source.name + " parcel query failed:",err);
+      }
+    }
+    if (foundWithoutAddress) return foundWithoutAddress;
+    if (lastError) throw Error("No parcel returned; one or more services failed. " + lastError.message);
+    return null;
+  }
+  let parcelClickSequence = 0;
+  async function identifyClickedParcel(latlng) {
+    if (!map.hasLayer(taxlots) || map.getZoom() < 14) return;
+    const sequence = ++parcelClickSequence;
+    const popup = L.popup().setLatLng(latlng).setContent("Looking up tax lot…").openOn(map);
+    try {
+      const match = await queryParcelAt(latlng.lat,latlng.lng);
+      if (sequence !== parcelClickSequence || !map.hasLayer(taxlots)) return;
+      if (!match) { popup.setContent("No queryable tax lot found here. The statewide boundaries may cover areas not available in the address services."); return; }
+      const d = match.details;
+      popup.setContent("<div style='min-width:190px;line-height:1.5'>"+
+        "<strong>Oregon Tax Lot</strong><br>"+
+        "<strong>Situs:</strong> "+escapeHtml(d.address || "Not reported")+"<br>"+
+        "<strong>Tax lot:</strong> "+escapeHtml(d.lot || "Not reported")+
+        (d.acres ? "<br><strong>Acres:</strong> "+escapeHtml(d.acres) : "")+
+        "<br><small>Source: "+escapeHtml(match.source)+"</small></div>");
+    } catch(err) {
+      if (sequence === parcelClickSequence) popup.setContent("Tax lot lookup failed: "+escapeHtml(err.message || String(err)));
+    }
+  }
+  async function updateGpsSitus(lat,lng,force) {
+    const point = L.latLng(lat,lng);
+    const now = Date.now();
+    if (!force && lastSitusPoint && point.distanceTo(lastSitusPoint) < 25 && now-lastSitusTime < 30000) return;
+    lastSitusPoint = point;
+    lastSitusTime = now;
+    const request = ++situsRequest;
+    situsDisplay.textContent = "Situs: Looking up parcel…";
+    try {
+      const match = await queryParcelAt(lat,lng);
+      if (request !== situsRequest) return;
+      situsDisplay.textContent = match && match.details.address ? "Situs: "+match.details.address : "Situs: No parcel address reported at GPS location";
+    } catch(err) {
+      if (request === situsRequest) situsDisplay.textContent = "Situs: Lookup unavailable (see console)";
+      console.warn("GPS situs lookup:",err);
+    }
+  }
 
   let hillshadeRequest = 0;
   let plssRequest = 0;
@@ -786,6 +979,7 @@ function updatePublicLand() {
       updateHillshade();
       updatePLSS();
       updatePublicLand();
+      updateTaxlots();
 
       if (typeof scheduleWaterbodyRefresh === "function") {
         scheduleWaterbodyRefresh();
@@ -2004,6 +2198,7 @@ function historicalPerimeterStyle() {
       "DOGAMI LiDAR": hillshade,
       "Public Land Ownership": publicLand,
       "PLSS Sections": plss,
+      "Oregon Tax Lots": taxlots,
       "NIFC Fires (24h)": nifcFireLayer,
       "SWO Current": firePerimeterLayer,
       "SWO Historical": historicalFirePerimeterLayer,
@@ -2220,6 +2415,7 @@ clearGpxButton.addEventListener("click", function () {
     if (event.layer === hillshade) updateHillshade();
     if (event.layer === publicLand) updatePublicLand();
     if (event.layer === plss) updatePLSS();
+    if (event.layer === taxlots) updateTaxlots();
     if (event.layer === nifcFireLayer) updateNifcFires();
     if (event.layer === firePerimeterLayer) updateFirePerimeters();
 
@@ -2239,6 +2435,7 @@ clearGpxButton.addEventListener("click", function () {
 
   map.on("overlayremove", function (event) {
 
+    if (event.layer === taxlots) { taxlotRequest++; parcelClickSequence++; }
     if (event.layer === publicLand) {
       publicLandRequest++;
     }
@@ -2306,6 +2503,7 @@ clearGpxButton.addEventListener("click", function () {
     coordinatesDisplay.textContent =
       toDDM(event.latlng.lat) + "  " +
       toDDM(event.latlng.lng);
+    identifyClickedParcel(event.latlng);
   });
 
   // =========================================================
@@ -2329,6 +2527,9 @@ clearGpxButton.addEventListener("click", function () {
   L.DomEvent.disableClickPropagation(gpsButton);
 
   function stopGpsTracking() {
+    situsRequest++;
+    lastSitusPoint = null;
+    situsDisplay.textContent = "Situs: GPS off";
   endGpsTrackSegment();
     if (gpsWatchId !== null && navigator.geolocation) {
       navigator.geolocation.clearWatch(gpsWatchId);
@@ -2443,6 +2644,7 @@ clearGpxButton.addEventListener("click", function () {
           "  (±" + Math.round(accuracy) + " m)";
 
         gpsButton.textContent = "GPS ON";
+        updateGpsSitus(lat, lng, false);
 
         if (!gpsHasCentered) {
           map.setView(

@@ -1,0 +1,4086 @@
+{
+  "type": "FeatureCollection",
+  "generator": "overpass-turbo",
+  "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.",
+  "timestamp": "2026-10-30T22:36:05Z",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "relation/12507543",
+      "properties": {
+        "@id": "relation/12507543",
+        "access": "yes",
+        "leisure": "dog_park",
+        "name": "Memorial Dog Park",
+        "operator": "City of Wilsonville",
+        "operator:type": "public",
+        "type": "multipolygon",
+        "website": "https://www.wilsonvilleparksandrec.com/parksrec/page/dog-park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7559212,
+          45.2994145
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "relation/14645956",
+      "properties": {
+        "@id": "relation/14645956",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "type": "multipolygon",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6705353,
+          45.477378
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "relation/21054683",
+      "properties": {
+        "@id": "relation/21054683",
+        "access": "yes",
+        "leisure": "dog_park",
+        "name": "Portland International Raceway Off Leash Area",
+        "type": "multipolygon",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6882946,
+          45.5985842
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/39799548",
+      "properties": {
+        "@id": "way/39799548",
+        "fenced": "no",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6576395,
+          45.5469509
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/93031873",
+      "properties": {
+        "@id": "way/93031873",
+        "area": "yes",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.5716291,
+          45.4853038
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/99256833",
+      "properties": {
+        "@id": "way/99256833",
+        "leisure": "dog_park",
+        "name": "Fernhill City Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6226061,
+          45.5667229
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/123503986",
+      "properties": {
+        "@id": "way/123503986",
+        "area": "yes",
+        "barrier": "fence",
+        "landuse": "grass",
+        "leisure": "dog_park",
+        "name": "Amazon Dog Park",
+        "wheelchair": "yes",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.0835436,
+          44.0253275
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/130791864",
+      "properties": {
+        "@id": "way/130791864",
+        "addr:city": "Tigard",
+        "addr:housenumber": "9025",
+        "addr:postcode": "97223",
+        "addr:state": "OR",
+        "addr:street": "Southwest Burnham Street",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "name": "Ash Avenue Dog Park",
+        "operator": "City of Tigard",
+        "operator:type": "public",
+        "operator:wikidata": "Q1444136",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7694394,
+          45.4284272
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/131770319",
+      "properties": {
+        "@id": "way/131770319",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "name": "East Delta Park Off-Leash Area",
+        "operator": "City of Portland",
+        "operator:type": "public",
+        "operator:wikidata": "Q6106",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6758547,
+          45.5995597
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/146690542",
+      "properties": {
+        "@id": "way/146690542",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7205208,
+          45.4707667
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/146690543",
+      "properties": {
+        "@id": "way/146690543",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7223887,
+          45.4730691
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/149066507",
+      "properties": {
+        "@id": "way/149066507",
+        "leisure": "dog_park",
+        "name": "Potso Dog Park",
+        "operator": "City of Tigard",
+        "operator:type": "public",
+        "operator:wikidata": "Q1444136",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7600681,
+          45.4255206
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/177199275",
+      "properties": {
+        "@id": "way/177199275",
+        "access": "yes",
+        "addr:city": "Medford",
+        "addr:housenumber": "1275",
+        "addr:postcode": "97504",
+        "addr:state": "OR",
+        "addr:street": "East Barnett Road",
+        "leisure": "dog_park",
+        "name": "Medford Dog Park",
+        "note": "Bear Creek Dog Park is located at 1275 Barnett Road and is an enclosed 2 acre site with a granite walking path, small covered area and water.",
+        "operator": "City of Medford",
+        "operator:type": "public",
+        "website": "https://www.medfordoregon.gov/Government/Departments/Parks-Recreation-and-Facilities/City-Parks-and-Facilities/Bear-Creek-Park_",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8507709,
+          42.3164216
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/203033389",
+      "properties": {
+        "@id": "way/203033389",
+        "landuse": "recreation_ground",
+        "leisure": "dog_park",
+        "source": "survey",
+        "wheelchair": "yes",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6720834,
+          45.5585969
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/203513655",
+      "properties": {
+        "@id": "way/203513655",
+        "leisure": "dog_park",
+        "name": "Alton Baker Dog Park",
+        "wheelchair": "yes",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.0715614,
+          44.0554487
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/220672714",
+      "properties": {
+        "@id": "way/220672714",
+        "access": "yes",
+        "addr:city": "Talent",
+        "addr:housenumber": "604",
+        "addr:postcode": "97540",
+        "addr:state": "OR",
+        "addr:street": "Talent Avenue",
+        "leisure": "dog_park",
+        "name": "Bark Park",
+        "opening_hours": "06:00-sunset",
+        "operator": "City of Talent",
+        "operator:type": "public",
+        "website": "https://www.cityoftalent.org/publicworks/page/city-parks",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7785739,
+          42.2388184
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/231531948",
+      "properties": {
+        "@id": "way/231531948",
+        "leisure": "dog_park",
+        "name": "Firehouse Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.1351389,
+          45.5982872
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/264634439",
+      "properties": {
+        "@id": "way/264634439",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "name": "Ashland Dog Park",
+        "note": "The Dog Park is a two-acre fenced in area where dogs can run off leash and socialize with other dogs. Park hours are from dawn to dusk, seven days a week, throughout the year. Water and scoopers are available on site.",
+        "opening_hours": "sunrise-sunset",
+        "operator": "Ashland Parks and Recreation Comission",
+        "operator:type": "public",
+        "website": "https://www.ashland.or.us/Page.asp?NavID=9290",
+        "wikidata": "Q49473049",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7124748,
+          42.2134065
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/272505205",
+      "properties": {
+        "@id": "way/272505205",
+        "leisure": "dog_park",
+        "name": "Arbor Lodge Park Off Leash Area",
+        "wheelchair": "yes",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6942373,
+          45.573122
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/279278182",
+      "properties": {
+        "@id": "way/279278182",
+        "leisure": "dog_park",
+        "name": "Happy Tails Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.3564764,
+          43.2064359
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/281372468",
+      "properties": {
+        "@id": "way/281372468",
+        "leisure": "dog_park",
+        "name": "Wishire Off Leash Dog Park",
+        "website": "https://www.portland.gov/parks/wilshire-park",
+        "wheelchair": "no",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6262147,
+          45.5529265
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/304914089",
+      "properties": {
+        "@id": "way/304914089",
+        "leisure": "dog_park",
+        "name": "Weigand Family Dog Park",
+        "source": "http://www.ci.redmond.or.us/Home/Components/FacilityDirectory/FacilityDirectory/22/339",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.1837341,
+          44.2779886
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/345128600",
+      "properties": {
+        "@id": "way/345128600",
+        "leisure": "dog_park",
+        "wheelchair": "yes",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6820862,
+          45.5336318
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/348386362",
+      "properties": {
+        "@id": "way/348386362",
+        "leisure": "dog_park",
+        "wheelchair": "yes",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.2932492,
+          42.9433133
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/359205769",
+      "properties": {
+        "@id": "way/359205769",
+        "leisure": "dog_park",
+        "name": "Pet Exercise Area",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.1868625,
+          45.742852
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/365800640",
+      "properties": {
+        "@id": "way/365800640",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "surface": "pebblestone",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.9104562,
+          45.552741
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/387599775",
+      "properties": {
+        "@id": "way/387599775",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "surface": "grass",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.9101168,
+          45.5531887
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/387599779",
+      "properties": {
+        "@id": "way/387599779",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "surface": "grass",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.9097305,
+          45.5525682
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/403363696",
+      "properties": {
+        "@id": "way/403363696",
+        "leisure": "dog_park",
+        "name": "Wallace Park Off-Leash Area",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7031798,
+          45.5336159
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/430883479",
+      "properties": {
+        "@id": "way/430883479",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.2825873,
+          44.5355069
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/431480365",
+      "properties": {
+        "@id": "way/431480365",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7425551,
+          45.3841977
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/437695507",
+      "properties": {
+        "@id": "way/437695507",
+        "leisure": "dog_park",
+        "name": "Off Leash Area",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7597781,
+          45.5869568
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/438076175",
+      "properties": {
+        "@id": "way/438076175",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.177498,
+          44.5005101
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/440427850",
+      "properties": {
+        "@id": "way/440427850",
+        "leisure": "dog_park",
+        "name": "Gold Hill Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.0424054,
+          42.4355725
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/442078906",
+      "properties": {
+        "@id": "way/442078906",
+        "access": "yes",
+        "addr:city": "Cottage Grove",
+        "addr:housenumber": "1118",
+        "addr:postcode": "97424",
+        "addr:state": "OR",
+        "addr:street": "East Main Street",
+        "bicycle": "no",
+        "dog": "designated",
+        "leisure": "dog_park",
+        "name": "Lulu's Dog Park",
+        "opening_hours": "05:00-22:00",
+        "operator": "City of Cottage Grove",
+        "operator:type": "government",
+        "smoking": "no",
+        "wheelchair": "limited",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.0561886,
+          43.7978051
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/455569779",
+      "properties": {
+        "@id": "way/455569779",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "name": "Ewing Young Dog Park",
+        "wheelchair": "yes",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.97667,
+          45.2912553
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/458940380",
+      "properties": {
+        "@id": "way/458940380",
+        "addr:city": "Lincoln City",
+        "addr:housenumber": "4787",
+        "addr:postcode": "97367",
+        "addr:state": "OR",
+        "addr:street": "Southwest Highway 101",
+        "building": "retail",
+        "contact:facebook": "CampCanines",
+        "contact:yelp": "https://www.yelp.com/biz/camp-canines-lincoln-city-2",
+        "leisure": "dog_park",
+        "name": "Camp Canines - Training and Indoor Dog Park",
+        "phone": "+1 541 994 0065",
+        "website": "https://campcanineslincolncity.com/",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -124.0174671,
+          44.9295986
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/461564669",
+      "properties": {
+        "@id": "way/461564669",
+        "leisure": "dog_park",
+        "name": "Central Bark",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.3026355,
+          44.9191422
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/461654694",
+      "properties": {
+        "@id": "way/461654694",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8686406,
+          42.3294221
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/461654695",
+      "properties": {
+        "@id": "way/461654695",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8692216,
+          42.3293218
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/466581155",
+      "properties": {
+        "@id": "way/466581155",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "name": "Tualatin Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7640287,
+          45.3890227
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/470461889",
+      "properties": {
+        "@id": "way/470461889",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "name": "3rd Street Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.2636471,
+          44.5579661
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/471865175",
+      "properties": {
+        "@id": "way/471865175",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "name": "PCC Rock Creek Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8566203,
+          45.5636207
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/472411469",
+      "properties": {
+        "@id": "way/472411469",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "name": "Winkelman Dog Park",
+        "operator": "Tualatin Hills Park & Recreation District",
+        "operator:short": "THPRD",
+        "operator:type": "public",
+        "operator:wikidata": "Q7850598",
+        "website": "https://www.thprd.org/parks-and-trails/dog-parks",
+        "wheelchair": "limited",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8576536,
+          45.4471078
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/473249739",
+      "properties": {
+        "@id": "way/473249739",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7677576,
+          45.3128453
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/474954216",
+      "properties": {
+        "@id": "way/474954216",
+        "leisure": "dog_park",
+        "name": "Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8110892,
+          45.8937188
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/479748565",
+      "properties": {
+        "@id": "way/479748565",
+        "leisure": "dog_park",
+        "name": "Summerlake Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8094023,
+          45.4365482
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/480936825",
+      "properties": {
+        "@id": "way/480936825",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.0612178,
+          44.9587779
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/482738147",
+      "properties": {
+        "@id": "way/482738147",
+        "addr:city": "Portland",
+        "addr:housenumber": "4949",
+        "addr:postcode": "97202",
+        "addr:state": "OR",
+        "addr:street": "Southeast 25th Avenue",
+        "building": "yes",
+        "building:levels": "1",
+        "contact:facebook": "http://www.facebook.com/pg/Fidos-Indoor-Dog-Park-126855807339935/",
+        "ele": "18.2",
+        "height": "8.9",
+        "leisure": "dog_park",
+        "name": "Fido's Indoor Dog Park",
+        "opening_hours": "06:30-20:00",
+        "phone": "+1-503-477-6318",
+        "website": "http://www.fidosindoordogpark.com/",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6410445,
+          45.48729
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/483865089",
+      "properties": {
+        "@id": "way/483865089",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.3286272,
+          42.4576814
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/484233543",
+      "properties": {
+        "@id": "way/484233543",
+        "access": "private",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.3445594,
+          44.0100738
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/484238927",
+      "properties": {
+        "@id": "way/484238927",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "name": "Riverbend Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.3176957,
+          44.0429956
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/494926163",
+      "properties": {
+        "@id": "way/494926163",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "name": "Chimney Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7578745,
+          45.6068463
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/497965288",
+      "properties": {
+        "@id": "way/497965288",
+        "leisure": "dog_park",
+        "name": "Orenco Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.9129679,
+          45.5325083
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/507824616",
+      "properties": {
+        "@id": "way/507824616",
+        "description": "Three fenced-in areas for dogs",
+        "leisure": "dog_park",
+        "name": "Normandale Park Off-Leash Area",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6062136,
+          45.531518
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/512193070",
+      "properties": {
+        "@id": "way/512193070",
+        "leisure": "dog_park",
+        "wheelchair": "limited",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -116.9445396,
+          44.0160219
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/544013338",
+      "properties": {
+        "@id": "way/544013338",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "name": "Thatcher Park Off Leash Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.13373,
+          45.5388388
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/544053803",
+      "properties": {
+        "@id": "way/544053803",
+        "leisure": "dog_park",
+        "name": "Riverside Drive Dog Park",
+        "wheelchair": "yes",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.1789713,
+          45.2153768
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/544299114",
+      "properties": {
+        "@id": "way/544299114",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.0547296,
+          44.6387732
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/544811411",
+      "properties": {
+        "@id": "way/544811411",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.3036797,
+          42.4280485
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/546012076",
+      "properties": {
+        "@id": "way/546012076",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.3008311,
+          44.0351314
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/549819014",
+      "properties": {
+        "@id": "way/549819014",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "name": "Ponderosa Park Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.2854734,
+          44.0468664
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/552217119",
+      "properties": {
+        "@id": "way/552217119",
+        "leisure": "dog_park",
+        "name": "Big Sky Offleash Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.2355945,
+          44.0706704
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/553349199",
+      "properties": {
+        "@id": "way/553349199",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.2613823,
+          44.0933929
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/554183162",
+      "properties": {
+        "@id": "way/554183162",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "name": "Ponderosa Park Small Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.285814,
+          44.0464266
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/558299142",
+      "properties": {
+        "@id": "way/558299142",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "name": "Carruthers Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.9297241,
+          46.1907809
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/563966371",
+      "properties": {
+        "@id": "way/563966371",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "name": "Keizer Rapids Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.0558248,
+          44.9961239
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/568861152",
+      "properties": {
+        "@id": "way/568861152",
+        "leisure": "dog_park",
+        "name": "Fernhill Dogpark",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6230927,
+          45.5676361
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/581312666",
+      "properties": {
+        "@id": "way/581312666",
+        "area": "yes",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "name": "Sacajawea Dog Park Off-Leash Area",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.5860352,
+          45.559715
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/591594507",
+      "properties": {
+        "@id": "way/591594507",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6879687,
+          45.3960962
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/602188625",
+      "properties": {
+        "@id": "way/602188625",
+        "leisure": "dog_park",
+        "name": "Crooked River Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -120.842953,
+          44.288976
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/606624592",
+      "properties": {
+        "@id": "way/606624592",
+        "leisure": "dog_park",
+        "name": "Stout Park Dog Area",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -124.2803676,
+          42.0552587
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/609825373",
+      "properties": {
+        "@id": "way/609825373",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6747874,
+          45.5084925
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/609825374",
+      "properties": {
+        "@id": "way/609825374",
+        "leisure": "dog_park",
+        "name": "Dog Run",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6743019,
+          45.5093392
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/610894222",
+      "properties": {
+        "@id": "way/610894222",
+        "access": "yes",
+        "addr:city": "Springfield",
+        "addr:housenumber": "6100",
+        "addr:postcode": "97478",
+        "addr:state": "OR",
+        "addr:street": "Thurston Road",
+        "dog": "yes",
+        "leisure": "dog_park",
+        "name": "Lively Park Dog Park",
+        "operator": "Willamalane Park and Recreation District",
+        "operator:type": "community",
+        "website": "https://www.willamalane.org/lively_park.php",
+        "wheelchair": "yes",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.9177189,
+          44.0573734
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/622918640",
+      "properties": {
+        "@id": "way/622918640",
+        "access": "yes",
+        "addr:city": "Bend",
+        "addr:housenumber": "1315",
+        "addr:postcode": "97703",
+        "addr:state": "OR",
+        "addr:street": "Northwest Discovery Park Drive",
+        "dog": "yes",
+        "leisure": "dog_park",
+        "name": "Discovery Park Off-Leash Area",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.3621001,
+          44.0595031
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/651851594",
+      "properties": {
+        "@id": "way/651851594",
+        "addr:city": "South Beach",
+        "addr:housenumber": "755",
+        "addr:postcode": "97366",
+        "addr:state": "OR",
+        "addr:street": "Southeast College Way",
+        "leisure": "dog_park",
+        "name": "Wilder Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -124.0439292,
+          44.6032941
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/675530316",
+      "properties": {
+        "@id": "way/675530316",
+        "leisure": "dog_park",
+        "name": "Ecco Apartments Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.1246249,
+          44.085628
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/675755055",
+      "properties": {
+        "@id": "way/675755055",
+        "access": "permissive",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.71134,
+          45.449668
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/700005480",
+      "properties": {
+        "@id": "way/700005480",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.5506336,
+          43.5283212
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/723283998",
+      "properties": {
+        "@id": "way/723283998",
+        "access": "customers",
+        "landuse": "grass",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.9235372,
+          45.5651273
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/727916088",
+      "properties": {
+        "@id": "way/727916088",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.5004541,
+          45.4227362
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/728149872",
+      "properties": {
+        "@id": "way/728149872",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.5010061,
+          45.4289768
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/728149895",
+      "properties": {
+        "@id": "way/728149895",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.5224105,
+          45.4493158
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/728149896",
+      "properties": {
+        "@id": "way/728149896",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.5218536,
+          45.4496063
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/728149897",
+      "properties": {
+        "@id": "way/728149897",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.5216358,
+          45.4493195
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/732398670",
+      "properties": {
+        "@id": "way/732398670",
+        "dog": "yes",
+        "leisure": "dog_park",
+        "name": "Stayton Community Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7908857,
+          44.7962447
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/757484077",
+      "properties": {
+        "@id": "way/757484077",
+        "leisure": "dog_park",
+        "name": "Silverton Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7940052,
+          44.9995996
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/772487587",
+      "properties": {
+        "@id": "way/772487587",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8550411,
+          45.5115346
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/805346716",
+      "properties": {
+        "@id": "way/805346716",
+        "leisure": "dog_park",
+        "name": "RR Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.3972261,
+          43.1339127
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/829450663",
+      "properties": {
+        "@id": "way/829450663",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.1838497,
+          44.0708482
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/836678285",
+      "properties": {
+        "@id": "way/836678285",
+        "access": "private",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7363034,
+          45.4867801
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/836937218",
+      "properties": {
+        "@id": "way/836937218",
+        "brand": "Love's",
+        "brand:wikidata": "Q1872496",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -119.7995317,
+          45.8246859
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/837644000",
+      "properties": {
+        "@id": "way/837644000",
+        "access": "yes",
+        "barrier": "fence",
+        "fence_type": "wire",
+        "leisure": "dog_park",
+        "name": "Schiffler Park Dog Run",
+        "operator": "Tualatin Hills Park & Recreation District",
+        "operator:short": "THPRD",
+        "operator:type": "public",
+        "operator:wikidata": "Q7850598",
+        "start_date": "2019-08",
+        "surface": "grass",
+        "website": "https://www.thprd.org/parks-and-trails/dog-parks",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8156424,
+          45.4793294
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/837645388",
+      "properties": {
+        "@id": "way/837645388",
+        "access": "yes",
+        "barrier": "fence",
+        "fence_type": "wire",
+        "leisure": "dog_park",
+        "name": "Hazeldale Dog Park",
+        "operator": "Tualatin Hills Park & Recreation District",
+        "operator:short": "THPRD",
+        "operator:type": "public",
+        "operator:wikidata": "Q7850598",
+        "surface": "grass",
+        "website": "https://www.thprd.org/parks-and-trails/dog-parks",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8765006,
+          45.4725947
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/837651621",
+      "properties": {
+        "@id": "way/837651621",
+        "barrier": "no",
+        "leisure": "dog_park",
+        "name": "Sellwood Dog Park",
+        "operator": "City of Portland",
+        "operator:type": "public",
+        "operator:wikidata": "Q6106",
+        "surface": "grass",
+        "website": "https://www.portland.gov/parks/sellwood-riverfront-park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6634184,
+          45.4665237
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/860517804",
+      "properties": {
+        "@id": "way/860517804",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.9090028,
+          45.4976755
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/871467931",
+      "properties": {
+        "@id": "way/871467931",
+        "access": "yes",
+        "description": "Has separate fenced areas for large and small dogs. Small dog area has artificial turf.",
+        "leisure": "dog_park",
+        "operator": "City of Hillsboro",
+        "operator:type": "public",
+        "operator:wikidata": "Q81824",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.9013496,
+          45.4795477
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/871501303",
+      "properties": {
+        "@id": "way/871501303",
+        "access": "private",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7537251,
+          45.3034604
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/872050489",
+      "properties": {
+        "@id": "way/872050489",
+        "incline": "no",
+        "leisure": "dog_park",
+        "name": "Armitage Dog Park",
+        "surface": "dirt",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.0522549,
+          44.1091155
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/872155330",
+      "properties": {
+        "@id": "way/872155330",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.0597923,
+          44.0960434
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/882595655",
+      "properties": {
+        "@id": "way/882595655",
+        "leisure": "dog_park",
+        "name": "Off Leash Area",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6292663,
+          45.3805866
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/888793809",
+      "properties": {
+        "@id": "way/888793809",
+        "access": "yes",
+        "addr:city": "Portland",
+        "addr:housenumber": "17095",
+        "addr:postcode": "97224",
+        "addr:state": "OR",
+        "addr:street": "Southwest Arkenstone Drive",
+        "leisure": "dog_park",
+        "name": "Durham Park Off-leash dog area",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7636424,
+          45.3958611
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/916110863",
+      "properties": {
+        "@id": "way/916110863",
+        "access": "yes",
+        "description": "Small breed area",
+        "leisure": "dog_park",
+        "surface": "artificial_turf",
+        "wheelchair": "yes",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8996724,
+          45.4908834
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/924704307",
+      "properties": {
+        "@id": "way/924704307",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.83534,
+          45.3517535
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/926856800",
+      "properties": {
+        "@id": "way/926856800",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "name": "Luuwit View Dog Park",
+        "operator": "City of Portland",
+        "operator:type": "public",
+        "operator:wikidata": "Q6106",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.5324365,
+          45.5489306
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/953862041",
+      "properties": {
+        "@id": "way/953862041",
+        "addr:city": "Eugene",
+        "addr:postcode": "97405",
+        "addr:state": "OR",
+        "leisure": "dog_park",
+        "operator": "Pacific Retirement Services, Inc.",
+        "operator:type": "private_non_profit",
+        "social_facility": "nursing_home",
+        "social_facility:for": "senior",
+        "wheelchair": "yes",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.0924621,
+          44.0248635
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/978569793",
+      "properties": {
+        "@id": "way/978569793",
+        "access": "yes",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8985863,
+          45.4959605
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/978569794",
+      "properties": {
+        "@id": "way/978569794",
+        "access": "yes",
+        "description": "Small dog area",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8989014,
+          45.4962023
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/981057970",
+      "properties": {
+        "@id": "way/981057970",
+        "access": "yes",
+        "leisure": "dog_park",
+        "name": "LaPine State Park Pet Exercise Area",
+        "operator": "LaPine State Park",
+        "operator:type": "government",
+        "website": "https://stateparks.oregon.gov/index.cfm?do=park.profile&parkId=32",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.5444053,
+          43.7709359
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/981877307",
+      "properties": {
+        "@id": "way/981877307",
+        "leisure": "dog_park",
+        "name": "Pet Area",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7790712,
+          45.4515606
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/988788383",
+      "properties": {
+        "@id": "way/988788383",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.609016,
+          45.4276048
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/992477625",
+      "properties": {
+        "@id": "way/992477625",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.7511514,
+          42.2068186
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/996143834",
+      "properties": {
+        "@id": "way/996143834",
+        "access": "customers",
+        "leisure": "dog_park",
+        "operator": "Dog's Day Out",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.9182181,
+          45.4973969
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/996143839",
+      "properties": {
+        "@id": "way/996143839",
+        "access": "customers",
+        "description": "Outdoor kennel area for dogs",
+        "leisure": "dog_park",
+        "surface": "artificial_turf",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.9183881,
+          45.4976757
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/996143842",
+      "properties": {
+        "@id": "way/996143842",
+        "access": "customers",
+        "description": "Outdoor kennel area for dogs",
+        "leisure": "dog_park",
+        "surface": "artificial_turf",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.9184117,
+          45.4975875
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/996143843",
+      "properties": {
+        "@id": "way/996143843",
+        "access": "customers",
+        "description": "Outdoor kennel area for dogs",
+        "leisure": "dog_park",
+        "surface": "artificial_turf",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.9182668,
+          45.497681
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/996143844",
+      "properties": {
+        "@id": "way/996143844",
+        "access": "customers",
+        "description": "Outdoor kennel area for dogs",
+        "leisure": "dog_park",
+        "surface": "artificial_turf",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.91813,
+          45.4976666
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1012572678",
+      "properties": {
+        "@id": "way/1012572678",
+        "access": "permissive",
+        "area": "yes",
+        "leisure": "dog_park",
+        "source": "https://www.hillsboro-oregon.gov/home/showpublisheddocument/27630/637751540568670000",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.9295517,
+          45.4952199
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1016687396",
+      "properties": {
+        "@id": "way/1016687396",
+        "leisure": "dog_park",
+        "name": "Monmouth Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.2214044,
+          44.85277
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1016687819",
+      "properties": {
+        "@id": "way/1016687819",
+        "leisure": "dog_park",
+        "name": "Independence Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.1829015,
+          44.8576916
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1029104326",
+      "properties": {
+        "@id": "way/1029104326",
+        "leisure": "dog_park",
+        "maxweight:dog": "30 lbs",
+        "name": "Eulalona Small Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.7780974,
+          42.2371165
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1029104327",
+      "properties": {
+        "@id": "way/1029104327",
+        "access": "yes",
+        "addr:city": "Klamath Falls",
+        "addr:housenumber": "1820",
+        "addr:postcode": "97601",
+        "addr:state": "OR",
+        "addr:street": "Leroy Street",
+        "leisure": "dog_park",
+        "minweight:dog": "30 lbs",
+        "name": "Eulalona Large Dog Park",
+        "operator": "City of Klamath Falls",
+        "operator:type": "public",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.7778498,
+          42.2367474
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1039425417",
+      "properties": {
+        "@id": "way/1039425417",
+        "area": "yes",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.9076245,
+          45.4961364
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1042088916",
+      "properties": {
+        "@id": "way/1042088916",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.5892783,
+          45.5656101
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1042791603",
+      "properties": {
+        "@id": "way/1042791603",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "wheelchair": "limited",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8343823,
+          42.3533144
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1045976015",
+      "properties": {
+        "@id": "way/1045976015",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8807501,
+          45.5285056
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1050452989",
+      "properties": {
+        "@id": "way/1050452989",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8160879,
+          42.2650229
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1062425486",
+      "properties": {
+        "@id": "way/1062425486",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8837172,
+          45.5434611
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1067038725",
+      "properties": {
+        "@id": "way/1067038725",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "name": "Jackie Husen Dog Run",
+        "operator": "Tualatin Hills Park & Recreation District",
+        "operator:short": "THPRD",
+        "operator:type": "public",
+        "operator:wikidata": "Q7850598",
+        "start_date": "2019-12",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7889684,
+          45.5291805
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1073262251",
+      "properties": {
+        "@id": "way/1073262251",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.487213,
+          45.4343035
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1073262252",
+      "properties": {
+        "@id": "way/1073262252",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.487443,
+          45.4340825
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1073262282",
+      "properties": {
+        "@id": "way/1073262282",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.4872393,
+          45.425034
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1077781601",
+      "properties": {
+        "@id": "way/1077781601",
+        "leisure": "dog_park",
+        "proposed:leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.5056067,
+          45.5140844
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1078912877",
+      "properties": {
+        "@id": "way/1078912877",
+        "access": "private",
+        "description": "Requires membership to get access to the gated dog park.",
+        "leisure": "dog_park",
+        "name": "South Waterfront Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6681921,
+          45.4980211
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1078939335",
+      "properties": {
+        "@id": "way/1078939335",
+        "barrier": "fence",
+        "fence_type": "chain_link",
+        "height": "2",
+        "leisure": "dog_park",
+        "name": "Hassler Dog Park",
+        "operator": "City of Sublimity",
+        "website": "https://www.cityofsublimity.org/parks",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7869093,
+          44.8261038
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1080143786",
+      "properties": {
+        "@id": "way/1080143786",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.3738305,
+          42.4336602
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1082259929",
+      "properties": {
+        "@id": "way/1082259929",
+        "access": "yes",
+        "leisure": "dog_park",
+        "operator": "City of Tualatin",
+        "operator:type": "government",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7856203,
+          45.3972366
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1092753542",
+      "properties": {
+        "@id": "way/1092753542",
+        "access": "yes",
+        "dog": "yes",
+        "leisure": "dog_park",
+        "name": "Love's Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.0544017,
+          44.6991133
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1101872601",
+      "properties": {
+        "@id": "way/1101872601",
+        "access": "private",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8283014,
+          45.4442815
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1117294201",
+      "properties": {
+        "@id": "way/1117294201",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.2876424,
+          44.0166055
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1123555794",
+      "properties": {
+        "@id": "way/1123555794",
+        "access": "private",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.5707507,
+          45.3129289
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1130836459",
+      "properties": {
+        "@id": "way/1130836459",
+        "access": "yes",
+        "leisure": "dog_park",
+        "name": "Lincoln City Dog Park",
+        "operator": "City of Lincoln City",
+        "website": "https://www.lincolncity.org/departments/parks-recreation/dog-park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -124.0070521,
+          44.9799933
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1138604868",
+      "properties": {
+        "@id": "way/1138604868",
+        "description": "Agility training area",
+        "leisure": "dog_park",
+        "natural": "grass",
+        "wheelchair": "yes",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8997097,
+          45.4904829
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1144245888",
+      "properties": {
+        "@id": "way/1144245888",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8535279,
+          45.5093757
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1183774186",
+      "properties": {
+        "@id": "way/1183774186",
+        "leisure": "dog_park",
+        "name": "Pet Area",
+        "surface": "grass",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6537802,
+          42.1688063
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1183776407",
+      "properties": {
+        "@id": "way/1183776407",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.1282839,
+          42.4109427
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1186856370",
+      "properties": {
+        "@id": "way/1186856370",
+        "leisure": "dog_park",
+        "name": "Council Crest Off-Leash Area",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7063734,
+          45.4981259
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1190298287",
+      "properties": {
+        "@id": "way/1190298287",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.2543174,
+          44.5403366
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1192407246",
+      "properties": {
+        "@id": "way/1192407246",
+        "leisure": "dog_park",
+        "name": "Bandon Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -124.4290391,
+          43.1126038
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1193883925",
+      "properties": {
+        "@id": "way/1193883925",
+        "access": "private",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8027647,
+          45.4702761
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1194529766",
+      "properties": {
+        "@id": "way/1194529766",
+        "access": "yes",
+        "fenced": "yes",
+        "leisure": "dog_park",
+        "name": "Train Mountain Dog Park",
+        "operator": "Train Mountain Railroad Museum",
+        "wheelchair": "no",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.8878156,
+          42.5577648
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1207915907",
+      "properties": {
+        "@id": "way/1207915907",
+        "addr:city": "Lake Oswego",
+        "addr:housenumber": "15775",
+        "addr:postcode": "97035",
+        "addr:state": "OR",
+        "addr:street": "Waluga Drive",
+        "dog": "yes",
+        "leisure": "dog_park",
+        "name": "Waluga Dog Park",
+        "wheelchair": "yes",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7291895,
+          45.4114013
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1209258283",
+      "properties": {
+        "@id": "way/1209258283",
+        "leisure": "dog_park",
+        "name": "Singing Pines Off Leash Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -124.1083386,
+          43.9790958
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1210444193",
+      "properties": {
+        "@id": "way/1210444193",
+        "addr:city": "Lake Oswego",
+        "addr:housenumber": "19043",
+        "addr:postcode": "97035",
+        "addr:state": "OR",
+        "addr:street": "Pilkington Road",
+        "leisure": "dog_park",
+        "name": "Pilkington Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.735422,
+          45.3875448
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1211344075",
+      "properties": {
+        "@id": "way/1211344075",
+        "leisure": "dog_park",
+        "name": "Pet Area",
+        "wheelchair": "no",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -119.3210853,
+          43.5324198
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1211344076",
+      "properties": {
+        "@id": "way/1211344076",
+        "leisure": "dog_park",
+        "name": "Pet Area",
+        "wheelchair": "yes",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -119.3201413,
+          43.5319473
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1212433430",
+      "properties": {
+        "@id": "way/1212433430",
+        "leisure": "dog_park",
+        "wheelchair": "yes",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.9274286,
+          45.5257293
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1212918226",
+      "properties": {
+        "@id": "way/1212918226",
+        "leisure": "dog_park",
+        "name": "Minto Brown Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.0691049,
+          44.9230721
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1216388944",
+      "properties": {
+        "@id": "way/1216388944",
+        "leisure": "dog_park",
+        "name": "Mountain View Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.5322055,
+          45.6978534
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1221939454",
+      "properties": {
+        "@id": "way/1221939454",
+        "leisure": "dog_park",
+        "name": "Brentwood Dog Off-Leash Area",
+        "operator": "City of Portland",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6003658,
+          45.4723399
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1228976952",
+      "properties": {
+        "@id": "way/1228976952",
+        "leisure": "dog_park",
+        "name": "Off Leash Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.625466,
+          45.4800931
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1233920735",
+      "properties": {
+        "@id": "way/1233920735",
+        "leisure": "dog_park",
+        "name": "East Holladay Dog Park",
+        "operator": "City of Portland",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.5292088,
+          45.5320806
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1298673558",
+      "properties": {
+        "@id": "way/1298673558",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.4736103,
+          43.7127209
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1298905304",
+      "properties": {
+        "@id": "way/1298905304",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.0361739,
+          42.4270978
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1298905307",
+      "properties": {
+        "@id": "way/1298905307",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.0375242,
+          42.4279729
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1303163056",
+      "properties": {
+        "@id": "way/1303163056",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8788672,
+          45.5288374
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1304372691",
+      "properties": {
+        "@id": "way/1304372691",
+        "access": "private",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8716946,
+          45.425107
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1304372722",
+      "properties": {
+        "@id": "way/1304372722",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.849598,
+          45.4216055
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1342772284",
+      "properties": {
+        "@id": "way/1342772284",
+        "fenced": "yes",
+        "landuse": "grass",
+        "leisure": "dog_park",
+        "name": "Tiny Tranquility Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -124.0839745,
+          44.3942541
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1381315054",
+      "properties": {
+        "@id": "way/1381315054",
+        "fenced": "yes",
+        "leisure": "dog_park",
+        "operator": "Southern Oregon RV Park",
+        "operator:type": "government",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.9114793,
+          42.3899847
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1396706996",
+      "properties": {
+        "@id": "way/1396706996",
+        "access": "private",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "surface": "earth",
+        "waste_basket": "yes",
+        "water": "yes",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.0548693,
+          44.1566955
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1408411674",
+      "properties": {
+        "@id": "way/1408411674",
+        "dog": "leashed",
+        "leisure": "dog_park",
+        "surface": "grass",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.0388572,
+          44.1579215
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1408411675",
+      "properties": {
+        "@id": "way/1408411675",
+        "dog": "leashed",
+        "leisure": "dog_park",
+        "surface": "grass",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.0370323,
+          44.1571057
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1413423316",
+      "properties": {
+        "@id": "way/1413423316",
+        "brand": "Love's",
+        "brand:wikidata": "Q1872496",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.1369967,
+          44.6134039
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1413423416",
+      "properties": {
+        "@id": "way/1413423416",
+        "brand": "Love's",
+        "brand:wikidata": "Q1872496",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.7987781,
+          42.2587319
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1421301079",
+      "properties": {
+        "@id": "way/1421301079",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8296315,
+          45.5738384
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1423123124",
+      "properties": {
+        "@id": "way/1423123124",
+        "leisure": "dog_park",
+        "name": "Greenwood Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.3414875,
+          42.430318
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1423126281",
+      "properties": {
+        "@id": "way/1423126281",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.9181645,
+          45.5330412
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1423129160",
+      "properties": {
+        "@id": "way/1423129160",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.3517172,
+          42.4312635
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1429164425",
+      "properties": {
+        "@id": "way/1429164425",
+        "access": "private",
+        "image": "https://img1.wsimg.com/isteam/ip/4cbc53f0-178a-4ee2-bb8d-2f03daec196d/newest%20dog%20park.jpg",
+        "leisure": "dog_park",
+        "operator": "Mountain View Estates of Talent, LLC",
+        "operator:type": "community",
+        "surface": "grass",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7790409,
+          42.2435884
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1435781574",
+      "properties": {
+        "@id": "way/1435781574",
+        "fenced": "yes",
+        "leisure": "dog_park",
+        "operator": "Seal Rocks RV Cove",
+        "operator:type": "private",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -124.0819963,
+          44.4936947
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1444104112",
+      "properties": {
+        "@id": "way/1444104112",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -119.6868342,
+          45.8402999
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1453220147",
+      "properties": {
+        "@id": "way/1453220147",
+        "addr:city": "South Beach",
+        "addr:housenumber": "50",
+        "addr:postcode": "97366",
+        "addr:state": "OR",
+        "addr:street": "Southeast 123rd Street",
+        "addr:unit": "Dog Run",
+        "fenced": "yes",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -124.0696025,
+          44.5471102
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1455069291",
+      "properties": {
+        "@id": "way/1455069291",
+        "barrier": "fence",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.0393663,
+          44.6415956
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1471791849",
+      "properties": {
+        "@id": "way/1471791849",
+        "addr:city": "Toledo",
+        "addr:postcode": "97391",
+        "addr:state": "OR",
+        "addr:street": "Southeast Fir Street",
+        "fenced": "yes",
+        "leisure": "dog_park",
+        "name": "Julie Rockwell Memorial Dog Park",
+        "nohousenumber": "yes",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.9305557,
+          44.6136508
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1479077722",
+      "properties": {
+        "@id": "way/1479077722",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8521473,
+          45.4268548
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1490248888",
+      "properties": {
+        "@id": "way/1490248888",
+        "access": "private",
+        "description": "Sloping hill with grass and dirt, flat gravel area with agility structures.",
+        "dog": "unleashed",
+        "leisure": "dog_park",
+        "operator": "Haven at Golf Creek",
+        "operator:type": "private",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7633842,
+          45.5062679
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1498686098",
+      "properties": {
+        "@id": "way/1498686098",
+        "access": "yes",
+        "dog": "unleashed",
+        "leisure": "dog_park",
+        "name": "Mount Tabor Off-Leash Dog Area",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.5949002,
+          45.5078458
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1500997545",
+      "properties": {
+        "@id": "way/1500997545",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.4293071,
+          45.4960923
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1501193270",
+      "properties": {
+        "@id": "way/1501193270",
+        "access": "customers",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -124.0625716,
+          44.6359263
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1510041807",
+      "properties": {
+        "@id": "way/1510041807",
+        "access": "private",
+        "leisure": "dog_park",
+        "operator": "Tímine Way North Apartments",
+        "operator:type": "private",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -118.6903645,
+          45.6671958
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1510333061",
+      "properties": {
+        "@id": "way/1510333061",
+        "leisure": "dog_park",
+        "operator": "City of Pendleton",
+        "operator:type": "public",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -118.7793468,
+          45.673051
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1511187004",
+      "properties": {
+        "@id": "way/1511187004",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.4088995,
+          45.4871764
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1511187005",
+      "properties": {
+        "@id": "way/1511187005",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.4095862,
+          45.4871591
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1516077727",
+      "properties": {
+        "@id": "way/1516077727",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8919545,
+          42.3560062
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1518566878",
+      "properties": {
+        "@id": "way/1518566878",
+        "leisure": "dog_park",
+        "name": "Coquille Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -124.1856444,
+          43.1785081
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1521085834",
+      "properties": {
+        "@id": "way/1521085834",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.5680468,
+          45.3183243
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1527717625",
+      "properties": {
+        "@id": "way/1527717625",
+        "leisure": "dog_park",
+        "name": "Veneta Dog Park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.3529929,
+          44.0521839
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1528673541",
+      "properties": {
+        "@id": "way/1528673541",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -119.3015288,
+          45.8463803
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1547024175",
+      "properties": {
+        "@id": "way/1547024175",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -124.0637083,
+          44.6804463
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1551612892",
+      "properties": {
+        "@id": "way/1551612892",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.1921656,
+          42.4220227
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1551664513",
+      "properties": {
+        "@id": "way/1551664513",
+        "access": "yes",
+        "description": "Small breed area",
+        "leisure": "dog_park",
+        "surface": "artificial_turf",
+        "wheelchair": "yes",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.9012661,
+          45.4887501
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1558738170",
+      "properties": {
+        "@id": "way/1558738170",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6164761,
+          42.6867721
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1567576704",
+      "properties": {
+        "@id": "way/1567576704",
+        "image": "https://cal-am.com/wp-content/uploads/2015/06/Medford-Estates-Clubhouse-pet-park.jpg",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8286509,
+          42.2875325
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1569900431",
+      "properties": {
+        "@id": "way/1569900431",
+        "leisure": "dog_park",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.0644204,
+          44.9604208
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/2474781998",
+      "properties": {
+        "@id": "node/2474781998",
+        "leisure": "dog_park",
+        "name": "Pet exercise area"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6559645,
+          44.875442
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/3967337812",
+      "properties": {
+        "@id": "node/3967337812",
+        "leisure": "dog_park",
+        "name": "Doggie Park"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.6618153,
+          45.3306181
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/4324633230",
+      "properties": {
+        "@id": "node/4324633230",
+        "description": "unfenced off-leash area designated on unpaved path along NE 22nd Ave only",
+        "leisure": "dog_park",
+        "name": "Alberta Park Off-Leash Area",
+        "operator": "City of Portland",
+        "operator:type": "public",
+        "operator:wikidata": "Q6106"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6437414,
+          45.564905
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/4365457604",
+      "properties": {
+        "@id": "node/4365457604",
+        "leisure": "dog_park",
+        "name": "Pet Relief Area"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.5953043,
+          45.5885894
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/4570366202",
+      "properties": {
+        "@id": "node/4570366202",
+        "leisure": "dog_park",
+        "name": "Central Bark Dog Park"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.302811,
+          44.9191094
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/4578000695",
+      "properties": {
+        "@id": "node/4578000695",
+        "description": "Open area/unfenced",
+        "leisure": "dog_park",
+        "name": "Frazer Park off-leash dog area"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6121147,
+          45.5306219
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/5301301768",
+      "properties": {
+        "@id": "node/5301301768",
+        "leisure": "dog_park"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.0620782,
+          44.2378491
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/6327625806",
+      "properties": {
+        "@id": "node/6327625806",
+        "leisure": "dog_park"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8873734,
+          45.5415591
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/6328068994",
+      "properties": {
+        "@id": "node/6328068994",
+        "leisure": "dog_park",
+        "name": "Prineville RV Park Dog Pen/Park"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -120.8272728,
+          44.2975732
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/6750950129",
+      "properties": {
+        "@id": "node/6750950129",
+        "access": "yes",
+        "dog": "yes",
+        "leisure": "dog_park"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6278233,
+          45.5406091
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/7259131585",
+      "properties": {
+        "@id": "node/7259131585",
+        "leisure": "dog_park"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.9707537,
+          42.3159395
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/7428491951",
+      "properties": {
+        "@id": "node/7428491951",
+        "leisure": "dog_park",
+        "name": "Dog Off-Leash Area"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.3326617,
+          44.572452
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/9905044104",
+      "properties": {
+        "@id": "node/9905044104",
+        "leisure": "dog_park",
+        "name": "Council Crest Off-Leash Area",
+        "operator": "City of Portland",
+        "operator:type": "public"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7063781,
+          45.4981011
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/11140138698",
+      "properties": {
+        "@id": "node/11140138698",
+        "access": "yes",
+        "addr:city": "Lake Oswego",
+        "addr:housenumber": "19043",
+        "addr:postcode": "97035",
+        "addr:state": "OR",
+        "addr:street": "Pilkington Road",
+        "leisure": "dog_park",
+        "name": "Pilkington Dog Park",
+        "operator": "Lake Oswego Parks & Recreation",
+        "operator:type": "public",
+        "website": "https://www.ci.oswego.or.us/parksrec/off-leash-dog-areas"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.7354011,
+          45.3875408
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/11976784744",
+      "properties": {
+        "@id": "node/11976784744",
+        "leisure": "dog_park"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.0513106,
+          45.0787676
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/12793727376",
+      "properties": {
+        "@id": "node/12793727376",
+        "leisure": "dog_park"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.5849476,
+          44.0308341
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/13206004291",
+      "properties": {
+        "@id": "node/13206004291",
+        "leisure": "dog_park"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.1727115,
+          45.8642252
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/13242247309",
+      "properties": {
+        "@id": "node/13242247309",
+        "leisure": "dog_park"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.6916903,
+          45.3941383
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/13342033656",
+      "properties": {
+        "@id": "node/13342033656",
+        "access": "private",
+        "leisure": "dog_park"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.0078651,
+          45.5185536
+        ]
+      }
+    }
+  ]
+}

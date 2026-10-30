@@ -28,6 +28,8 @@ html, body {
 .leaflet-top.leaflet-right {
   top: 10px;
   right: 8px;
+  /* Keep the layer menu above custom map controls when expanded. */
+  z-index: 2000;
 }
 
 .leaflet-control-layers {
@@ -2147,13 +2149,13 @@ function historicalPerimeterStyle() {
     },
     {
       "GPS Track": gpsTrackLayer,
-      "OR LiDAR": hillshade,
-      "OR Public Lands": publicLand,
+      "DOGAMI LiDAR": hillshade,
+      "OR Public Land Ownership": publicLand,
       "OR PLSS Sections": plss,
-      "OR Tax Lots": taxlots,
-      "OR New Fires (24Hr)": nifcFireLayer,
+      "Oregon Tax Lots": taxlots,
+      "OR NIFC Fires (24h)": nifcFireLayer,
       "US Current Fires": firePerimeterLayer,
-      "OR Historical Fires": historicalFirePerimeterLayer,
+      "Oregon Historical Fires": historicalFirePerimeterLayer,
       "OR RAWS WX": rawsLayer,
       "Lakes/Ponds ¼ Acre+": usgsWaterbodyLayer
     },

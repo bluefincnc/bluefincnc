@@ -487,6 +487,7 @@ footer a { margin-right: 14px; }
             contains separate segments.</li>
         <li>Named waypoints and start/end markers may also be displayed.</li>
         <li>The map zooms to the imported track's extent.</li>
+        <li>The small GPX import/clear status message is intentionally hidden in the current map interface.</li>
         <li>Tap <kbd>CLEAR GPX</kbd> to remove all imported GPX layers
             from the map and layer menu.</li>
       </ul>
@@ -505,6 +506,14 @@ footer a { margin-right: 14px; }
     <p>Remote layers generally load when enabled. The current perimeter layer refreshes periodically; historical perimeter requests are view-driven. Data availability, geographic coverage, and provider limits may affect completeness.</p>
   </section>
 
+  <h2 class="section-title">Marked Points</h2>
+  <section class="card">
+    <p><strong>ADD POINT:</strong> Tap to enter placement mode (orange button), then tap anywhere on the map to create numbered orange markers. Continue tapping to add multiple points. Tap ADD POINT again to exit placement mode. In normal mode, tapping still updates the coordinate text and can inspect tax lots.</p>
+    <p><strong>Marker balloon:</strong> Tap a point to see its coordinates in DDM and decimal degrees, copy its coordinates in degrees and decimal minutes with N/S and E/W (for example, 42° 26.208' N, 123° 08.400' W), rename it, or delete just that point. Drag a marker to reposition it.</p>
+    <p><strong>ENTER COORDS:</strong> Type latitude and longitude in degrees and decimal minutes (the default) or decimal degrees, optionally name the point, and select PLACE POINT. West and south coordinates are negative unless using W/S direction letters.</p>
+    <p><strong>CLEAR POINTS:</strong> Deletes all marked points after confirmation. The Marked Points checkbox in the layer menu only hides or shows them.</p>
+    <p>Points are stored in this browser and restored when the map reopens, as long as browser storage remains available. Clearing browser data may erase them. Points are independent of GPS and imported GPX tracks.</p>
+  </section>
   <h2 class="section-title">Coordinate display</h2>
   <section class="card">
     <p>

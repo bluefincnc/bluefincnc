@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Oregon LiDAR Map V 0.5</title>
+<title>TOPOTAC | Tactical Mapping System</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
@@ -499,6 +499,10 @@ html, body {
 }
   
 
+/* TOPOTAC tactical accent; keep basemap and operational symbology unchanged. */
+#mapGuideButton { background:#171717; border-color:#ff861c; color:#fff; }
+#mapGuideButton:hover { background:#df6900; }
+#gpsButton[aria-pressed="true"] { outline-color:#f47a13; }
 </style>
 </head>
 
@@ -997,6 +1001,8 @@ function updatePublicLand() {
       updatePLSS();
       updatePublicLand();
       updateTaxlots();
+      scheduleHistoricalPerimeterRefresh();
+      scheduleCurrentPerimeterRefresh();
 
       if (typeof scheduleWaterbodyRefresh === "function") {
         scheduleWaterbodyRefresh();
@@ -1158,14 +1164,18 @@ function updatePublicLand() {
 
   // =========================================================
   // CURRENT NIFC FIRE PERIMETERS
-  // Jackson and Josephine counties
+  // Statewide, visible map extent at zoom 9+
   // =========================================================
 
   const perimeterQueryUrl =
     "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters_Current/FeatureServer/0/query";
 
   const firePerimeterLayer = L.layerGroup().addTo(map);
-  let perimeterRefreshInProgress = false;
+  let currentRequestSequence = 0;
+  let currentAbortController = null;
+  let currentLastViewKey = "";
+  let currentRefreshTimer = null;
+  let currentLastFetch = 0;
   let perimeterFillOpacity = 0.10;
 
   function perimeterStyle() {
@@ -1191,90 +1201,81 @@ function updatePublicLand() {
       : "Not reported";
   }
 
-  async function updateFirePerimeters() {
-    if (
-      perimeterRefreshInProgress ||
-      !map.hasLayer(firePerimeterLayer)
-    ) return;
-
-    perimeterRefreshInProgress = true;
-
-    const params = new URLSearchParams({
-      where: "attr_POOCounty = 'JACKSON' OR attr_POOCounty = 'JOSEPHINE'",
-      outFields: "poly_IncidentName,poly_GISAcres,attr_POOCounty",
-      outSR: "4326",
-      returnGeometry: "true",
-      f: "json"
-    });
-
+  async function updateFirePerimeters(force = false) {
+    if (!map.hasLayer(firePerimeterLayer)) return;
+    if (map.getZoom() < 9) {
+      currentRequestSequence++;
+      if (currentAbortController) currentAbortController.abort();
+      currentAbortController = null;
+      currentLastViewKey = "";
+      firePerimeterLayer.clearLayers();
+      return;
+    }
+    const bounds = map.getBounds();
+    const sw = L.CRS.EPSG3857.project(bounds.getSouthWest());
+    const ne = L.CRS.EPSG3857.project(bounds.getNorthEast());
+    const bbox = [sw.x, sw.y, ne.x, ne.y].join(",");
+    const viewKey = bbox;
+    if (!force && currentLastViewKey === viewKey) return;
+    const sequence = ++currentRequestSequence;
+    if (currentAbortController) currentAbortController.abort();
+    const controller = new AbortController();
+    currentAbortController = controller;
+    const base = {
+      where: "1=1", geometry: bbox, geometryType: "esriGeometryEnvelope",
+      inSR: "3857", spatialRel: "esriSpatialRelIntersects",
+      outFields: "OBJECTID,poly_IncidentName,poly_GISAcres,attr_POOCounty",
+      outSR: "4326", returnGeometry: "true", orderByFields: "OBJECTID ASC",
+      resultRecordCount: "1000", f: "json"
+    };
     try {
-      const response = await fetch(
-        perimeterQueryUrl + "?" + params.toString()
-      );
-
-      if (!response.ok) {
-        throw new Error("HTTP " + response.status);
+      const features = [];
+      for (let offset = 0; ; offset += 1000) {
+        const params = new URLSearchParams({...base, resultOffset: String(offset)});
+        const response = await fetch(perimeterQueryUrl + "?" + params, {signal: controller.signal});
+        if (!response.ok) throw Error("Current perimeter HTTP " + response.status);
+        const data = await response.json();
+        if (data.error) throw Error(data.error.message || "Current perimeter query failed");
+        if (sequence !== currentRequestSequence || !map.hasLayer(firePerimeterLayer) || map.getZoom() < 9) return;
+        const page = Array.isArray(data.features) ? data.features : [];
+        features.push(...page);
+        if (!page.length || (!data.exceededTransferLimit && page.length < 1000)) break;
       }
-
-      const data = await response.json();
-
-      if (data.error) {
-        throw new Error(data.error.message || "Perimeter query failed");
-      }
-
       const replacementLayer = L.layerGroup();
-      const features = Array.isArray(data.features) ? data.features : [];
-
-      features.forEach(function (feature) {
+      features.forEach(function(feature) {
         const attrs = feature.attributes || {};
-        const geometry = feature.geometry || {};
-        const rings = Array.isArray(geometry.rings) ? geometry.rings : [];
-
+        const rings = feature.geometry && Array.isArray(feature.geometry.rings) ? feature.geometry.rings : [];
         if (!rings.length) return;
-
-        const latLngRings = rings.map(function (ring) {
-          return ring.map(function (point) {
-            return [Number(point[1]), Number(point[0])];
-          });
-        });
-
+        const latLngRings = rings.map(ring => ring.map(point => [Number(point[1]), Number(point[0])]));
         if (!latLngRings[0] || latLngRings[0].length < 3) return;
-
         const polygon = L.polygon(latLngRings, perimeterStyle());
-
-        const popup =
-          "<div style='min-width:180px'>" +
-          "<strong>" +
-          escapeHtml(attrs.poly_IncidentName || "Unnamed fire perimeter") +
-          "</strong><br>" +
-          "County: " + escapeHtml(attrs.attr_POOCounty) + "<br>" +
-          "Reported size: " + escapeHtml(formatAcres(attrs.poly_GISAcres)) +
-          "</div>";
-
-        polygon.bindPopup(popup);
+        polygon.bindPopup("<div style='min-width:180px'><strong>" +
+          escapeHtml(attrs.poly_IncidentName || "Unnamed fire perimeter") + "</strong><br>County: " +
+          escapeHtml(attrs.attr_POOCounty) + "<br>Reported size: " +
+          escapeHtml(formatAcres(attrs.poly_GISAcres)) + "</div>");
         polygon.addTo(replacementLayer);
       });
-
       firePerimeterLayer.clearLayers();
-
-      replacementLayer.eachLayer(function (layer) {
-        layer.addTo(firePerimeterLayer);
-      });
-
-      console.info(
-        "NIFC fire perimeters for Jackson/Josephine counties:",
-        features.length
-      );
-
-    } catch (error) {
-      console.error("Could not refresh NIFC fire perimeters:", error);
+      replacementLayer.eachLayer(layer => layer.addTo(firePerimeterLayer));
+      currentLastViewKey = viewKey;
+      currentLastFetch = Date.now();
+      console.info("Current fire perimeters in view:", features.length);
+    } catch(error) {
+      if (error.name !== "AbortError") console.error("Current perimeter query failed:", error);
     } finally {
-      perimeterRefreshInProgress = false;
+      if (sequence === currentRequestSequence) currentAbortController = null;
     }
   }
 
-  updateFirePerimeters();
-  setInterval(updateFirePerimeters, 5 * 60 * 1000);
+  function scheduleCurrentPerimeterRefresh() {
+    if (!map.hasLayer(firePerimeterLayer)) return;
+    clearTimeout(currentRefreshTimer);
+    currentRefreshTimer = setTimeout(() => updateFirePerimeters(), 300);
+  }
+  setInterval(() => {
+    if (map.hasLayer(firePerimeterLayer) && Date.now() - currentLastFetch >= 5 * 60 * 1000)
+      updateFirePerimeters(true);
+  }, 5 * 60 * 1000);
 
   // =========================================================
   // HISTORICAL FIRE PERIMETERS
@@ -1285,7 +1286,10 @@ function updatePublicLand() {
     "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters/FeatureServer/0/query";
 
   const historicalFirePerimeterLayer = L.layerGroup();
-  let historicalPerimeterRefreshInProgress = false;
+  let historicalRequestSequence = 0;
+  let historicalAbortController = null;
+  let historicalLastViewKey = "";
+  let historicalRefreshTimer = null;
 
   function formatHistoricalDate(value) {
     if (value == null || value === "") return "Not reported";
@@ -1356,19 +1360,41 @@ function historicalPerimeterStyle() {
   };
 }
 
-  async function updateHistoricalFirePerimeters() {
-    if (
-      historicalPerimeterRefreshInProgress ||
-      !map.hasLayer(historicalFirePerimeterLayer)
-    ) return;
+  async function updateHistoricalFirePerimeters(force = false) {
+    if (!map.hasLayer(historicalFirePerimeterLayer)) return;
+    if (map.getZoom() < 9) {
+      historicalRequestSequence++;
+      if (historicalAbortController) historicalAbortController.abort();
+      historicalAbortController = null;
+      historicalLastViewKey = "";
+      historicalFirePerimeterLayer.clearLayers();
+      return;
+    }
 
-    historicalPerimeterRefreshInProgress = true;
+    const bounds = map.getBounds();
+    const size = map.getSize();
+    if (!bounds.isValid() || size.x < 1 || size.y < 1) return;
 
-    const params = new URLSearchParams({
+    // Query Oregon historical fire perimeters intersecting the current screen.
+    const sw = L.CRS.EPSG3857.project(bounds.getSouthWest());
+    const ne = L.CRS.EPSG3857.project(bounds.getNorthEast());
+    const bbox = [sw.x, sw.y, ne.x, ne.y].join(",");
+    const viewKey = [bbox, size.x, size.y].join("|");
+    if (!force && viewKey === historicalLastViewKey) return;
+
+    const sequence = ++historicalRequestSequence;
+    if (historicalAbortController) historicalAbortController.abort();
+    const controller = new AbortController();
+    historicalAbortController = controller;
+
+    const baseParams = {
       where:
-        "(attr_POOCounty = 'JACKSON' OR attr_POOCounty = 'JOSEPHINE') " +
-        "AND attr_POOState = 'US-OR' " +
+        "attr_POOState = 'US-OR' " +
         "AND attr_FireDiscoveryDateTime >= TIMESTAMP '2020-01-01 00:00:00'",
+      geometry: bbox,
+      geometryType: "esriGeometryEnvelope",
+      inSR: "3857",
+      spatialRel: "esriSpatialRelIntersects",
       outFields:
         "poly_IncidentName,poly_GISAcres,poly_CreateDate," +
         "poly_DateCurrent,poly_PolygonDateTime," +
@@ -1380,28 +1406,32 @@ function historicalPerimeterStyle() {
         "attr_ContainmentDateTime,attr_FireOutDateTime",
       outSR: "4326",
       returnGeometry: "true",
-      resultRecordCount: "2000",
+      orderByFields: "OBJECTID ASC",
+      resultRecordCount: "1000",
       f: "json"
-    });
+    };
 
     try {
-      const response = await fetch(
-        historicalPerimeterQueryUrl + "?" + params.toString()
-      );
-
-      if (!response.ok) {
-        throw new Error("HTTP " + response.status);
-      }
-
-      const data = await response.json();
-
-      if (data.error) {
-        throw new Error(
-          data.error.message || "Historical perimeter query failed"
+      const features = [];
+      const pageSize = 1000;
+      for (let offset = 0; ; offset += pageSize) {
+        const params = new URLSearchParams({
+          ...baseParams,
+          resultOffset: String(offset)
+        });
+        const response = await fetch(
+          historicalPerimeterQueryUrl + "?" + params.toString(),
+          {signal: controller.signal}
         );
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        const data = await response.json();
+        if (data.error) throw new Error(data.error.message || "Historical perimeter query failed");
+        if (sequence !== historicalRequestSequence || !map.hasLayer(historicalFirePerimeterLayer)) return;
+        const page = Array.isArray(data.features) ? data.features : [];
+        features.push(...page);
+        if (!data.exceededTransferLimit && page.length < pageSize) break;
+        if (!page.length) break;
       }
-
-      const features = Array.isArray(data.features) ? data.features : [];
       const replacementLayer = L.layerGroup();
 
       features.forEach(function (feature) {
@@ -1478,35 +1508,27 @@ function historicalPerimeterStyle() {
         polygon.addTo(replacementLayer);
       });
 
+      if (sequence !== historicalRequestSequence || !map.hasLayer(historicalFirePerimeterLayer)) return;
       historicalFirePerimeterLayer.clearLayers();
-
       replacementLayer.eachLayer(function (layer) {
         layer.addTo(historicalFirePerimeterLayer);
       });
-
-      console.info(
-        "Historical Jackson/Josephine fire perimeters loaded:",
-        features.length
-      );
-
-      if (data.exceededTransferLimit) {
-        console.warn(
-          "Historical perimeter results exceeded the service record limit. " +
-          "Additional paging may be needed to retrieve every record."
-        );
-      }
-
+      historicalLastViewKey = viewKey;
+      console.info("Historical perimeters in visible map extent:", features.length);
     } catch (error) {
-      console.error(
-        "Could not refresh historical fire perimeters:",
-        error
-      );
+      if (error.name !== "AbortError") {
+        console.error("Could not refresh historical fire perimeters:", error);
+      }
     } finally {
-      historicalPerimeterRefreshInProgress = false;
+      if (sequence === historicalRequestSequence) historicalAbortController = null;
     }
   }
 
-  setInterval(updateHistoricalFirePerimeters, 15 * 60 * 1000);
+  function scheduleHistoricalPerimeterRefresh() {
+    if (!map.hasLayer(historicalFirePerimeterLayer)) return;
+    clearTimeout(historicalRefreshTimer);
+    historicalRefreshTimer = setTimeout(updateHistoricalFirePerimeters, 300);
+  }
 
   // =========================================================
   // RAWS WEATHER STATIONS
@@ -1751,7 +1773,7 @@ function historicalPerimeterStyle() {
   //
   // featuretype = 3: Lake
   // Minimum size = 0.25 acre
-  // Only Jackson and Josephine counties
+  // Statewide, visible map extent at zoom 9+
   // Only fetch waterbody geometry for the current map view
   // =========================================================
 
@@ -1770,146 +1792,10 @@ function historicalPerimeterStyle() {
 
   const usgsWaterbodyLayer = L.layerGroup();
 
-  // The list of eligible waterbody IDs is fetched once per page load.
-  let waterbodyObjectIds = null;
-  let waterbodyIdLoadPromise = null;
   let waterbodyRefreshSequence = 0;
   let waterbodyRefreshTimer = null;
   let waterbodyLastViewKey = "";
-
-  async function arcgisPost(url, params) {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-      },
-      body: new URLSearchParams(params).toString()
-    });
-
-    if (!response.ok) {
-      throw new Error("ArcGIS HTTP " + response.status);
-    }
-
-    const data = await response.json();
-
-    if (data.error) {
-      throw new Error(
-        data.error.message || "ArcGIS query failed"
-      );
-    }
-
-    return data;
-  }
-
-  function waterbodyCountyGeometryParams(countyGeometry) {
-    return {
-      where: waterbodyWhere,
-      geometry: JSON.stringify(countyGeometry),
-      geometryType: "esriGeometryPolygon",
-      inSR: "4326",
-      spatialRel: "esriSpatialRelIntersects",
-      returnIdsOnly: "true",
-      f: "json"
-    };
-  }
-
-  async function loadWaterbodyObjectIds() {
-    if (waterbodyObjectIds !== null) {
-      return waterbodyObjectIds;
-    }
-
-    if (waterbodyIdLoadPromise) {
-      return waterbodyIdLoadPromise;
-    }
-
-    waterbodyIdLoadPromise = (async function () {
-      console.info(
-        "USGS waterbodies: loading Jackson and Josephine county boundaries..."
-      );
-
-      const countyData = await arcgisPost(
-        oregonCountyQueryUrl,
-        {
-          where: "county_name IN ('Jackson','Josephine')",
-          outFields: "OBJECTID,county_name",
-          returnGeometry: "true",
-          outSR: "4326",
-          f: "json"
-        }
-      );
-
-      const counties = Array.isArray(countyData.features)
-        ? countyData.features
-        : [];
-
-      if (counties.length === 0) {
-        throw new Error(
-          "No Jackson/Josephine county boundaries were returned."
-        );
-      }
-
-      const allIds = new Set();
-
-      for (const countyFeature of counties) {
-        const countyAttributes = countyFeature.attributes || {};
-        const countyGeometry = countyFeature.geometry;
-
-        if (
-          !countyGeometry ||
-          !Array.isArray(countyGeometry.rings) ||
-          countyGeometry.rings.length === 0
-        ) {
-          console.warn(
-            "County geometry was missing:",
-            countyAttributes.county_name
-          );
-          continue;
-        }
-
-        // Ensure the geometry explicitly declares geographic coordinates.
-        const queryGeometry = {
-          rings: countyGeometry.rings,
-          spatialReference: { wkid: 4326 }
-        };
-
-        const idData = await arcgisPost(
-          usgsWaterbodyQueryUrl,
-          waterbodyCountyGeometryParams(queryGeometry)
-        );
-
-        const ids = Array.isArray(idData.objectIds)
-          ? idData.objectIds
-          : [];
-
-        ids.forEach(function (id) {
-          allIds.add(id);
-        });
-
-        console.info(
-          "USGS eligible waterbodies intersecting " +
-          countyAttributes.county_name + " County:",
-          ids.length
-        );
-      }
-
-      waterbodyObjectIds = Array.from(allIds);
-
-      console.info(
-        "USGS eligible waterbodies across both counties:",
-        waterbodyObjectIds.length
-      );
-
-      return waterbodyObjectIds;
-    })();
-
-    try {
-      return await waterbodyIdLoadPromise;
-    } catch (error) {
-      // Permit a later attempt if the first county/ID request fails.
-      waterbodyIdLoadPromise = null;
-      throw error;
-    }
-  }
+  let waterbodyAbortController = null;
 
   function formatWaterbodyAcres(areaSqKm) {
     const squareKm = Number(areaSqKm);
@@ -2012,107 +1898,60 @@ function historicalPerimeterStyle() {
 
   async function updateWaterbodiesInView() {
     if (!map.hasLayer(usgsWaterbodyLayer)) return;
-
+    if (map.getZoom() < 9) {
+      waterbodyRefreshSequence++;
+      if (waterbodyAbortController) waterbodyAbortController.abort();
+      waterbodyAbortController = null;
+      waterbodyLastViewKey = "";
+      usgsWaterbodyLayer.clearLayers();
+      return;
+    }
     const viewKey = currentWaterbodyViewKey();
-
     if (viewKey === waterbodyLastViewKey) return;
-    waterbodyLastViewKey = viewKey;
-
-    const requestSequence = ++waterbodyRefreshSequence;
-
+    const sequence = ++waterbodyRefreshSequence;
+    if (waterbodyAbortController) waterbodyAbortController.abort();
+    const controller = new AbortController();
+    waterbodyAbortController = controller;
+    const bounds = map.getBounds();
+    const geometry = JSON.stringify({xmin: bounds.getWest(), ymin: bounds.getSouth(),
+      xmax: bounds.getEast(), ymax: bounds.getNorth(), spatialReference: {wkid:4326}});
+    const base = {
+      where: waterbodyWhere, geometry, geometryType: "esriGeometryEnvelope", inSR: "4326",
+      spatialRel: "esriSpatialRelIntersects",
+      outFields: "OBJECTID,id3dhp,gnisidlabel,featuretype,featuretypelabel,areasqkm,featuredate",
+      returnGeometry: "true", outSR: "4326", orderByFields: "OBJECTID ASC",
+      resultRecordCount: "1000", f: "json"
+    };
     try {
-      const objectIds = await loadWaterbodyObjectIds();
-
-      if (
-        requestSequence !== waterbodyRefreshSequence ||
-        !map.hasLayer(usgsWaterbodyLayer)
-      ) return;
-
-      if (objectIds.length === 0) {
-        usgsWaterbodyLayer.clearLayers();
-        console.info("No qualifying USGS waterbodies found in the counties.");
-        return;
-      }
-
-      const bounds = map.getBounds();
-
-      const viewGeometry = {
-        xmin: bounds.getWest(),
-        ymin: bounds.getSouth(),
-        xmax: bounds.getEast(),
-        ymax: bounds.getNorth(),
-        spatialReference: { wkid: 4326 }
-      };
-
-      // Keep each query manageable. The server also filters by the current
-      // map extent, so geometry outside the view is not returned.
-      const batchSize = 400;
       const replacementLayer = L.layerGroup();
       const loadedIds = new Set();
-
-      for (let start = 0; start < objectIds.length; start += batchSize) {
-        if (
-          requestSequence !== waterbodyRefreshSequence ||
-          !map.hasLayer(usgsWaterbodyLayer)
-        ) return;
-
-        const batchIds = objectIds.slice(start, start + batchSize);
-
-        const data = await arcgisPost(
-          usgsWaterbodyQueryUrl,
-          {
-            objectIds: batchIds.join(","),
-            where: waterbodyWhere,
-            geometry: JSON.stringify(viewGeometry),
-            geometryType: "esriGeometryEnvelope",
-            inSR: "4326",
-            spatialRel: "esriSpatialRelIntersects",
-            outFields:
-              "OBJECTID,id3dhp,gnisidlabel,featuretype," +
-              "featuretypelabel,areasqkm,featuredate",
-            returnGeometry: "true",
-            outSR: "4326",
-            f: "json"
-          }
-        );
-
-        const features = Array.isArray(data.features)
-          ? data.features
-          : [];
-
-        features.forEach(function (feature) {
-          const id = feature.attributes
-            ? feature.attributes.OBJECTID
-            : null;
-
+      for (let offset = 0; ; offset += 1000) {
+        const response = await fetch(usgsWaterbodyQueryUrl, {
+          method: "POST", signal: controller.signal,
+          headers: {"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+          body: new URLSearchParams({...base, resultOffset: String(offset)}).toString()
+        });
+        if (!response.ok) throw Error("Waterbody HTTP " + response.status);
+        const data = await response.json();
+        if (data.error) throw Error(data.error.message || "Waterbody query failed");
+        if (sequence !== waterbodyRefreshSequence || !map.hasLayer(usgsWaterbodyLayer) || map.getZoom() < 9) return;
+        const page = Array.isArray(data.features) ? data.features : [];
+        page.forEach(feature => {
+          const id = feature.attributes && feature.attributes.OBJECTID;
           if (id != null && loadedIds.has(id)) return;
           if (id != null) loadedIds.add(id);
-
           addWaterbodyFeature(feature, replacementLayer);
         });
+        if (!page.length || (!data.exceededTransferLimit && page.length < 1000)) break;
       }
-
-      if (
-        requestSequence !== waterbodyRefreshSequence ||
-        !map.hasLayer(usgsWaterbodyLayer)
-      ) return;
-
-      // Replace the displayed features only after the complete view query
-      // succeeds, so a failed request doesn't leave a half-drawn layer.
       usgsWaterbodyLayer.clearLayers();
-
-      replacementLayer.eachLayer(function (layer) {
-        layer.addTo(usgsWaterbodyLayer);
-      });
-
-      console.info(
-        "USGS waterbodies drawn for current map view:",
-        loadedIds.size
-      );
-
-    } catch (error) {
-      console.error("Could not load USGS waterbodies:", error);
-      waterbodyLastViewKey = "";
+      replacementLayer.eachLayer(layer => layer.addTo(usgsWaterbodyLayer));
+      waterbodyLastViewKey = viewKey;
+      console.info("Oregon lakes and ponds in view:", loadedIds.size);
+    } catch(error) {
+      if (error.name !== "AbortError") console.error("Could not load USGS waterbodies:", error);
+    } finally {
+      if (sequence === waterbodyRefreshSequence) waterbodyAbortController = null;
     }
   }
 
@@ -2143,13 +1982,96 @@ function historicalPerimeterStyle() {
     lineJoin: "round"
   };
 
+  // Persist short GPS segments locally. Storage is optional: GPS still works if blocked.
+  const GPS_DB_NAME = "topotac-gps-tracks";
+  const GPS_DB_STORE = "segments";
+  let gpsDb = null;
+  let gpsDbReady = false;
+  let gpsStorageWarningShown = false;
+  let gpsSegmentId = null;
+  let gpsLastFixTime = 0;
+  let gpsWriteQueue = Promise.resolve();
+  let gpsTrackGeneration = 0;
+  const GPS_GAP_MS = 60000;
+
+  function warnGpsStorage(err) {
+    console.warn("GPS track local storage unavailable:", err);
+    if (!gpsStorageWarningShown) {
+      gpsStorageWarningShown = true;
+      const note = document.createElement("div");
+      note.textContent = "GPS tracks are temporary: browser storage unavailable.";
+      note.setAttribute("role", "status");
+      note.style.cssText = "position:absolute;bottom:245px;right:8px;z-index:1200;background:#fff4dd;color:#3a2500;padding:9px;border:1px solid #bd8d31;border-radius:5px;max-width:220px;font:12px Arial";
+      document.body.appendChild(note);
+    }
+  }
+
+  function openGpsDb() {
+    if (!window.indexedDB) { warnGpsStorage("IndexedDB unsupported"); return Promise.resolve(null); }
+    return new Promise(resolve => {
+      let request;
+      try { request = indexedDB.open(GPS_DB_NAME, 1); }
+      catch (err) { warnGpsStorage(err); resolve(null); return; }
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(GPS_DB_STORE)) db.createObjectStore(GPS_DB_STORE, {keyPath:"id"});
+      };
+      request.onsuccess = () => { gpsDb = request.result; gpsDbReady = true; resolve(gpsDb); };
+      request.onerror = () => { warnGpsStorage(request.error); resolve(null); };
+      request.onblocked = () => { warnGpsStorage("Database upgrade blocked"); resolve(null); };
+    });
+  }
+
+  function gpsDbOperation(mode, action) {
+    return new Promise((resolve, reject) => {
+      if (!gpsDbReady || !gpsDb) { resolve(null); return; }
+      try {
+        const tx = gpsDb.transaction(GPS_DB_STORE, mode);
+        const store = tx.objectStore(GPS_DB_STORE);
+        const req = action(store);
+        tx.oncomplete = () => resolve(req ? req.result : true);
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+      } catch(err) { reject(err); }
+    });
+  }
+
+  // Restore before recording new positions, so asynchronous reads never overwrite them.
+  const gpsRestorePromise = openGpsDb().then(async db => {
+    if (!db) return;
+    const generation = gpsTrackGeneration;
+    try {
+      const records = await gpsDbOperation("readonly", store => store.getAll());
+      if (generation !== gpsTrackGeneration) return;
+      for (const record of (records || [])) {
+        if (!Array.isArray(record.points) || !record.points.length) continue;
+        L.polyline(record.points, gpsTrackStyle).addTo(gpsTrackLayer);
+      }
+    } catch(err) { warnGpsStorage(err); }
+  });
+
+  function saveGpsSegment() {
+    if (!gpsSegmentId || !gpsTrackPoints.length) return;
+    const record = {id:gpsSegmentId, points:gpsTrackPoints.map(p => [p.lat,p.lng])};
+    const generation = gpsTrackGeneration;
+    gpsWriteQueue = gpsWriteQueue.then(async () => {
+      await gpsRestorePromise;
+      if (generation !== gpsTrackGeneration) return;
+      await gpsDbOperation("readwrite", store => store.put(record));
+    }).catch(warnGpsStorage);
+  }
+
   // Each GPS session gets its own polyline.
   let gpsTrackLine = null;
   let gpsTrackPoints = [];
 
   function recordGpsTrackPoint(location) {
     // Create a new line when a session starts or restarts.
+    const fixTime = Date.now();
+    if (gpsTrackLine && gpsLastFixTime && fixTime - gpsLastFixTime > GPS_GAP_MS) endGpsTrackSegment();
+    gpsLastFixTime = fixTime;
     if (!gpsTrackLine) {
+      gpsSegmentId = "segment-" + fixTime + "-" + Math.random().toString(36).slice(2);
       gpsTrackPoints = [];
       gpsTrackLine = L.polyline([], gpsTrackStyle);
       gpsTrackLine.addTo(gpsTrackLayer);
@@ -2168,6 +2090,7 @@ function historicalPerimeterStyle() {
     ) {
       gpsTrackPoints.push(location);
       gpsTrackLine.setLatLngs(gpsTrackPoints);
+      saveGpsSegment();
     }
   }
 
@@ -2175,6 +2098,8 @@ function historicalPerimeterStyle() {
   function endGpsTrackSegment() {
     gpsTrackLine = null;
     gpsTrackPoints = [];
+    gpsSegmentId = null;
+    gpsLastFixTime = 0;
   }
 
   const clearTrackButton =
@@ -2185,12 +2110,22 @@ function historicalPerimeterStyle() {
 
   clearTrackButton.addEventListener("click", function () {
     // Delete every segment, including earlier GPS sessions.
+    gpsTrackGeneration++;
     gpsTrackLayer.clearLayers();
+    gpsWriteQueue = gpsWriteQueue.then(async () => {
+      await gpsRestorePromise;
+      await gpsDbOperation("readwrite", store => store.clear());
+    }).catch(warnGpsStorage);
 
     // If GPS is still on, the next position starts a fresh line.
     endGpsTrackSegment();
   });
 
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) endGpsTrackSegment();
+  });
+  window.addEventListener("pagehide", endGpsTrackSegment);
 
   // =========================================================
   // GPX IMPORT LAYER
@@ -2212,15 +2147,15 @@ function historicalPerimeterStyle() {
     },
     {
       "GPS Track": gpsTrackLayer,
-      "DOGAMI LiDAR": hillshade,
-      "Public Land Ownership": publicLand,
-      "PLSS Sections": plss,
-      "Oregon Tax Lots": taxlots,
-      "NIFC Fires (24h)": nifcFireLayer,
-      "SWO Current": firePerimeterLayer,
-      "SWO Historical": historicalFirePerimeterLayer,
-      "RAWS WX Stations": rawsLayer,
-      "Lake/Pond ¼ Acre+": usgsWaterbodyLayer
+      "OR LiDAR": hillshade,
+      "OR Public Lands": publicLand,
+      "OR PLSS Sections": plss,
+      "OR Tax Lots": taxlots,
+      "OR New Fires (24Hr)": nifcFireLayer,
+      "US Current Fires": firePerimeterLayer,
+      "OR Historical Fires": historicalFirePerimeterLayer,
+      "OR RAWS WX": rawsLayer,
+      "Lakes/Ponds ¼ Acre+": usgsWaterbodyLayer
     },
     {
       collapsed: true,
@@ -2451,7 +2386,21 @@ clearGpxButton.addEventListener("click", function () {
   });
 
   map.on("overlayremove", function (event) {
+    if (event.layer === firePerimeterLayer) {
+      clearTimeout(currentRefreshTimer);
+      currentRequestSequence++;
+      if (currentAbortController) currentAbortController.abort();
+      currentAbortController = null;
+      currentLastViewKey = "";
+    }
 
+    if (event.layer === historicalFirePerimeterLayer) {
+      clearTimeout(historicalRefreshTimer);
+      historicalRequestSequence++;
+      if (historicalAbortController) historicalAbortController.abort();
+      historicalAbortController = null;
+      historicalLastViewKey = "";
+    }
     if (event.layer === taxlots) { taxlotRequest++; parcelClickSequence++; }
     if (event.layer === publicLand) {
       publicLandRequest++;
@@ -2461,6 +2410,9 @@ clearGpxButton.addEventListener("click", function () {
     if (event.layer === usgsWaterbodyLayer) {
       // Ignore any older request that finishes after the layer is turned off.
       waterbodyRefreshSequence++;
+      if (waterbodyAbortController) waterbodyAbortController.abort();
+      waterbodyAbortController = null;
+      waterbodyLastViewKey = "";
       clearTimeout(waterbodyRefreshTimer);
     }
   });

@@ -2190,6 +2190,56 @@ function historicalPerimeterStyle() {
 
   const markedPointsLayer = L.layerGroup().addTo(map);
 
+  // Oregon dog parks: static GeoJSON hosted beside index.html.
+  // Load once, on first checkbox activation; no Overpass requests.
+  const oregonDogParksLayer = L.layerGroup();
+  let oregonDogParksPromise = null;
+  function dogParkEscape(value) {
+    return String(value).replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[ch]);
+  }
+  function loadOregonDogParks() {
+    if (oregonDogParksPromise) return oregonDogParksPromise;
+    oregonDogParksPromise = fetch("oregon_dogparks.geojson")
+      .then(response => {
+        if (!response.ok) throw new Error("GeoJSON HTTP " + response.status);
+        return response.json();
+      })
+      .then(data => {
+        if (data.type !== "FeatureCollection" || !Array.isArray(data.features)) {
+          throw new Error("Invalid dog park GeoJSON");
+        }
+        const parks = L.geoJSON(data, {
+          pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
+            radius: 7, color: "#ffffff", weight: 2,
+            fillColor: "#9333ea", fillOpacity: 0.95
+          }),
+          onEachFeature: (feature, layer) => {
+            const p = feature.properties || {};
+            const name = dogParkEscape(p.name || "Unnamed Dog Park");
+            let popup = "<strong>" + name + "</strong><br>Oregon Dog Park";
+            if (p.operator) popup += "<br>Operator: " + dogParkEscape(p.operator);
+            if (p.access) popup += "<br>Access: " + dogParkEscape(p.access);
+            if (p.dog) popup += "<br>Dog access: " + dogParkEscape(p.dog);
+            if (p.website && /^https?:\/\//i.test(p.website)) {
+              const url = dogParkEscape(p.website);
+              popup += '<br><a href="' + url + '" target="_blank" rel="noopener noreferrer">Park website</a>';
+            }
+            layer.bindPopup(popup);
+          }
+        });
+        parks.addTo(oregonDogParksLayer);
+        console.info("OR Dog Parks loaded:", data.features.length);
+      })
+      .catch(error => {
+        oregonDogParksPromise = null; // allow retry on next enable
+        console.error("OR Dog Parks GeoJSON failed to load:", error);
+        if (map.hasLayer(oregonDogParksLayer)) {
+          alert("OR Dog Parks could not load. Check that oregon_dogparks.geojson is beside index.html.");
+        }
+      });
+    return oregonDogParksPromise;
+  }
+
   // =========================================================
   // LAYER MENU
   // =========================================================
@@ -2211,7 +2261,8 @@ function historicalPerimeterStyle() {
       "OR RAWS WX": rawsLayer,
       "Lakes/Ponds ¼ Acre+": usgsWaterbodyLayer,
       "GPS Tracks": gpsTrackLayer,
-      "Marked Points": markedPointsLayer
+      "Marked Points": markedPointsLayer,
+      "OR Dog Parks": oregonDogParksLayer
     },
     {
       collapsed: true,
@@ -2419,6 +2470,7 @@ clearGpxButton.addEventListener("click", function () {
   L.DomEvent.disableClickPropagation(gpxStatus);
 
   map.on("overlayadd", function (event) {
+    if (event.layer === oregonDogParksLayer) loadOregonDogParks();
 
     if (event.layer === hillshade) updateHillshade();
     if (event.layer === publicLand) updatePublicLand();

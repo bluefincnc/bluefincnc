@@ -3751,7 +3751,7 @@ clearGpxButton.addEventListener("click", function () {
         gpsCoordinatesDisplay.innerHTML =
           '<span class="gps-lat">Lat: ' + toDDM(lat) + '</span>' +
           '<span class="gps-lng">Lon: ' + toDDM(lng) +
-          ' (±' + Math.round(accuracy) + ' m)</span>';
+          ' (±' + Math.round(accuracy) + ' m) GPS</span>';
 
         gpsButton.textContent = "GPS ON";
         updateGpsSitus(lat, lng, false);

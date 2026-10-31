@@ -532,6 +532,37 @@ html, body {
  #situsAddress {bottom:57px;left:343px;max-width:210px}
 }
 
+
+/* TOPOTAC collapsible utility drawer */
+#toolsToggle {position:absolute;top:12px;left:10px;z-index:2100;background:#171717;color:white;border:2px solid #ff861c;border-radius:7px;padding:11px 13px;font:bold 13px Arial;cursor:pointer;min-height:44px;box-shadow:0 2px 8px #555}
+#toolsDrawer {position:absolute;top:64px;left:10px;z-index:2100;width:min(285px,calc(100vw - 24px));max-height:calc(100dvh - 80px);overflow-y:auto;background:rgba(255,255,255,.98);border:1px solid #ff861c;border-radius:9px;padding:12px;box-sizing:border-box;box-shadow:0 3px 16px #555}
+#toolsDrawer[hidden] {display:none!important}
+.tools-heading {font:bold 12px Arial;color:#b45309;margin:10px 0 6px;border-bottom:1px solid #ddd;padding-bottom:5px}
+#toolsDrawer button:not(#toolsToggle),#toolsDrawer #mapGuideButton {position:static!important;display:inline-flex;align-items:center;justify-content:center;width:auto!important;min-width:0!important;min-height:40px!important;margin:3px 3px 3px 0!important;padding:8px 10px!important;font-size:12px!important;vertical-align:middle}
+#toolsDrawer #opacityControl {position:static!important;width:100%!important;box-shadow:none;padding:4px!important;margin:0!important}
+#toolsDrawer #mapGuideButton {text-decoration:none}
+#pointEntryPanel {position:absolute!important;left:10px!important;bottom:auto!important;top:70px!important;max-height:calc(100dvh - 90px);overflow-y:auto;z-index:2300}
+@media(max-width:900px) and (orientation:landscape) {#toolsToggle {top:8px;left:6px}#toolsDrawer {top:58px;left:6px;max-height:calc(100dvh - 65px)}#pointEntryPanel {top:58px!important;right:8px!important;left:auto!important}}
+@media(max-width:600px) {#toolsToggle {top:8px;left:6px}#toolsDrawer {top:58px;left:6px}}
+
+/* Compact top toolbar and true map-symbol legend */
+#toolsToggle {left:8px!important;top:8px!important;padding:8px 9px!important;font-size:12px!important;min-height:40px!important}
+#mapGuideButton.topbarGuide {position:absolute!important;top:8px!important;left:105px!important;z-index:2100!important;min-height:40px;box-sizing:border-box;display:flex;align-items:center;padding:8px 9px!important;font-size:11px!important}
+#legendToggle {position:absolute;top:8px;left:208px;z-index:2100;min-height:40px;background:#171717;color:#fff;border:2px solid #ff861c;border-radius:6px;font:bold 11px Arial;padding:7px 9px;cursor:pointer}
+#legendPanel {position:absolute;top:58px;left:8px;z-index:2200;width:min(315px,calc(100vw - 16px));max-height:calc(100dvh - 70px);overflow:auto;background:#fff;border:2px solid #ff861c;border-radius:9px;box-sizing:border-box;padding:12px;box-shadow:0 3px 16px #555;font:13px Arial}
+#legendPanel[hidden]{display:none!important}
+.legend-title{display:flex;justify-content:space-between;align-items:center;color:#171717;font-size:15px}
+#legendClose{border:0;background:#eee;border-radius:5px;padding:5px 10px;cursor:pointer}
+.legend-section{font-weight:bold;font-size:11px;color:#a44d00;border-bottom:1px solid #ddd;margin:13px 0 7px;padding-bottom:4px}
+.legend-entry{display:flex;align-items:center;gap:12px;min-height:27px}
+.legend-dot{display:inline-block;flex:0 0 17px;width:17px;height:17px;border:2px solid #fff;box-sizing:border-box;border-radius:50%;box-shadow:0 0 0 1px #777}
+.legend-line{display:inline-block;flex:0 0 28px;width:28px}
+.legend-area{display:inline-block;flex:0 0 27px;width:27px;height:16px;box-sizing:border-box}
+.legend-area.current{border:3px solid #ff2100;background:rgba(255,22,0,.10)}
+.legend-area.historical{border:2.5px dashed #000;background:rgba(50,205,50,.12)}
+.legend-area.water{border:2px solid #1769d2;background:rgba(66,165,245,.55)}
+.legend-note{font-size:11px;color:#555;line-height:1.4;margin:5px 0 7px}
+@media(max-width:360px){#toolsToggle{font-size:11px!important;padding:7px!important}#mapGuideButton.topbarGuide{left:94px!important;font-size:10px!important;padding:7px!important}#legendToggle{left:188px;font-size:10px;padding:7px}}
 </style>
 </head>
 
@@ -545,9 +576,9 @@ html, body {
 
 <div id="opacityControl">
   <div><strong>LiDaR opacity:</strong>
-    <span id="opacityValue">60%</span>
+    <span id="opacityValue">80%</span>
   </div>
-  <input id="opacitySlider" type="range" min="0" max="100" value="60">
+  <input id="opacitySlider" type="range" min="0" max="100" value="80">
 </div>
 
 <div id="coordinates">Click Map for Coordinates</div>
@@ -593,6 +624,58 @@ html, body {
   <button id="placeEnteredPoint" type="button">PLACE POINT</button>
   <button id="closePointEntry" type="button">CANCEL</button>
 </div>
+
+
+<script>
+/* Reparent existing controls; original event handlers and state remain intact. */
+(function(){
+ const toggle=document.createElement('button');toggle.id='toolsToggle';toggle.type='button';toggle.textContent='☰ TOOLS';toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-controls','toolsDrawer');
+ const drawer=document.createElement('div');drawer.id='toolsDrawer';drawer.hidden=true;
+ document.body.append(toggle,drawer);
+ const guide=document.getElementById('mapGuideButton');
+ guide.classList.add('topbarGuide');
+ const legendButton=document.createElement('button');legendButton.id='legendToggle';legendButton.type='button';legendButton.textContent='◈ LEGEND';legendButton.setAttribute('aria-expanded','false');legendButton.setAttribute('aria-controls','legendPanel');
+ const legend=document.createElement('div');legend.id='legendPanel';legend.hidden=true;legend.setAttribute('role','dialog');legend.setAttribute('aria-label','TOPOTAC map legend');
+ legend.innerHTML=`<div class="legend-title"><strong>MAP LEGEND</strong><button id="legendClose" type="button" aria-label="Close legend">✕</button></div>
+ <div class="legend-section">FIRE INCIDENTS</div>
+ <div class="legend-entry"><i class="legend-dot" style="background:#d62828"></i>Wildfire (WF)</div>
+ <div class="legend-entry"><i class="legend-dot" style="background:#2e9d50"></i>Prescribed fire (RX)</div>
+ <div class="legend-entry"><i class="legend-dot" style="background:#f28c00"></i>Incident complex (CX)</div>
+ <div class="legend-entry"><i class="legend-dot" style="background:#555555"></i>Other fire activity</div>
+ <div class="legend-section">FIRE PERIMETERS</div>
+ <div class="legend-entry"><i class="legend-area current"></i>Current fire perimeter</div>
+ <div class="legend-entry"><i class="legend-area historical"></i>Historical fire perimeter</div>
+ <div class="legend-section">GPS & POINTS</div>
+ <div class="legend-entry"><i class="legend-dot" style="background:#2583ff"></i>GPS location</div>
+ <div class="legend-entry"><i class="legend-line" style="background:#00a6ff;height:5px"></i>Recorded GPS track</div>
+ <div class="legend-entry"><i class="legend-dot" style="background:#ff861c;color:#111;font-weight:bold;font-style:normal;text-align:center;line-height:17px">1</i>Marked point (numbered)</div>
+ <div class="legend-entry"><i class="legend-dot" style="background:#16803c"></i>GPX start</div>
+ <div class="legend-entry"><i class="legend-dot" style="background:#d62828"></i>GPX end</div>
+ <div class="legend-note">Imported GPX line colors may vary by track.</div>
+ <div class="legend-section">OTHER FEATURES</div>
+ <div class="legend-entry"><i class="legend-dot" style="background:#9333ea"></i>Dog park</div>
+ <div class="legend-entry"><i class="legend-dot" style="background:#087f8c"></i>RAWS weather station</div>
+ <div class="legend-entry"><i class="legend-area water"></i>USGS waterbody</div>
+ <div class="legend-note">Basemaps, LiDAR hillshade, PLSS and taxlot overlays use service-rendered cartography; their appearance may change with zoom or source.</div>`;
+ document.body.append(legendButton,legend);
+ function closeLegend(){legend.hidden=true;legendButton.setAttribute('aria-expanded','false')}
+ legendButton.addEventListener('click',e=>{e.stopPropagation();close();legend.hidden=!legend.hidden;legendButton.setAttribute('aria-expanded',String(!legend.hidden))});
+ legend.querySelector('#legendClose').addEventListener('click',closeLegend);
+ legend.addEventListener('click',e=>e.stopPropagation());legend.addEventListener('pointerdown',e=>e.stopPropagation());
+ document.getElementById('map').addEventListener('click',closeLegend);
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLegend()});
+ const groups=[['GPS & TRACKING',['gpsButton','clearTrackButton']],['GPX TRACKS',['gpxImportButton','clearGpxButton']],['MARKED POINTS',['addPointButton','enterCoordsButton','clearPointsButton']],['DISPLAY',['opacityControl']]];
+ groups.forEach(([heading,ids])=>{const section=document.createElement('section');const label=document.createElement('div');label.className='tools-heading';label.textContent=heading;section.append(label);ids.forEach(id=>{const el=document.getElementById(id);if(el)section.append(el)});drawer.append(section)});
+ function close(){drawer.hidden=true;toggle.setAttribute('aria-expanded','false')}
+ toggle.addEventListener('click',e=>{e.stopPropagation();closeLegend();drawer.hidden=!drawer.hidden;toggle.setAttribute('aria-expanded',String(!drawer.hidden))});
+ drawer.addEventListener('click',e=>{e.stopPropagation();if(e.target.closest('button') && e.target.id!=='enterCoordsButton')close()});
+ drawer.addEventListener('pointerdown',e=>e.stopPropagation());
+ drawer.addEventListener('dblclick',e=>e.stopPropagation());
+ drawer.addEventListener('wheel',e=>e.stopPropagation(),{passive:true});
+ document.getElementById('map').addEventListener('click',close);
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+})();
+</script>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -644,7 +727,7 @@ html, body {
     "",
     [[42.0, -124.0], [43.0, -122.0]],
     {
-      opacity: 0.60,
+      opacity: 0.80,
       interactive: false
     }
   );

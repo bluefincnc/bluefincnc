@@ -563,6 +563,17 @@ html, body {
 .legend-area.water{border:2px solid #1769d2;background:rgba(66,165,245,.55)}
 .legend-note{font-size:11px;color:#555;line-height:1.4;margin:5px 0 7px}
 @media(max-width:360px){#toolsToggle{font-size:11px!important;padding:7px!important}#mapGuideButton.topbarGuide{left:94px!important;font-size:10px!important;padding:7px!important}#legendToggle{left:188px;font-size:10px;padding:7px}}
+
+/* Revised utility layout: permanent point mode and drawer footer links */
+#mapGuideButton.topbarGuide, #toolsDrawer #mapGuideButton.topbarGuide {position:static!important;top:auto!important;left:auto!important;z-index:auto!important}
+#toolsDrawer #legendToggle {position:static!important;top:auto!important;left:auto!important;z-index:auto!important;min-height:40px!important;margin:3px!important;font-size:12px!important}
+.tools-links {display:flex;flex-wrap:wrap;gap:5px;border-top:1px solid #ddd;margin-top:12px;padding-top:10px;align-items:center}
+#addPointButton {position:absolute!important;left:10px!important;bottom:14px!important;top:auto!important;z-index:2100!important;min-height:44px!important;border:2px solid #ff861c!important}
+#addPointButton[aria-pressed="true"] {background:#ff861c!important;color:#111!important;box-shadow:0 0 0 3px rgba(255,134,28,.35)!important}
+#situsAddress {top:auto!important;bottom:10px!important;left:135px!important;max-width: min(330px,calc(100vw - 145px))!important;width:auto!important}
+@media(max-width:600px) and (orientation:portrait) {#addPointButton {left:8px!important;bottom:12px!important}#situsAddress {left:8px!important;bottom:68px!important;max-width:min(270px,calc(100vw - 16px))!important}}
+@media(max-width:900px) and (orientation:landscape) {#addPointButton {left:8px!important;bottom:8px!important}#situsAddress {left:115px!important;bottom:8px!important;max-width:calc(100vw - 125px)!important}}
+
 </style>
 </head>
 
@@ -633,7 +644,7 @@ html, body {
  const drawer=document.createElement('div');drawer.id='toolsDrawer';drawer.hidden=true;
  document.body.append(toggle,drawer);
  const guide=document.getElementById('mapGuideButton');
- guide.classList.add('topbarGuide');
+ // Guide remains inside the tools drawer.
  const legendButton=document.createElement('button');legendButton.id='legendToggle';legendButton.type='button';legendButton.textContent='◈ LEGEND';legendButton.setAttribute('aria-expanded','false');legendButton.setAttribute('aria-controls','legendPanel');
  const legend=document.createElement('div');legend.id='legendPanel';legend.hidden=true;legend.setAttribute('role','dialog');legend.setAttribute('aria-label','TOPOTAC map legend');
  legend.innerHTML=`<div class="legend-title"><strong>MAP LEGEND</strong><button id="legendClose" type="button" aria-label="Close legend">✕</button></div>
@@ -657,18 +668,22 @@ html, body {
  <div class="legend-entry"><i class="legend-dot" style="background:#087f8c"></i>RAWS weather station</div>
  <div class="legend-entry"><i class="legend-area water"></i>USGS waterbody</div>
  <div class="legend-note">Basemaps, LiDAR hillshade, PLSS and taxlot overlays use service-rendered cartography; their appearance may change with zoom or source.</div>`;
- document.body.append(legendButton,legend);
+ document.body.append(legend);
  function closeLegend(){legend.hidden=true;legendButton.setAttribute('aria-expanded','false')}
  legendButton.addEventListener('click',e=>{e.stopPropagation();close();legend.hidden=!legend.hidden;legendButton.setAttribute('aria-expanded',String(!legend.hidden))});
  legend.querySelector('#legendClose').addEventListener('click',closeLegend);
  legend.addEventListener('click',e=>e.stopPropagation());legend.addEventListener('pointerdown',e=>e.stopPropagation());
  document.getElementById('map').addEventListener('click',closeLegend);
  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLegend()});
- const groups=[['GPS & TRACKING',['gpsButton','clearTrackButton']],['GPX TRACKS',['gpxImportButton','clearGpxButton']],['MARKED POINTS',['addPointButton','enterCoordsButton','clearPointsButton']],['DISPLAY',['opacityControl']]];
+ const groups=[['GPS & TRACKING',['gpsButton','clearTrackButton']],['GPX TRACKS',['gpxImportButton','clearGpxButton']],['MARKED POINTS',['enterCoordsButton','clearPointsButton']],['DISPLAY',['opacityControl']]];
  groups.forEach(([heading,ids])=>{const section=document.createElement('section');const label=document.createElement('div');label.className='tools-heading';label.textContent=heading;section.append(label);ids.forEach(id=>{const el=document.getElementById(id);if(el)section.append(el)});drawer.append(section)});
+ const links=document.createElement('section');links.className='tools-links';
+ links.append(guide,legendButton);drawer.append(links);
+ // Keep ADD POINT visible so its active state cannot be hidden in the drawer.
+ document.body.append(document.getElementById('addPointButton'));
  function close(){drawer.hidden=true;toggle.setAttribute('aria-expanded','false')}
  toggle.addEventListener('click',e=>{e.stopPropagation();closeLegend();drawer.hidden=!drawer.hidden;toggle.setAttribute('aria-expanded',String(!drawer.hidden))});
- drawer.addEventListener('click',e=>{e.stopPropagation();if(e.target.closest('button') && e.target.id!=='enterCoordsButton')close()});
+ drawer.addEventListener('click',e=>{e.stopPropagation();if(e.target.closest('button') && e.target.id!=='enterCoordsButton' && e.target.id!=='legendToggle')close()});
  drawer.addEventListener('pointerdown',e=>e.stopPropagation());
  drawer.addEventListener('dblclick',e=>e.stopPropagation());
  drawer.addEventListener('wheel',e=>e.stopPropagation(),{passive:true});

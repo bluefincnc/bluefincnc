@@ -1,6 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!--
+ TOPOTAC SOURCE GUIDE
+ 01. Styles: map, controls, drawer, legend, and responsive layouts
+ 02. Markup: controls, GPS/situs readouts, GPX input, marked points
+ 03. Tools drawer and legend behavior
+ 04. Leaflet initialization and base maps
+ 05. ArcGIS exports: LiDAR, PLSS, public land, taxlots
+ 06. Parcel identify and GPS situs lookup
+ 07. Fire activity, current/historical perimeters
+ 08. Other layers: RAWS, USGS water, and additional overlays
+ 09. GPS tracking, GPX import, coordinate entry, marked points
+ 10. Refresh scheduling, layer controls, and event listeners
+ Keep index.html and guide.html in the same directory.
+-->
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TOPOTAC | Tactical Mapping System</title>
@@ -8,6 +23,11 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
 <style>
+/* * TOPOTAC — PHASE 3: CONSOLIDATED CSS * Desktop is the base; smaller screens override only changed values. * Edit the appropriate device section to move readouts or buttons. * Device groups are mutually exclusive; no historical cascade patches remain. * JavaScript and HTML are unchanged. */
+
+/* ======================================================================
+ * DESKTOP DEFAULTS & SHARED STYLES — base layout and control appearances
+ * ====================================================================== */
 html, body {
   margin: 0;
   padding: 0;
@@ -16,7 +36,6 @@ html, body {
   overflow: hidden;
   font-family: Arial, sans-serif;
 }
-
 #map {
   position: absolute;
   inset: 0;
@@ -24,14 +43,11 @@ html, body {
   height: 100%;
   background: #e5e5e5;
 }
-
 .leaflet-top.leaflet-right {
   top: 10px;
   right: 8px;
-  /* Keep the layer menu above custom map controls when expanded. */
   z-index: 2000;
 }
-
 .leaflet-control-layers {
   max-width: min(230px, calc(100vw - 28px));
   max-height: 48vh;
@@ -41,19 +57,15 @@ html, body {
   box-shadow: 0 1px 6px #777;
   font-size: 14px;
 }
-
 .leaflet-control-layers-expanded {
   padding: 10px 12px;
 }
 .leaflet-control-layers label {
   margin: 6px 0;
 }
-
 .leaflet-control-layers-separator {
   margin: 8px 0;
 }
-
-/*  opacity and fire perimeter fill controls */
 #opacityControl {
   position: absolute;
   top: 12px;
@@ -67,22 +79,17 @@ html, body {
   box-shadow: 0 1px 6px #777;
   font-size: 13px;
 }
-
 #opacityControl input {
   width: 100%;
   margin: 5px 0 8px;
 }
-
-/* Bright red fire perimeter outline with subtle glow */
 .fire-perimeter-glow {
   filter: drop-shadow(0 0 4px rgba(255, 20, 0, 0.9));
 }
-
-/* Map-click coordinate display */
 #coordinates {
   position: absolute;
-  top: 80px;
-  left: 10px;
+  top: 8px !important;
+  left: 112px !important;
   z-index: 1000;
   max-width: calc(100vw - 40px);
   padding: 8px 10px;
@@ -93,12 +100,10 @@ html, body {
   font-size: 13px;
   overflow-wrap: anywhere;
 }
-
-/* Live GPS coordinate display */
 #gpsCoordinates {
   position: absolute;
-  top: 115px;
-  left: 10px;
+  top: 8px !important;
+  left: 335px !important;
   z-index: 1000;
   max-width: calc(100vw - 40px);
   padding: 8px 10px;
@@ -109,16 +114,21 @@ html, body {
   font-size: 13px;
   overflow-wrap: anywhere;
 }
-
-/* Parcel situs address, below GPS coordinates */
 #situsAddress {
-  position: absolute; top: 160px; left: 10px; z-index: 1000;
-  max-width: min(320px, calc(100vw - 30px)); padding: 8px 10px;
-  background: rgba(255,255,255,.96); border-radius: 6px;
-  box-shadow: 0 1px 6px #777; font-size: 13px; overflow-wrap: anywhere;
+  position: absolute;
+  top: 65px !important;
+  left: 8px !important;
+  z-index: 1000;
+  max-width: min(330px,calc(100vw - 145px)) !important;
+  padding: 8px 10px;
+  background: rgba(255,255,255,.96);
+  border-radius: 6px;
+  box-shadow: 0 1px 6px #777;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+  width: auto !important;
+  bottom: auto !important;
 }
-
-/* GPS button */
 #gpsButton {
   position: absolute;
   left: 10px;
@@ -137,18 +147,14 @@ html, body {
   cursor: pointer;
   touch-action: manipulation;
 }
-
 #gpsButton:active {
   background: #e8f1ff;
 }
-
 #gpsButton[aria-pressed="true"] {
   color: #1769d2;
   outline: 2px solid #1769d2;
+  outline-color: #f47a13;
 }
-
-
-/* Clear GPS track button */
 #clearTrackButton {
   position: absolute;
   left: 10px;
@@ -166,19 +172,9 @@ html, body {
   cursor: pointer;
   touch-action: manipulation;
 }
-
 #clearTrackButton:active {
   background: #fee2e2;
 }
-
-@media (max-width: 600px) {
-  #clearTrackButton {
-    left: 8px;
-    bottom: 76px;
-  }
-}
-
-/* GPX import controls */
 .gpx-button {
   position: absolute;
   left: 10px;
@@ -195,20 +191,16 @@ html, body {
   cursor: pointer;
   touch-action: manipulation;
 }
-  
 #gpxImportButton {
   bottom: 136px;
 }
-
 #clearGpxButton {
   bottom: 184px;
   color: #b42318;
 }
-
 #gpxFileInput {
   display: none;
 }
-  
 #gpxStatus {
   position: absolute;
   left: 10px;
@@ -230,10 +222,12 @@ html, body {
   border-radius: 50%;
   box-shadow: 0 1px 4px rgba(0,0,0,0.6);
 }
-.gpx-start-marker { background: #16803c; }
-.gpx-end-marker { background: #d62828; }
-
-/* GPS accuracy circle */
+.gpx-start-marker {
+  background: #16803c;
+}
+.gpx-end-marker {
+  background: #d62828;
+}
 .gps-accuracy-circle {
   stroke: #2478e5;
   stroke-opacity: 0.75;
@@ -241,8 +235,6 @@ html, body {
   fill: #3388ff;
   fill-opacity: 0.16;
 }
-
-/* Blue GPS dot */
 .gps-location-dot {
   width: 16px;
   height: 16px;
@@ -252,109 +244,18 @@ html, body {
   box-shadow: 0 1px 5px rgba(0,0,0,0.55);
   box-sizing: border-box;
 }
-
-/* RAWS station marker */
 .raws-station-marker {
   stroke: #ffffff;
   stroke-width: 1.5;
   fill: #087f8c;
   fill-opacity: 1;
 }
-
-/* USGS waterbody polygons */
 .usgs-waterbody {
   color: #1769d2;
   weight: 1.5;
-  fillColor: #42a5f5;
-  fillOpacity: 0.55;
+  fillcolor: #42a5f5;
+  fillopacity: 0.55;
 }
-
-
-@media (max-width: 600px) {
-  .leaflet-top.leaflet-right {
-    top: 10px;
-    right: 6px;
-  }
-
-  .leaflet-control-layers {
-    max-height: 42vh;
-    max-width: 210px;
-    overflow-y: auto;
-    font-size: 13px;
-  }
-
-  #opacityControl {
-    top: 10px;
-    left: 6px;
-    width: 145px;
-    box-sizing: border-box;
-    padding: 8px;
-    font-size: 12px;
-  }
-
-  #coordinates {
-    top: 116px;
-    left: 6px;
-    max-width: 180px;
-    font-size: 12px;
-  }
-
-  #gpsCoordinates {
-    top: 160px;
-    left: 6px;
-    width: 180px;
-    font-size: 12px;
-  }
-
-#situsAddress {
-    top: 215px;
-    left: 6px;
-    width: 180px;
-    box-sizing: border-box;
-    font-size: 12px;
-}
-
-  /* PORTRAIT BUTTONS - BOTTOM TO TOP */
-
-  #clearTrackButton {
-    left: 8px;
-    bottom: 12px;
-    min-height: 40px;
-  }
-
-  #gpsButton {
-    left: 8px;
-    bottom: 64px;
-    min-width: 48px;
-    min-height: 40px;
-  }
-
-  .gpx-button {
-    left: 8px;
-    min-height: 40px;
-    box-sizing: border-box;
-    font-size: 12px;
-    padding: 8px 10px;
-  }
-
-  #clearGpxButton {
-    left: 8px;
-    bottom: 116px;
-  }
-
-  #gpxImportButton {
-    left: 8px;
-    bottom: 168px;
-  }
-
-  #gpxStatus {
-    left: 6px;
-    bottom: 220px;
-    max-width: 155px;
-    font-size: 11px;
-  }
-}
-
 .fire-label {
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid #777;
@@ -365,268 +266,916 @@ html, body {
   padding: 2px 4px;
   box-shadow: 0 1px 3px #777;
 }
-
-
 #mapGuideButton {
   position: absolute;
   top: 12px;
   left: 205px;
   z-index: 1000;
   padding: 8px 12px;
-  background: #263746;
-  color: white;
+  background: #171717;
+  color: #fff;
   border: 1px solid white;
   border-radius: 5px;
   text-decoration: none;
   font-size: 12px;
   font-weight: bold;
+  border-color: #ff861c;
+}
+#mapGuideButton:hover {
+  background: #df6900;
+}
+.point-button {
+  position: absolute;
+  left: 10px;
+  z-index: 1100;
+  min-height: 40px;
+  padding: 8px 11px;
+  border: 0;
+  border-radius: 7px;
+  background: rgba(255,255,255,.97);
+  box-shadow: 0 1px 6px #777;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+#addPointButton {
+  bottom: 14px !important;
+  left: 10px !important;
+  position: absolute !important;
+  top: auto !important;
+  z-index: 2100 !important;
+  min-height: 44px !important;
+  border: 2px solid #ff861c !important;
+}
+#clearPointsButton {
+  bottom: 332px;
+  color: #b42318;
+}
+#enterCoordsButton {
+  bottom: 380px;
+}
+#addPointButton[aria-pressed="true"] {
+  background: #ff861c !important;
+  color: #111 !important;
+  outline: 2px solid #111;
+  box-shadow: 0 0 0 3px rgba(255,134,28,.35) !important;
+}
+.marked-point-pin {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #ff861c;
+  color: #111;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 5px #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: bold 12px Arial;
+}
+#pointEntryPanel {
+  position: absolute !important;
+  left: 10px !important;
+  bottom: auto !important;
+  z-index: 2300;
+  background: #fff;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px #555;
+  width: min(285px,calc(100vw - 25px));
+  font-size: 13px;
+  box-sizing: border-box;
+  top: 70px !important;
+  max-height: calc(100dvh - 90px);
+  overflow-y: auto;
+}
+#pointEntryPanel[hidden] {
+  display: none;
+}
+#pointEntryPanel input,#pointEntryPanel select {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 7px;
+  margin: 4px 0 8px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+}
+#pointEntryPanel button {
+  padding: 7px 9px;
+  margin-right: 5px;
+}
+#pointEntryError {
+  color: #a02020;
+  min-height: 15px;
+}
+#toolsToggle {
+  position: absolute;
+  top: 8px !important;
+  left: 8px !important;
+  z-index: 2100;
+  background: #171717;
+  color: white;
+  border: 2px solid #ff861c;
+  border-radius: 7px;
+  padding: 8px 9px !important;
+  font: bold 13px Arial;
+  cursor: pointer;
+  min-height: 40px !important;
+  box-shadow: 0 2px 8px #555;
+  font-size: 12px !important;
+}
+#toolsDrawer {
+  position: absolute;
+  top: 64px;
+  left: 10px;
+  z-index: 2100;
+  width: min(285px,calc(100vw - 24px));
+  max-height: calc(100dvh - 80px);
+  overflow-y: auto;
+  background: rgba(255,255,255,.98);
+  border: 1px solid #ff861c;
+  border-radius: 9px;
+  padding: 12px;
+  box-sizing: border-box;
+  box-shadow: 0 3px 16px #555;
+}
+#toolsDrawer[hidden] {
+  display: none !important;
+}
+.tools-heading {
+  font: bold 12px Arial;
+  color: #b45309;
+  margin: 10px 0 6px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 5px;
+}
+#toolsDrawer button:not(#toolsToggle),#toolsDrawer #mapGuideButton {
+  position: static !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 40px !important;
+  margin: 3px 3px 3px 0 !important;
+  padding: 8px 10px !important;
+  font-size: 12px !important;
+  vertical-align: middle;
+}
+#toolsDrawer #opacityControl {
+  position: static !important;
+  width: 100% !important;
+  box-shadow: none;
+  padding: 4px !important;
+  margin: 0 !important;
+}
+#toolsDrawer #mapGuideButton {
+  text-decoration: none;
+}
+#mapGuideButton.topbarGuide {
+  position: absolute !important;
+  top: 8px !important;
+  left: 105px !important;
+  z-index: 2100 !important;
+  min-height: 40px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 8px 9px !important;
+  font-size: 11px !important;
+}
+#legendToggle {
+  position: absolute;
+  top: 8px;
+  left: 208px;
+  z-index: 2100;
+  min-height: 40px;
+  background: #171717;
+  color: #fff;
+  border: 2px solid #ff861c;
+  border-radius: 6px;
+  font: bold 11px Arial;
+  padding: 7px 9px;
+  cursor: pointer;
+}
+#legendPanel {
+  position: absolute;
+  top: 58px;
+  left: 8px;
+  z-index: 2200;
+  width: min(315px,calc(100vw - 16px));
+  max-height: calc(100dvh - 70px);
+  overflow: auto;
+  background: #fff;
+  border: 2px solid #ff861c;
+  border-radius: 9px;
+  box-sizing: border-box;
+  padding: 12px;
+  box-shadow: 0 3px 16px #555;
+  font: 13px Arial;
+}
+#legendPanel[hidden] {
+  display: none !important;
+}
+.legend-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #171717;
+  font-size: 15px;
+}
+#legendClose {
+  border: 0;
+  background: #eee;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.legend-section {
+  font-weight: bold;
+  font-size: 11px;
+  color: #a44d00;
+  border-bottom: 1px solid #ddd;
+  margin: 13px 0 7px;
+  padding-bottom: 4px;
+}
+.legend-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 27px;
+}
+.legend-dot {
+  display: inline-block;
+  flex: 0 0 17px;
+  width: 17px;
+  height: 17px;
+  border: 2px solid #fff;
+  box-sizing: border-box;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #777;
+}
+.legend-line {
+  display: inline-block;
+  flex: 0 0 28px;
+  width: 28px;
+}
+.legend-area {
+  display: inline-block;
+  flex: 0 0 27px;
+  width: 27px;
+  height: 16px;
+  box-sizing: border-box;
+}
+.legend-area.current {
+  border: 3px solid #ff2100;
+  background: rgba(255,22,0,.10);
+}
+.legend-area.historical {
+  border: 2.5px dashed #000;
+  background: rgba(50,205,50,.12);
+}
+.legend-area.water {
+  border: 2px solid #1769d2;
+  background: rgba(66,165,245,.55);
+}
+.legend-note {
+  font-size: 11px;
+  color: #555;
+  line-height: 1.4;
+  margin: 5px 0 7px;
+}
+#mapGuideButton.topbarGuide, #toolsDrawer #mapGuideButton.topbarGuide {
+  position: static !important;
+  top: auto !important;
+  left: auto !important;
+  z-index: auto !important;
+}
+#toolsDrawer #legendToggle {
+  position: static !important;
+  top: auto !important;
+  left: auto !important;
+  z-index: auto !important;
+  min-height: 40px !important;
+  margin: 3px !important;
+  font-size: 12px !important;
+}
+.tools-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  border-top: 1px solid #ddd;
+  margin-top: 12px;
+  padding-top: 10px;
+  align-items: center;
+}
+#coordinates, #gpsCoordinates, #situsAddress {
+  box-sizing: border-box !important;
+  z-index: 1200 !important;
+}
+.gps-lat, .gps-lng {
+  display: inline;
+}
+.gps-lat::after {
+  content: "  ";
 }
 
-@media (max-width: 600px) {
-  #mapGuideButton {
-    top: 76px;
-    left: 6px;
+/* ======================================================================
+ * TABLET PORTRAIT — 601–900px
+ * ====================================================================== */
+@media (min-width: 601px) and (max-width: 900px) and (orientation: portrait) {
+  #coordinates {
+    top: 80px !important;
+    left: 10px !important;
+  }
+  #gpsCoordinates {
+    top: 115px !important;
+    left: 10px !important;
+  }
+  #situsAddress {
+    top: auto !important;
+    left: 135px !important;
+    bottom: 10px !important;
   }
 }
 
-/* PHONE LANDSCAPE LAYOUT */
-@media (max-width: 900px) and (orientation: landscape) {
-
-  /* Keep the layer menu in the upper-right */
+/* ======================================================================
+ * TABLET LANDSCAPE — 601–900px
+ * ====================================================================== */
+@media (min-width: 601px) and (max-width: 900px) and (orientation: landscape) {
   .leaflet-top.leaflet-right {
-    top: 10px;
     right: 6px;
   }
-
   .leaflet-control-layers {
-    max-height: 65vh;
     max-width: 210px;
-    overflow-y: auto;
+    max-height: 65vh;
     font-size: 12px;
   }
-
-  /* TOP ROW: opacity, map coordinates, GPS coordinates */
   #opacityControl {
     top: 8px;
     left: 6px;
     width: 145px;
-    box-sizing: border-box;
     padding: 6px;
     font-size: 11px;
   }
-
   #coordinates {
-    top: 8px;
-    left: 161px;
-    width: 155px;
-    max-width: 155px;
-    box-sizing: border-box;
-    padding: 6px;
+    max-width: 155px !important;
+    padding: 6px 8px !important;
     font-size: 11px;
+    width: 155px !important;
+    right: auto !important;
   }
-
   #gpsCoordinates {
-    top: 8px;
-    left: 326px;
-    width: 220px;
-    max-width: 220px;
-    box-sizing: border-box;
-    padding: 6px;
+    left: 277px !important;
+    max-width: 220px !important;
+    padding: 6px 8px !important;
     font-size: 11px;
+    width: 220px !important;
+    right: auto !important;
   }
-
-  /* MAP GUIDE: below opacity, against the left edge */
-  #mapGuideButton {
-    top: 65px;
-    left: 6px;
-  }
-
-  /* BOTTOM ROW: OPEN GPX, CLEAR GPX, GPS, CLEAR TRACK */
-  .gpx-button {
-    bottom: 8px;
-    min-height: 40px;
-    box-sizing: border-box;
-    padding: 6px 9px;
+  #situsAddress {
+    top: auto !important;
+    left: 151px !important;
+    max-width: min(400px,calc(100vw - 165px)) !important;
     font-size: 11px;
+    box-sizing: border-box;
+    bottom: 8px !important;
+    right: auto !important;
   }
-
-  #gpxImportButton {
-    left: 8px;
-    bottom: 8px;
-  }
-
-  #clearGpxButton {
-    left: 88px;
-    bottom: 8px;
-    color: #c62828;
-  }
-
   #gpsButton {
     left: 175px;
     bottom: 8px;
-    width: 68px;
     min-width: 68px;
     min-height: 40px;
-    box-sizing: border-box;
     padding: 6px 9px;
     font-size: 12px;
+    width: 68px;
+    box-sizing: border-box;
   }
-
   #clearTrackButton {
     left: 255px;
     bottom: 8px;
     min-height: 40px;
-    box-sizing: border-box;
     padding: 6px 9px;
     font-size: 11px;
-  }
-
-  /* Situs address: beside CLEAR GPS in landscape */
-  #situsAddress {
-    top: auto;
-    bottom: 8px;
-    left: 343px;
-    max-width: calc(100vw - 385px);
     box-sizing: border-box;
-    font-size: 11px;
   }
-
-  /* GPX status above the bottom row */
+  .gpx-button {
+    padding: 6px 9px;
+    font-size: 11px;
+    box-sizing: border-box;
+    bottom: 8px;
+  }
+  #gpxImportButton {
+    bottom: 8px;
+    left: 8px;
+  }
+  #clearGpxButton {
+    bottom: 8px;
+    color: #c62828;
+    left: 88px;
+  }
   #gpxStatus {
     left: 8px;
     bottom: 54px;
     max-width: 210px;
     font-size: 10px;
   }
-}
-  
-
-/* TOPOTAC tactical accent; keep basemap and operational symbology unchanged. */
-#mapGuideButton { background:#171717; border-color:#ff861c; color:#fff; }
-#mapGuideButton:hover { background:#df6900; }
-#gpsButton[aria-pressed="true"] { outline-color:#f47a13; }
-
-/* Marked points: independent from GPS and GPX */
-.point-button {position:absolute;left:10px;z-index:1100;min-height:40px;padding:8px 11px;border:0;border-radius:7px;background:rgba(255,255,255,.97);box-shadow:0 1px 6px #777;font-size:12px;font-weight:bold;cursor:pointer;touch-action:manipulation}
-#addPointButton {bottom:284px}
-#clearPointsButton {bottom:332px;color:#b42318}
-#enterCoordsButton {bottom:380px}
-#addPointButton[aria-pressed="true"] {background:#ff861c;color:#111;outline:2px solid #111}
-.marked-point-pin {width:26px;height:26px;border-radius:50%;background:#ff861c;color:#111;border:2px solid #fff;box-shadow:0 1px 5px #333;display:flex;align-items:center;justify-content:center;font:bold 12px Arial}
-#pointEntryPanel {position:absolute;left:10px;bottom:430px;z-index:1500;background:#fff;padding:12px;border-radius:8px;box-shadow:0 2px 12px #555;width:min(285px,calc(100vw - 25px));font-size:13px;box-sizing:border-box}
-#pointEntryPanel[hidden] {display:none}
-#pointEntryPanel input,#pointEntryPanel select {box-sizing:border-box;width:100%;padding:7px;margin:4px 0 8px;border:1px solid #aaa;border-radius:4px}
-#pointEntryPanel button {padding:7px 9px;margin-right:5px}
-#pointEntryError {color:#a02020;min-height:15px}
-@media(max-width:600px) and (orientation:portrait) {
- #addPointButton {left:8px;bottom:220px}
- #clearPointsButton {left:8px;bottom:268px}
- #enterCoordsButton {left:8px;bottom:316px}
- #pointEntryPanel {left:8px;bottom:365px}
-}
-@media(max-width:900px) and (orientation:landscape) {
- #addPointButton {left:343px;bottom:8px}
- #clearPointsButton {left:438px;bottom:8px}
- #enterCoordsButton {left:550px;bottom:8px}
- #pointEntryPanel {left:auto;right:8px;bottom:58px}
- #situsAddress {bottom:57px;left:343px;max-width:210px}
+  #mapGuideButton {
+    top: 65px;
+    left: 6px;
+  }
+  #addPointButton {
+    bottom: 8px !important;
+    left: 8px !important;
+  }
+  #clearPointsButton {
+    bottom: 8px;
+    left: 438px;
+  }
+  #enterCoordsButton {
+    bottom: 8px;
+    left: 550px;
+  }
+  #pointEntryPanel {
+    left: auto !important;
+    right: 8px !important;
+    top: 58px !important;
+  }
+  #toolsDrawer {
+    top: 58px;
+    left: 6px;
+    max-height: calc(100dvh - 65px);
+  }
 }
 
-
-/* TOPOTAC collapsible utility drawer */
-#toolsToggle {position:absolute;top:12px;left:10px;z-index:2100;background:#171717;color:white;border:2px solid #ff861c;border-radius:7px;padding:11px 13px;font:bold 13px Arial;cursor:pointer;min-height:44px;box-shadow:0 2px 8px #555}
-#toolsDrawer {position:absolute;top:64px;left:10px;z-index:2100;width:min(285px,calc(100vw - 24px));max-height:calc(100dvh - 80px);overflow-y:auto;background:rgba(255,255,255,.98);border:1px solid #ff861c;border-radius:9px;padding:12px;box-sizing:border-box;box-shadow:0 3px 16px #555}
-#toolsDrawer[hidden] {display:none!important}
-.tools-heading {font:bold 12px Arial;color:#b45309;margin:10px 0 6px;border-bottom:1px solid #ddd;padding-bottom:5px}
-#toolsDrawer button:not(#toolsToggle),#toolsDrawer #mapGuideButton {position:static!important;display:inline-flex;align-items:center;justify-content:center;width:auto!important;min-width:0!important;min-height:40px!important;margin:3px 3px 3px 0!important;padding:8px 10px!important;font-size:12px!important;vertical-align:middle}
-#toolsDrawer #opacityControl {position:static!important;width:100%!important;box-shadow:none;padding:4px!important;margin:0!important}
-#toolsDrawer #mapGuideButton {text-decoration:none}
-#pointEntryPanel {position:absolute!important;left:10px!important;bottom:auto!important;top:70px!important;max-height:calc(100dvh - 90px);overflow-y:auto;z-index:2300}
-@media(max-width:900px) and (orientation:landscape) {#toolsToggle {top:8px;left:6px}#toolsDrawer {top:58px;left:6px;max-height:calc(100dvh - 65px)}#pointEntryPanel {top:58px!important;right:8px!important;left:auto!important}}
-@media(max-width:600px) {#toolsToggle {top:8px;left:6px}#toolsDrawer {top:58px;left:6px}}
-
-/* Compact top toolbar and true map-symbol legend */
-#toolsToggle {left:8px!important;top:8px!important;padding:8px 9px!important;font-size:12px!important;min-height:40px!important}
-#mapGuideButton.topbarGuide {position:absolute!important;top:8px!important;left:105px!important;z-index:2100!important;min-height:40px;box-sizing:border-box;display:flex;align-items:center;padding:8px 9px!important;font-size:11px!important}
-#legendToggle {position:absolute;top:8px;left:208px;z-index:2100;min-height:40px;background:#171717;color:#fff;border:2px solid #ff861c;border-radius:6px;font:bold 11px Arial;padding:7px 9px;cursor:pointer}
-#legendPanel {position:absolute;top:58px;left:8px;z-index:2200;width:min(315px,calc(100vw - 16px));max-height:calc(100dvh - 70px);overflow:auto;background:#fff;border:2px solid #ff861c;border-radius:9px;box-sizing:border-box;padding:12px;box-shadow:0 3px 16px #555;font:13px Arial}
-#legendPanel[hidden]{display:none!important}
-.legend-title{display:flex;justify-content:space-between;align-items:center;color:#171717;font-size:15px}
-#legendClose{border:0;background:#eee;border-radius:5px;padding:5px 10px;cursor:pointer}
-.legend-section{font-weight:bold;font-size:11px;color:#a44d00;border-bottom:1px solid #ddd;margin:13px 0 7px;padding-bottom:4px}
-.legend-entry{display:flex;align-items:center;gap:12px;min-height:27px}
-.legend-dot{display:inline-block;flex:0 0 17px;width:17px;height:17px;border:2px solid #fff;box-sizing:border-box;border-radius:50%;box-shadow:0 0 0 1px #777}
-.legend-line{display:inline-block;flex:0 0 28px;width:28px}
-.legend-area{display:inline-block;flex:0 0 27px;width:27px;height:16px;box-sizing:border-box}
-.legend-area.current{border:3px solid #ff2100;background:rgba(255,22,0,.10)}
-.legend-area.historical{border:2.5px dashed #000;background:rgba(50,205,50,.12)}
-.legend-area.water{border:2px solid #1769d2;background:rgba(66,165,245,.55)}
-.legend-note{font-size:11px;color:#555;line-height:1.4;margin:5px 0 7px}
-@media(max-width:360px){#toolsToggle{font-size:11px!important;padding:7px!important}#mapGuideButton.topbarGuide{left:94px!important;font-size:10px!important;padding:7px!important}#legendToggle{left:188px;font-size:10px;padding:7px}}
-
-/* Revised utility layout: permanent point mode and drawer footer links */
-#mapGuideButton.topbarGuide, #toolsDrawer #mapGuideButton.topbarGuide {position:static!important;top:auto!important;left:auto!important;z-index:auto!important}
-#toolsDrawer #legendToggle {position:static!important;top:auto!important;left:auto!important;z-index:auto!important;min-height:40px!important;margin:3px!important;font-size:12px!important}
-.tools-links {display:flex;flex-wrap:wrap;gap:5px;border-top:1px solid #ddd;margin-top:12px;padding-top:10px;align-items:center}
-#addPointButton {position:absolute!important;left:10px!important;bottom:14px!important;top:auto!important;z-index:2100!important;min-height:44px!important;border:2px solid #ff861c!important}
-#addPointButton[aria-pressed="true"] {background:#ff861c!important;color:#111!important;box-shadow:0 0 0 3px rgba(255,134,28,.35)!important}
-#situsAddress {top:auto!important;bottom:10px!important;left:135px!important;max-width: min(330px,calc(100vw - 145px))!important;width:auto!important}
-@media(max-width:600px) and (orientation:portrait) {#addPointButton {left:8px!important;bottom:12px!important}#situsAddress {left:8px!important;bottom:68px!important;max-width:min(270px,calc(100vw - 16px))!important}}
-@media(max-width:900px) and (orientation:landscape) {#addPointButton {left:8px!important;bottom:8px!important}#situsAddress {left:115px!important;bottom:8px!important;max-width:calc(100vw - 125px)!important}}
-
-
-/* V3: responsive readouts. Leaflet attribution is left untouched. */
-#coordinates, #gpsCoordinates, #situsAddress {box-sizing:border-box!important;z-index:1200!important}
-.gps-lat, .gps-lng {display:inline}
-.gps-lat::after {content:"  "}
-@media (max-width:600px) and (orientation:portrait) {
-  #toolsToggle {left:8px!important;top:8px!important}
+/* ======================================================================
+ * PHONE PORTRAIT — 361–600px
+ * ====================================================================== */
+@media (min-width: 361px) and (max-width: 600px) and (orientation: portrait) {
+  .leaflet-top.leaflet-right {
+    right: 6px;
+  }
+  .leaflet-control-layers {
+    max-width: 210px;
+    max-height: 42vh;
+    font-size: 13px;
+  }
+  #opacityControl {
+    top: 10px;
+    left: 6px;
+    width: 145px;
+    padding: 8px;
+    font-size: 12px;
+  }
   #coordinates {
-    top: 8px !important;
     left: 100px !important;
-    right: auto !important;
-    width: fit-content !important;
     max-width: 220px !important;
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+    width: fit-content !important;
+    right: auto !important;
     min-height: 40px;
     display: flex;
     align-items: center;
-    font-size: 12px !important;
-    padding: 6px 8px !important;
-    box-sizing: border-box;
-}
-  #situsAddress {top:61px!important;bottom:auto!important;left:8px!important;right:auto!important;width:min(265px,calc(100vw - 16px))!important;max-width:calc(100vw - 16px)!important;font-size:12px!important}
-  #addPointButton {left:8px!important;bottom:12px!important}
+  }
   #gpsCoordinates {
     top: auto !important;
-    bottom: 12px !important;
     left: 110px !important;
-    right: auto !important;
-    width: 115px !important;
     max-width: 115px !important;
-    min-height: 48px;
     padding: 6px 8px !important;
     font-size: 11px !important;
+    width: 115px !important;
+    bottom: 12px !important;
+    right: auto !important;
+    min-height: 48px;
     line-height: 1.35 !important;
     white-space: normal !important;
-    overflow-wrap: anywhere;
+  }
+  #situsAddress {
+    top: 61px !important;
+    max-width: calc(100vw - 16px) !important;
+    font-size: 12px !important;
+    width: min(265px,calc(100vw - 16px)) !important;
     box-sizing: border-box;
-}
-  #gpsCoordinates .gps-lat, #gpsCoordinates .gps-lng {display:block}
-  #gpsCoordinates .gps-lat::after {content:none}
-}
-@media (max-width:900px) and (orientation:landscape) {
-  #toolsToggle {left:8px!important;top:8px!important}
-  #coordinates {top:8px!important;left:112px!important;right:auto!important;width:155px!important;max-width:155px!important;padding:6px 8px!important}
-  #gpsCoordinates {top:8px!important;left:277px!important;right:auto!important;width:220px!important;max-width:220px!important;padding:6px 8px!important}
-  #situsAddress {top:auto!important;bottom:8px!important;left:151px!important;right:auto!important;width:auto!important;max-width:min(400px,calc(100vw - 165px))!important}
-  #addPointButton {left:8px!important;bottom:8px!important}
-}
-@media (min-width:901px) {
-  #coordinates {top:8px!important;left:112px!important}
-  #gpsCoordinates {top:8px!important;left:335px!important}
-  #situsAddress {top:65px!important;bottom:auto!important;left:8px!important}
+    right: auto !important;
+  }
+  #gpsButton {
+    left: 8px;
+    bottom: 64px;
+    min-height: 40px;
+  }
+  #clearTrackButton {
+    left: 8px;
+    bottom: 12px;
+    min-height: 40px;
+  }
+  .gpx-button {
+    left: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+    box-sizing: border-box;
+  }
+  #gpxImportButton {
+    bottom: 168px;
+    left: 8px;
+  }
+  #clearGpxButton {
+    bottom: 116px;
+    left: 8px;
+  }
+  #gpxStatus {
+    left: 6px;
+    bottom: 220px;
+    max-width: 155px;
+    font-size: 11px;
+  }
+  #mapGuideButton {
+    top: 76px;
+    left: 6px;
+  }
+  #addPointButton {
+    bottom: 12px !important;
+    left: 8px !important;
+  }
+  #clearPointsButton {
+    bottom: 268px;
+    left: 8px;
+  }
+  #enterCoordsButton {
+    bottom: 316px;
+    left: 8px;
+  }
+  #toolsDrawer {
+    top: 58px;
+    left: 6px;
+  }
+  #gpsCoordinates .gps-lat, #gpsCoordinates .gps-lng {
+    display: block;
+  }
+  #gpsCoordinates .gps-lat::after {
+    content: none;
+  }
 }
 
+/* ======================================================================
+ * PHONE LANDSCAPE — 361–600px
+ * ====================================================================== */
+@media (min-width: 361px) and (max-width: 600px) and (orientation: landscape) {
+  .leaflet-top.leaflet-right {
+    right: 6px;
+  }
+  .leaflet-control-layers {
+    max-width: 210px;
+    max-height: 65vh;
+    font-size: 12px;
+  }
+  #opacityControl {
+    top: 8px;
+    left: 6px;
+    width: 145px;
+    padding: 6px;
+    font-size: 11px;
+  }
+  #coordinates {
+    max-width: 155px !important;
+    padding: 6px 8px !important;
+    font-size: 11px;
+    width: 155px !important;
+    right: auto !important;
+  }
+  #gpsCoordinates {
+    left: 277px !important;
+    max-width: 220px !important;
+    padding: 6px 8px !important;
+    font-size: 11px;
+    width: 220px !important;
+    right: auto !important;
+  }
+  #situsAddress {
+    top: auto !important;
+    left: 151px !important;
+    max-width: min(400px,calc(100vw - 165px)) !important;
+    font-size: 11px;
+    box-sizing: border-box;
+    bottom: 8px !important;
+    right: auto !important;
+  }
+  #gpsButton {
+    left: 175px;
+    bottom: 8px;
+    min-width: 68px;
+    min-height: 40px;
+    padding: 6px 9px;
+    font-size: 12px;
+    width: 68px;
+    box-sizing: border-box;
+  }
+  #clearTrackButton {
+    left: 255px;
+    bottom: 8px;
+    min-height: 40px;
+    padding: 6px 9px;
+    font-size: 11px;
+    box-sizing: border-box;
+  }
+  .gpx-button {
+    padding: 6px 9px;
+    font-size: 11px;
+    box-sizing: border-box;
+    bottom: 8px;
+  }
+  #gpxImportButton {
+    bottom: 8px;
+    left: 8px;
+  }
+  #clearGpxButton {
+    bottom: 8px;
+    color: #c62828;
+    left: 88px;
+  }
+  #gpxStatus {
+    left: 8px;
+    bottom: 54px;
+    max-width: 210px;
+    font-size: 10px;
+  }
+  #mapGuideButton {
+    top: 65px;
+    left: 6px;
+  }
+  #addPointButton {
+    bottom: 8px !important;
+    left: 8px !important;
+  }
+  #clearPointsButton {
+    bottom: 8px;
+    left: 438px;
+  }
+  #enterCoordsButton {
+    bottom: 8px;
+    left: 550px;
+  }
+  #pointEntryPanel {
+    left: auto !important;
+    right: 8px !important;
+    top: 58px !important;
+  }
+  #toolsDrawer {
+    top: 58px;
+    left: 6px;
+    max-height: calc(100dvh - 65px);
+  }
+}
+
+/* ======================================================================
+ * SMALL PHONE PORTRAIT — 360px and below
+ * ====================================================================== */
+@media (max-width: 360px) and (orientation: portrait) {
+  .leaflet-top.leaflet-right {
+    right: 6px;
+  }
+  .leaflet-control-layers {
+    max-width: 210px;
+    max-height: 42vh;
+    font-size: 13px;
+  }
+  #opacityControl {
+    top: 10px;
+    left: 6px;
+    width: 145px;
+    padding: 8px;
+    font-size: 12px;
+  }
+  #coordinates {
+    left: 100px !important;
+    max-width: 220px !important;
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+    width: fit-content !important;
+    right: auto !important;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+  }
+  #gpsCoordinates {
+    top: auto !important;
+    left: 110px !important;
+    max-width: 115px !important;
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+    width: 115px !important;
+    bottom: 12px !important;
+    right: auto !important;
+    min-height: 48px;
+    line-height: 1.35 !important;
+    white-space: normal !important;
+  }
+  #situsAddress {
+    top: 61px !important;
+    max-width: calc(100vw - 16px) !important;
+    font-size: 12px !important;
+    width: min(265px,calc(100vw - 16px)) !important;
+    box-sizing: border-box;
+    right: auto !important;
+  }
+  #gpsButton {
+    left: 8px;
+    bottom: 64px;
+    min-height: 40px;
+  }
+  #clearTrackButton {
+    left: 8px;
+    bottom: 12px;
+    min-height: 40px;
+  }
+  .gpx-button {
+    left: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+    box-sizing: border-box;
+  }
+  #gpxImportButton {
+    bottom: 168px;
+    left: 8px;
+  }
+  #clearGpxButton {
+    bottom: 116px;
+    left: 8px;
+  }
+  #gpxStatus {
+    left: 6px;
+    bottom: 220px;
+    max-width: 155px;
+    font-size: 11px;
+  }
+  #mapGuideButton {
+    top: 76px;
+    left: 6px;
+  }
+  #addPointButton {
+    bottom: 12px !important;
+    left: 8px !important;
+  }
+  #clearPointsButton {
+    bottom: 268px;
+    left: 8px;
+  }
+  #enterCoordsButton {
+    bottom: 316px;
+    left: 8px;
+  }
+  #toolsToggle {
+    padding: 7px !important;
+    font-size: 11px !important;
+  }
+  #toolsDrawer {
+    top: 58px;
+    left: 6px;
+  }
+  #mapGuideButton.topbarGuide {
+    left: 94px !important;
+    padding: 7px !important;
+    font-size: 10px !important;
+  }
+  #legendToggle {
+    left: 188px;
+    padding: 7px;
+    font-size: 10px;
+  }
+  #gpsCoordinates .gps-lat, #gpsCoordinates .gps-lng {
+    display: block;
+  }
+  #gpsCoordinates .gps-lat::after {
+    content: none;
+  }
+}
+
+/* ======================================================================
+ * SMALL PHONE LANDSCAPE — 360px and below
+ * ====================================================================== */
+@media (max-width: 360px) and (orientation: landscape) {
+  .leaflet-top.leaflet-right {
+    right: 6px;
+  }
+  .leaflet-control-layers {
+    max-width: 210px;
+    max-height: 65vh;
+    font-size: 12px;
+  }
+  #opacityControl {
+    top: 8px;
+    left: 6px;
+    width: 145px;
+    padding: 6px;
+    font-size: 11px;
+  }
+  #coordinates {
+    max-width: 155px !important;
+    padding: 6px 8px !important;
+    font-size: 11px;
+    width: 155px !important;
+    right: auto !important;
+  }
+  #gpsCoordinates {
+    left: 277px !important;
+    max-width: 220px !important;
+    padding: 6px 8px !important;
+    font-size: 11px;
+    width: 220px !important;
+    right: auto !important;
+  }
+  #situsAddress {
+    top: auto !important;
+    left: 151px !important;
+    max-width: min(400px,calc(100vw - 165px)) !important;
+    font-size: 11px;
+    box-sizing: border-box;
+    bottom: 8px !important;
+    right: auto !important;
+  }
+  #gpsButton {
+    left: 175px;
+    bottom: 8px;
+    min-width: 68px;
+    min-height: 40px;
+    padding: 6px 9px;
+    font-size: 12px;
+    width: 68px;
+    box-sizing: border-box;
+  }
+  #clearTrackButton {
+    left: 255px;
+    bottom: 8px;
+    min-height: 40px;
+    padding: 6px 9px;
+    font-size: 11px;
+    box-sizing: border-box;
+  }
+  .gpx-button {
+    left: 8px;
+    padding: 6px 9px;
+    font-size: 11px;
+    box-sizing: border-box;
+    bottom: 8px;
+  }
+  #gpxImportButton {
+    bottom: 8px;
+    left: 8px;
+  }
+  #clearGpxButton {
+    bottom: 8px;
+    color: #c62828;
+    left: 88px;
+  }
+  #gpxStatus {
+    left: 8px;
+    bottom: 54px;
+    max-width: 210px;
+    font-size: 10px;
+  }
+  #mapGuideButton {
+    top: 65px;
+    left: 6px;
+  }
+  #addPointButton {
+    bottom: 8px !important;
+    left: 8px !important;
+  }
+  #clearPointsButton {
+    bottom: 8px;
+    left: 438px;
+  }
+  #enterCoordsButton {
+    bottom: 8px;
+    left: 550px;
+  }
+  #pointEntryPanel {
+    left: auto !important;
+    right: 8px !important;
+    top: 58px !important;
+  }
+  #toolsToggle {
+    padding: 7px !important;
+    font-size: 11px !important;
+  }
+  #toolsDrawer {
+    top: 58px;
+    left: 6px;
+    max-height: calc(100dvh - 65px);
+  }
+  #mapGuideButton.topbarGuide {
+    left: 94px !important;
+    padding: 7px !important;
+    font-size: 10px !important;
+  }
+  #legendToggle {
+    left: 188px;
+    padding: 7px;
+    font-size: 10px;
+  }
+}
 </style>
 </head>
 
@@ -722,6 +1271,7 @@ html, body {
  <div class="legend-entry"><i class="legend-area water"></i>USGS waterbody</div>
  <div class="legend-note">Basemaps, LiDAR hillshade, PLSS and taxlot overlays use service-rendered cartography; their appearance may change with zoom or source.</div>`;
  document.body.append(legend);
+ // closeLegend: close legend logic.
  function closeLegend(){legend.hidden=true;legendButton.setAttribute('aria-expanded','false')}
  legendButton.addEventListener('click',e=>{e.stopPropagation();close();legend.hidden=!legend.hidden;legendButton.setAttribute('aria-expanded',String(!legend.hidden))});
  legend.querySelector('#legendClose').addEventListener('click',closeLegend);
@@ -734,6 +1284,7 @@ html, body {
  links.append(guide,legendButton);drawer.append(links);
  // Keep ADD POINT visible so its active state cannot be hidden in the drawer.
  document.body.append(document.getElementById('addPointButton'));
+ // close: close logic.
  function close(){drawer.hidden=true;toggle.setAttribute('aria-expanded','false')}
  toggle.addEventListener('click',e=>{e.stopPropagation();closeLegend();drawer.hidden=!drawer.hidden;toggle.setAttribute('aria-expanded',String(!drawer.hidden))});
  drawer.addEventListener('click',e=>{e.stopPropagation();if(e.target.closest('button') && e.target.id!=='enterCoordsButton' && e.target.id!=='legendToggle')close()});
@@ -843,6 +1394,7 @@ html, body {
   let lastSitusTime = 0;
   const situsDisplay = document.getElementById("situsAddress");
 
+  // loadTaxlotMetadata: load taxlot metadata logic.
   function loadTaxlotMetadata() {
     if (!taxlotMetadataPromise) {
       taxlotMetadataPromise = fetch(taxlotService + "?f=pjson")
@@ -857,6 +1409,7 @@ html, body {
     return taxlotMetadataPromise;
   }
 
+  // Requests taxlot imagery for the visible map bounds at zoom 14+.
   async function updateTaxlots() {
     if (!map.hasLayer(taxlots)) return;
     const request = ++taxlotRequest;
@@ -883,12 +1436,14 @@ html, body {
   }
 
   // ArcGIS REST JSONP fallback for services that do not allow browser CORS.
+  // arcgisJsonp: arcgis jsonp logic.
   function arcgisJsonp(url, params) {
     return new Promise((resolve, reject) => {
       const callback = "__odfTaxlotCallback" + Date.now() + "_" + Math.floor(Math.random() * 1000000);
       const script = document.createElement("script");
       let finished = false;
       const timer = setTimeout(() => finish(new Error("Service timed out")), 12000);
+      // finish: finish logic.
       function finish(error, result) {
         if (finished) return;
         finished = true;
@@ -907,6 +1462,7 @@ html, body {
     });
   }
 
+  // taxlotRest: taxlot rest logic.
   async function taxlotRest(url, params) {
     const query = new URLSearchParams(params);
     try {
@@ -933,11 +1489,13 @@ html, body {
     {name:"Jackson County", url:"https://jcportal.jacksoncountyor.gov/server/rest/services/Property/Taxlots/FeatureServer/2/query"},
     {name:"Josephine County", url:"https://gis.co.josephine.or.us/arcgis/rest/services/Assessor/Assessor_Taxlots/FeatureServer/0/query"}
   ];
+  // taxlotField: taxlot field logic.
   function taxlotField(attrs, pattern) {
     const key = Object.keys(attrs).find(k => pattern.test(k));
     const value = key ? attrs[key] : null;
     return value == null || String(value).trim() === "" || /^null$/i.test(String(value)) ? "" : String(value).trim();
   }
+  // parcelDetails: parcel details logic.
   function parcelDetails(a) {
     const street = taxlotField(a, /^(site_address|SITEADDNAM|SITUS|SITUS_ADDRESS|SitusAddrsFull|SitusAddrs|SITUSADDR|STREETADDRESS)$/i);
     const cityzip = taxlotField(a, /^(site_citystatezip|SitusCityStateZip)$/i);
@@ -949,6 +1507,7 @@ html, body {
     return {address,lot,acres};
   }
   // A point query avoids downloading statewide parcel geometry and works independently of map view.
+  // Queries address-capable parcel services for one latitude/longitude.
   async function queryParcelAt(lat,lng) {
     const params = {
       where: "1=1", geometry: JSON.stringify({x:lng,y:lat,spatialReference:{wkid:4326}}),
@@ -977,6 +1536,7 @@ html, body {
     return null;
   }
   let parcelClickSequence = 0;
+  // identifyClickedParcel: identify clicked parcel logic.
   async function identifyClickedParcel(latlng) {
     if (!map.hasLayer(taxlots) || map.getZoom() < 14) return;
     const sequence = ++parcelClickSequence;
@@ -996,6 +1556,7 @@ html, body {
       if (sequence === parcelClickSequence) popup.setContent("Tax lot lookup failed: "+escapeHtml(err.message || String(err)));
     }
   }
+  // Refreshes the situs readout when GPS moves enough or the cache expires.
   async function updateGpsSitus(lat,lng,force) {
     const point = L.latLng(lat,lng);
     const now = Date.now();
@@ -1019,10 +1580,12 @@ html, body {
   let publicLandRequest = 0;
   let refreshTimer = null;
 
+  // makeExportUrl: make export url logic.
   function makeExportUrl(serviceUrl, params) {
     return serviceUrl + "?" + new URLSearchParams(params).toString();
   }
 
+  // Exports DOGAMI hillshade for the current map extent.
   function updateHillshade() {
     if (!map.hasLayer(hillshade)) return;
 
@@ -1078,6 +1641,7 @@ html, body {
 // UPDATE PLSS
 // =========================================================
 
+// Exports PLSS section imagery for the current map extent.
 function updatePLSS() {
   if (!map.hasLayer(plss)) return;
 
@@ -1139,6 +1703,7 @@ function updatePLSS() {
 // =========================================================
 // UPDATE PUBLIC LAND OWNERSHIP
 // =========================================================
+// Exports public ownership imagery for the current map extent.
 function updatePublicLand() {
   if (!map.hasLayer(publicLand)) return;
 
@@ -1197,6 +1762,7 @@ function updatePublicLand() {
 }
 
 
+  // Debounces overlay requests after map movement.
   function refreshVisibleOverlays() {
     clearTimeout(refreshTimer);
 
@@ -1218,6 +1784,7 @@ function updatePublicLand() {
   // SHARED HTML ESCAPING
   // =========================================================
 
+  // escapeHtml: escape html logic.
   function escapeHtml(value) {
     return String(value == null || value === "" ? "Not reported" : value)
       .replace(/&/g, "&amp;")
@@ -1237,6 +1804,7 @@ function updatePublicLand() {
   const nifcFireLayer = L.layerGroup().addTo(map);
   let nifcRefreshInProgress = false;
 
+  // fireTypeLabel: fire type label logic.
   function fireTypeLabel(code) {
     if (code === "WF") return "Wildfire";
     if (code === "RX") return "Prescribed fire";
@@ -1244,6 +1812,7 @@ function updatePublicLand() {
     return code || "Fire activity";
   }
 
+  // fireMarkerColor: fire marker color logic.
   function fireMarkerColor(code) {
     if (code === "RX") return "#2e9d50";
     if (code === "CX") return "#f28c00";
@@ -1251,6 +1820,7 @@ function updatePublicLand() {
     return "#555555";
   }
 
+  // Fetches recent Oregon incident points and replaces the fire layer.
   async function updateNifcFires() {
     if (nifcRefreshInProgress || !map.hasLayer(nifcFireLayer)) return;
 
@@ -1382,6 +1952,7 @@ function updatePublicLand() {
   let currentLastFetch = 0;
   let perimeterFillOpacity = 0.10;
 
+  // perimeterStyle: perimeter style logic.
   function perimeterStyle() {
     return {
       color: "#ff2100",
@@ -1395,6 +1966,7 @@ function updatePublicLand() {
     };
   }
 
+  // formatAcres: format acres logic.
   function formatAcres(value) {
     const acres = Number(value);
 
@@ -1405,6 +1977,7 @@ function updatePublicLand() {
       : "Not reported";
   }
 
+  // updateFirePerimeters: update fire perimeters logic.
   async function updateFirePerimeters(force = false) {
     if (!map.hasLayer(firePerimeterLayer)) return;
     if (map.getZoom() < 9) {
@@ -1471,6 +2044,7 @@ function updatePublicLand() {
     }
   }
 
+  // scheduleCurrentPerimeterRefresh: schedule current perimeter refresh logic.
   function scheduleCurrentPerimeterRefresh() {
     if (!map.hasLayer(firePerimeterLayer)) return;
     clearTimeout(currentRefreshTimer);
@@ -1495,6 +2069,7 @@ function updatePublicLand() {
   let historicalLastViewKey = "";
   let historicalRefreshTimer = null;
 
+  // formatHistoricalDate: format historical date logic.
   function formatHistoricalDate(value) {
     if (value == null || value === "") return "Not reported";
 
@@ -1515,6 +2090,7 @@ function updatePublicLand() {
     }));
   }
 
+  // formatHistoricalDateTime: format historical date time logic.
   function formatHistoricalDateTime(value) {
     if (value == null || value === "") return "Not reported";
 
@@ -1531,6 +2107,7 @@ function updatePublicLand() {
     return escapeHtml(date.toLocaleString());
   }
 
+  // formatHistoricalCoordinate: format historical coordinate logic.
   function formatHistoricalCoordinate(value) {
     const number = Number(value);
 
@@ -1544,6 +2121,7 @@ function updatePublicLand() {
     return sign + degrees + "° " + minutes + "'";
   }
 
+  // historicalFireType: historical fire type logic.
   function historicalFireType(code) {
     if (code === "WF") return "Wildfire";
     if (code === "RX") return "Prescribed fire";
@@ -1551,6 +2129,7 @@ function updatePublicLand() {
     return code || "Not reported";
   }
 
+// historicalPerimeterStyle: historical perimeter style logic.
 function historicalPerimeterStyle() {
   return {
     color: "#000000",
@@ -1564,6 +2143,7 @@ function historicalPerimeterStyle() {
   };
 }
 
+  // updateHistoricalFirePerimeters: update historical fire perimeters logic.
   async function updateHistoricalFirePerimeters(force = false) {
     if (!map.hasLayer(historicalFirePerimeterLayer)) return;
     if (map.getZoom() < 9) {
@@ -1728,6 +2308,7 @@ function historicalPerimeterStyle() {
     }
   }
 
+  // scheduleHistoricalPerimeterRefresh: schedule historical perimeter refresh logic.
   function scheduleHistoricalPerimeterRefresh() {
     if (!map.hasLayer(historicalFirePerimeterLayer)) return;
     clearTimeout(historicalRefreshTimer);
@@ -1745,6 +2326,7 @@ function historicalPerimeterStyle() {
   const rawsLayer = L.layerGroup().addTo(map);
   let rawsRefreshInProgress = false;
 
+  // rawsValue: raws value logic.
   function rawsValue(value, suffix) {
     if (
       value == null ||
@@ -1757,6 +2339,7 @@ function historicalPerimeterStyle() {
     return escapeHtml(String(value).trim()) + (suffix || "");
   }
 
+  // rawsTemperature: raws temperature logic.
   function rawsTemperature(value) {
     if (
       value == null ||
@@ -1775,6 +2358,7 @@ function historicalPerimeterStyle() {
     return escapeHtml(temperature) + "F";
   }
 
+  // rawsWindDirection: raws wind direction logic.
   function rawsWindDirection(value) {
     if (
       value == null ||
@@ -1802,6 +2386,7 @@ function historicalPerimeterStyle() {
     return compass + " (" + degrees + "°)";
   }
 
+  // rawsObservationTime: raws observation time logic.
   function rawsObservationTime(value) {
     if (value == null || value === "") return "Not reported";
 
@@ -1822,6 +2407,7 @@ function historicalPerimeterStyle() {
     return escapeHtml(date.toLocaleString());
   }
 
+  // updateRawsStations: update raws stations logic.
   async function updateRawsStations() {
     if (rawsRefreshInProgress || !map.hasLayer(rawsLayer)) return;
 
@@ -2001,6 +2587,7 @@ function historicalPerimeterStyle() {
   let waterbodyLastViewKey = "";
   let waterbodyAbortController = null;
 
+  // formatWaterbodyAcres: format waterbody acres logic.
   function formatWaterbodyAcres(areaSqKm) {
     const squareKm = Number(areaSqKm);
 
@@ -2015,6 +2602,7 @@ function historicalPerimeterStyle() {
     }) + " acres";
   }
 
+  // formatWaterbodyDate: format waterbody date logic.
   function formatWaterbodyDate(value) {
     if (value == null || value === "") return "Not reported";
 
@@ -2033,6 +2621,7 @@ function historicalPerimeterStyle() {
     }));
   }
 
+  // waterbodyPopup: waterbody popup logic.
   function waterbodyPopup(attributes) {
     const name =
       attributes.gnisidlabel ||
@@ -2060,6 +2649,7 @@ function historicalPerimeterStyle() {
     );
   }
 
+  // addWaterbodyFeature: add waterbody feature logic.
   function addWaterbodyFeature(feature, targetLayer) {
     const attributes = feature.attributes || {};
     const geometry = feature.geometry || {};
@@ -2087,6 +2677,7 @@ function historicalPerimeterStyle() {
     polygon.addTo(targetLayer);
   }
 
+  // currentWaterbodyViewKey: current waterbody view key logic.
   function currentWaterbodyViewKey() {
     const bounds = map.getBounds();
 
@@ -2100,6 +2691,7 @@ function historicalPerimeterStyle() {
     ].join(",");
   }
 
+  // updateWaterbodiesInView: update waterbodies in view logic.
   async function updateWaterbodiesInView() {
     if (!map.hasLayer(usgsWaterbodyLayer)) return;
     if (map.getZoom() < 9) {
@@ -2159,6 +2751,7 @@ function historicalPerimeterStyle() {
     }
   }
 
+  // scheduleWaterbodyRefresh: schedule waterbody refresh logic.
   function scheduleWaterbodyRefresh() {
     if (!map.hasLayer(usgsWaterbodyLayer)) return;
 
@@ -2198,6 +2791,7 @@ function historicalPerimeterStyle() {
   let gpsTrackGeneration = 0;
   const GPS_GAP_MS = 60000;
 
+  // warnGpsStorage: warn gps storage logic.
   function warnGpsStorage(err) {
     console.warn("GPS track local storage unavailable:", err);
     if (!gpsStorageWarningShown) {
@@ -2210,6 +2804,7 @@ function historicalPerimeterStyle() {
     }
   }
 
+  // openGpsDb: open gps db logic.
   function openGpsDb() {
     if (!window.indexedDB) { warnGpsStorage("IndexedDB unsupported"); return Promise.resolve(null); }
     return new Promise(resolve => {
@@ -2226,6 +2821,7 @@ function historicalPerimeterStyle() {
     });
   }
 
+  // gpsDbOperation: gps db operation logic.
   function gpsDbOperation(mode, action) {
     return new Promise((resolve, reject) => {
       if (!gpsDbReady || !gpsDb) { resolve(null); return; }
@@ -2254,6 +2850,7 @@ function historicalPerimeterStyle() {
     } catch(err) { warnGpsStorage(err); }
   });
 
+  // saveGpsSegment: save gps segment logic.
   function saveGpsSegment() {
     if (!gpsSegmentId || !gpsTrackPoints.length) return;
     const record = {id:gpsSegmentId, points:gpsTrackPoints.map(p => [p.lat,p.lng])};
@@ -2269,6 +2866,7 @@ function historicalPerimeterStyle() {
   let gpsTrackLine = null;
   let gpsTrackPoints = [];
 
+  // recordGpsTrackPoint: record gps track point logic.
   function recordGpsTrackPoint(location) {
     // Create a new line when a session starts or restarts.
     const fixTime = Date.now();
@@ -2299,6 +2897,7 @@ function historicalPerimeterStyle() {
   }
 
   // End the current segment without deleting its line.
+  // endGpsTrackSegment: end gps track segment logic.
   function endGpsTrackSegment() {
     gpsTrackLine = null;
     gpsTrackPoints = [];
@@ -2345,9 +2944,11 @@ function historicalPerimeterStyle() {
   // Load once, on first checkbox activation; no Overpass requests.
   const oregonDogParksLayer = L.layerGroup();
   let oregonDogParksPromise = null;
+  // dogParkEscape: dog park escape logic.
   function dogParkEscape(value) {
     return String(value).replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[ch]);
   }
+  // loadOregonDogParks: load oregon dog parks logic.
   function loadOregonDogParks() {
     if (oregonDogParksPromise) return oregonDogParksPromise;
     oregonDogParksPromise = fetch("oregon_dogparks.geojson")
@@ -2436,16 +3037,19 @@ function historicalPerimeterStyle() {
     "#c1121f", "#5a189a", "#0f766e", "#c026d3"
   ];
 
+  // showGpxStatus: show gpx status logic.
   function showGpxStatus(message, show) {
     gpxStatus.textContent = message;
     gpxStatus.style.display = show === false ? "none" : "block";
   }
 
+  // gpxText: gpx text logic.
   function gpxText(node, tagName) {
     const child = node.getElementsByTagName(tagName)[0];
     return child ? child.textContent.trim() : "";
   }
 
+  // gpxPointFromNode: gpx point from node logic.
   function gpxPointFromNode(node) {
     const lat = Number(node.getAttribute("lat"));
     const lon = Number(node.getAttribute("lon"));
@@ -2456,6 +3060,7 @@ function historicalPerimeterStyle() {
     return L.latLng(lat, lon);
   }
 
+  // gpxDistanceMeters: gpx distance meters logic.
   function gpxDistanceMeters(points) {
     let distance = 0;
     for (let i = 1; i < points.length; i++) {
@@ -2464,12 +3069,14 @@ function historicalPerimeterStyle() {
     return distance;
   }
 
+  // formatGpxDistance: format gpx distance logic.
   function formatGpxDistance(meters) {
     const miles = meters / 1609.344;
     if (miles < 0.1) return Math.round(meters) + " m";
     return miles.toFixed(2) + " mi";
   }
 
+  // makeGpxEndpointIcon: make gpx endpoint icon logic.
   function makeGpxEndpointIcon(kind) {
     return L.divIcon({
       className: "",
@@ -2479,6 +3086,7 @@ function historicalPerimeterStyle() {
     });
   }
 
+  // addGpxFile: add gpx file logic.
   async function addGpxFile(file) {
     const text = await file.text();
     const parser = new DOMParser();
@@ -2712,6 +3320,7 @@ clearGpxButton.addEventListener("click", function () {
   // Negative values indicate south or west.
   // =========================================================
 
+  // toDDM: to ddm logic.
   function toDDM(value) {
     const sign = value < 0 ? "-" : "";
     const absolute = Math.abs(value);
@@ -2757,15 +3366,18 @@ clearGpxButton.addEventListener("click", function () {
   const pointEntryError = document.getElementById("pointEntryError");
   let pointPlacementActive = false;
   let suppressPointClicksUntil = 0;
+  // blockDialogClickThrough: block dialog click through logic.
   function blockDialogClickThrough() { suppressPointClicksUntil = Date.now() + 650; }
   let markedPoints = [];
   let nextPointId = 1;
   const pointMarkers = new Map();
 
+  // saveMarkedPoints: save marked points logic.
   function saveMarkedPoints() {
     try { localStorage.setItem(pointStorageKey, JSON.stringify({points:markedPoints,nextId:nextPointId})); }
     catch (err) { console.warn("Marked points could not be saved:", err); }
   }
+  // pointPopup: point popup logic.
   function pointPopup(p) {
     const name = p.name ? "<strong>"+escapeHtml(p.name)+"</strong><br>" : "";
     return '<div style="min-width:190px;line-height:1.6">'+name+
@@ -2777,6 +3389,7 @@ clearGpxButton.addEventListener("click", function () {
       '<button type="button" data-point-action="delete" data-point-id="'+p.id+'">DELETE POINT</button>'+
       '<br><small>Drag marker to move</small></div>';
   }
+  // renderMarkedPoint: render marked point logic.
   function renderMarkedPoint(p) {
     const icon = L.divIcon({className:"",html:'<div class="marked-point-pin">'+p.id+'</div>',iconSize:[26,26],iconAnchor:[13,13]});
     const marker = L.marker([p.lat,p.lng],{icon,draggable:true,bubblingMouseEvents:false});
@@ -2791,6 +3404,7 @@ clearGpxButton.addEventListener("click", function () {
     markedPointsLayer.addLayer(marker);
     return marker;
   }
+  // addMarkedPoint: add marked point logic.
   function addMarkedPoint(lat,lng,name="") {
     if (!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180) return;
     const p={id:nextPointId++,lat,lng,name};
@@ -2809,6 +3423,7 @@ clearGpxButton.addEventListener("click", function () {
       markedPoints.forEach(renderMarkedPoint);
     }
   } catch(err) {console.warn("Could not restore marked points:",err);}
+  // setPointMode: set point mode logic.
   function setPointMode(active) {
     pointPlacementActive=active;
     addPointButton.setAttribute("aria-pressed",String(active));
@@ -2830,6 +3445,7 @@ clearGpxButton.addEventListener("click", function () {
     pointLat.placeholder=pointFormat.value==="dd"?"42.4368":"42° 26.208' N";
     pointLng.placeholder=pointFormat.value==="dd"?"-123.1400":"123° 08.400' W";
   });
+  // parsePointCoordinate: parse point coordinate logic.
   function parsePointCoordinate(input,format,latitude) {
     const s=input.trim().toUpperCase().replace(/[−–]/g,"-");
     if (latitude && /[EW]/.test(s)) return NaN;
@@ -2919,6 +3535,7 @@ clearGpxButton.addEventListener("click", function () {
 
   L.DomEvent.disableClickPropagation(gpsButton);
 
+  // stopGpsTracking: stop gps tracking logic.
   function stopGpsTracking() {
     situsRequest++;
     lastSitusPoint = null;
@@ -2949,6 +3566,7 @@ clearGpxButton.addEventListener("click", function () {
       "GPS: Off — tap GPS to start";
   }
 
+  // gpsError: gps error logic.
   function gpsError(error) {
     stopGpsTracking();
 

@@ -635,6 +635,8 @@ html, body {
     font-size: 11px;
   }
   #coordinates {
+    top: 8px !important;
+    left: 102px !important;
     max-width: 155px !important;
     padding: 6px 8px !important;
     font-size: 11px;
@@ -642,22 +644,39 @@ html, body {
     right: auto !important;
   }
   #gpsCoordinates {
-    left: 277px !important;
-    max-width: 220px !important;
-    padding: 6px 8px !important;
-    font-size: 11px;
-    width: 220px !important;
+    top: auto !important;
+    bottom: 8px !important;
+    left: 110px !important;
     right: auto !important;
+    width: 115px !important;
+    max-width: 115px !important;
+    min-height: 48px;
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
   }
   #situsAddress {
-    top: auto !important;
-    left: 151px !important;
-    max-width: min(400px,calc(100vw - 165px)) !important;
-    font-size: 11px;
-    box-sizing: border-box;
-    bottom: 8px !important;
+    top: 61px !important;
+    bottom: auto !important;
+    left: 8px !important;
     right: auto !important;
+    width: fit-content !important;
+    max-width: 60vw !important;
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+    font-size: 11px;
   }
+  #gpsCoordinates .gps-lat,
+  #gpsCoordinates .gps-lng {
+    display: block;
+  }
+
+  #gpsCoordinates .gps-lat::after {
+    content: none;
+  }
+
   #gpsButton {
     left: 175px;
     bottom: 8px;
@@ -857,31 +876,49 @@ html, body {
     padding: 6px;
     font-size: 11px;
   }
-#coordinates {
-  left: 102px !important;
-  max-width: 155px !important;
-  padding: 6px 8px !important;
-  font-size: 11px;
-  width: 155px !important;
-  right: auto !important;
-}
-  #gpsCoordinates {
-    left: 277px !important;
-    max-width: 220px !important;
+  #coordinates {
+    top: 8px !important;
+    left: 102px !important;
+    max-width: 155px !important;
     padding: 6px 8px !important;
     font-size: 11px;
-    width: 220px !important;
+    width: 155px !important;
     right: auto !important;
+  }
+  #gpsCoordinates {
+    top: auto !important;
+    bottom: 8px !important;
+    left: 110px !important;
+    right: auto !important;
+    width: 115px !important;
+    max-width: 115px !important;
+    min-height: 48px;
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
   }
   #situsAddress {
-    top: auto !important;
-    left: 151px !important;
-    max-width: min(400px,calc(100vw - 165px)) !important;
-    font-size: 11px;
-    box-sizing: border-box;
-    bottom: 8px !important;
+    top: 61px !important;
+    bottom: auto !important;
+    left: 8px !important;
     right: auto !important;
+    width: fit-content !important;
+    max-width: 60vw !important;
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+    font-size: 11px;
   }
+  #gpsCoordinates .gps-lat,
+  #gpsCoordinates .gps-lng {
+    display: block;
+  }
+
+  #gpsCoordinates .gps-lat::after {
+    content: none;
+  }
+
   #gpsButton {
     left: 175px;
     bottom: 8px;
@@ -1194,6 +1231,48 @@ html, body {
     left: 188px;
     padding: 7px;
     font-size: 10px;
+  }
+}
+
+/* ======================================================================
+ * WIDE, SHORT LANDSCAPE VIEWPORTS — phones above 900 CSS px wide
+ * Uses viewport shape, not device brand; leaves normal desktop unchanged.
+ * ====================================================================== */
+@media (min-width: 901px) and (orientation: landscape) and (max-height: 500px) {
+  #coordinates {
+    top: 8px !important;
+    left: 102px !important;
+  }
+  #situsAddress {
+    top: 61px !important;
+    bottom: auto !important;
+    left: 8px !important;
+    right: auto !important;
+    width: fit-content !important;
+    max-width: 60vw !important;
+    overflow-wrap: anywhere;
+    font-size: 11px;
+  }
+  #gpsCoordinates {
+    top: auto !important;
+    bottom: 8px !important;
+    left: 110px !important;
+    right: auto !important;
+    width: 115px !important;
+    max-width: 115px !important;
+    min-height: 48px;
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+  #gpsCoordinates .gps-lat,
+  #gpsCoordinates .gps-lng {
+    display: block;
+  }
+  #gpsCoordinates .gps-lat::after {
+    content: none;
   }
 }
 </style>

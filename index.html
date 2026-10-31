@@ -581,10 +581,36 @@ html, body {
 .gps-lat::after {content:"  "}
 @media (max-width:600px) and (orientation:portrait) {
   #toolsToggle {left:8px!important;top:8px!important}
-  #coordinates {top:8px!important;left:112px!important;right:8px!important;width:auto!important;max-width:none!important;min-height:40px;display:flex;align-items:center;font-size:12px!important;padding:6px 8px!important}
+  #coordinates {
+    top: 8px !important;
+    left: 100px !important;
+    right: auto !important;
+    width: fit-content !important;
+    max-width: 220px !important;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    font-size: 12px !important;
+    padding: 6px 8px !important;
+    box-sizing: border-box;
+}
   #situsAddress {top:61px!important;bottom:auto!important;left:8px!important;right:auto!important;width:min(265px,calc(100vw - 16px))!important;max-width:calc(100vw - 16px)!important;font-size:12px!important}
   #addPointButton {left:8px!important;bottom:12px!important}
-  #gpsCoordinates {top:auto!important;bottom:12px!important;left:calc(8px + 122px + 10px)!important;right:8px!important;width:auto!important;max-width:none!important;min-height:48px;padding:6px 8px!important;font-size:11px!important;line-height:1.35!important;overflow-wrap:anywhere}
+  #gpsCoordinates {
+    top: auto !important;
+    bottom: 12px !important;
+    left: 140px !important;
+    right: auto !important;
+    width: 115px !important;
+    max-width: 115px !important;
+    min-height: 48px;
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    box-sizing: border-box;
+}
   #gpsCoordinates .gps-lat, #gpsCoordinates .gps-lng {display:block}
   #gpsCoordinates .gps-lat::after {content:none}
 }

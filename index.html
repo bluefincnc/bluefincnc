@@ -730,7 +730,7 @@ html, body {
     font-size: 12px;
   }
   #coordinates {
-    left: 100px !important;
+    left: 95px !important;
     max-width: 220px !important;
     padding: 6px 8px !important;
     font-size: 12px !important;
@@ -754,13 +754,17 @@ html, body {
     white-space: normal !important;
   }
   #situsAddress {
-    top: 61px !important;
-    max-width: calc(100vw - 16px) !important;
-    font-size: 12px !important;
-    width: min(265px,calc(100vw - 16px)) !important;
+    top: 61px;
+    left: 8px;
+    right: auto;
+
+    width: fit-content;
+    max-width: 60vw;
+
     box-sizing: border-box;
-    right: auto !important;
-  }
+    overflow-wrap: anywhere;
+    font-size: 12px;
+}
   #gpsButton {
     left: 8px;
     bottom: 64px;

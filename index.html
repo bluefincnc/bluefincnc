@@ -1416,7 +1416,6 @@ html, body {
   pointer-events: none;
   box-shadow: 0 1px 5px rgba(0,0,0,.35);
 }
-
 </style>
 </head>
 
@@ -1509,6 +1508,14 @@ html, body {
  <div class="legend-entry"><i class="legend-dot" style="background:#16803c"></i>GPX start</div>
  <div class="legend-entry"><i class="legend-dot" style="background:#d62828"></i>GPX end</div>
  <div class="legend-note">Imported GPX line colors may vary by track.</div>
+ <div class="legend-section">AIR QUALITY — PM2.5 AQI</div>
+ <div class="legend-entry"><i class="legend-area" style="background:#00e400"></i>Good (0–50)</div>
+ <div class="legend-entry"><i class="legend-area" style="background:#ffff00"></i>Moderate (51–100)</div>
+ <div class="legend-entry"><i class="legend-area" style="background:#ff7e00"></i>Unhealthy for sensitive groups (101–150)</div>
+ <div class="legend-entry"><i class="legend-area" style="background:#ff0000"></i>Unhealthy (151–200)</div>
+ <div class="legend-entry"><i class="legend-area" style="background:#99004c"></i>Very unhealthy (201–300)</div>
+ <div class="legend-entry"><i class="legend-area" style="background:#4c0026"></i>Hazardous (301–500)</div>
+ <div class="legend-note">EPA AirNow estimated hourly PM2.5 AQI regions. Not a live smoke or on-scene exposure measurement.</div>
  <div class="legend-section">OTHER FEATURES</div>
  <div class="legend-entry"><i class="legend-dot" style="background:#9333ea"></i>Dog park</div>
  <div class="legend-entry"><i class="legend-dot" style="background:#008CFF;border:2px solid white;border-radius:0;box-shadow:0 0 0 1px #777"></i>RAWS weather station</div>
@@ -2023,6 +2030,7 @@ function updatePublicLand() {
       updatePLSS();
       updatePublicLand();
       updateTaxlots();
+      updateAirQuality();
       scheduleHistoricalPerimeterRefresh();
       scheduleCurrentPerimeterRefresh();
 
@@ -3247,6 +3255,69 @@ function historicalPerimeterStyle() {
   }
 
   // =========================================================
+  // US AIR QUALITY — EPA AIRNOW HOURLY PM2.5 AQI CONTOURS
+  // Off by default. Request only visible polygons; refresh at most hourly.
+  // =========================================================
+  map.createPane("aqiPane");
+  map.getPane("aqiPane").style.zIndex = 450; // above map imagery, below markers
+  map.getPane("aqiPane").style.pointerEvents = "none";
+  const airQualityLayer = L.layerGroup();
+  const AQI_SERVICE = "https://services.arcgis.com/cJ9YHowT8TU7DUyn/ArcGIS/rest/services/AirNowLatestContoursPM25/FeatureServer/0/query";
+  const AQI_COLORS = [null, "#00e400", "#ffff00", "#ff7e00", "#ff0000", "#99004c", "#4c0026"];
+  const AQI_NAMES = [null, "Good", "Moderate", "Unhealthy for sensitive groups", "Unhealthy", "Very unhealthy", "Hazardous"];
+  let aqiController = null;
+  let aqiRequestId = 0;
+  let aqiLastView = "";
+  let aqiLastFetch = 0;
+  let aqiRefreshTimer = null;
+
+  async function updateAirQuality(force = false) {
+    if (!map.hasLayer(airQualityLayer)) return;
+    const bounds = map.getBounds();
+    const box = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
+    const viewKey = box.map(n => n.toFixed(2)).join(",");
+    if (!force && aqiLastView === viewKey && Date.now() - aqiLastFetch < 55 * 60 * 1000) return;
+    if (aqiController) aqiController.abort();
+    const controller = new AbortController();
+    aqiController = controller;
+    const requestId = ++aqiRequestId;
+    const params = new URLSearchParams({
+      f: "geojson", where: "1=1", outFields: "gridcode,Timestamp",
+      geometry: box.join(","), geometryType: "esriGeometryEnvelope",
+      inSR: "4326", outSR: "4326", spatialRel: "esriSpatialRelIntersects",
+      // Reduce geometry payload, particularly when zoomed out.
+      maxAllowableOffset: String(Math.max(0.005, 0.25 / Math.pow(2, Math.max(0, map.getZoom() - 6)))),
+      geometryPrecision: "4", returnGeometry: "true"
+    });
+    try {
+      const response = await fetch(AQI_SERVICE + "?" + params, {signal: controller.signal});
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      const data = await response.json();
+      if (data.error || data.type !== "FeatureCollection") throw new Error(data.error?.message || "Invalid GeoJSON");
+      if (requestId !== aqiRequestId || !map.hasLayer(airQualityLayer)) return;
+      const polygons = L.geoJSON(data, {
+        pane: "aqiPane",
+        interactive: false,
+        style: feature => ({
+          color: "transparent", weight: 0,
+          fillColor: AQI_COLORS[Number(feature.properties?.gridcode)] || "#888888",
+          fillOpacity: 0.40
+        })
+      });
+      airQualityLayer.clearLayers();
+      airQualityLayer.addLayer(polygons);
+      aqiLastView = viewKey;
+      aqiLastFetch = Date.now();
+    } catch (error) {
+      if (error.name !== "AbortError") console.warn("AirNow AQI overlay unavailable:", error);
+    } finally {
+      if (aqiController === controller) aqiController = null;
+    }
+  }
+  // Poll hourly while enabled; movement loads the new viewport on demand.
+  aqiRefreshTimer = setInterval(() => updateAirQuality(true), 60 * 60 * 1000);
+
+  // =========================================================
   // LAYER MENU
   // =========================================================
 
@@ -3268,6 +3339,7 @@ function historicalPerimeterStyle() {
       "US Current Fires": firePerimeterLayer,
       "OR Historical Fires": historicalFirePerimeterLayer,
       "OR RAWS WX": rawsLayer,
+      "US Air Quality (AQI)": airQualityLayer,
       "OR Dog Parks": oregonDogParksLayer
     },
     {
@@ -3495,6 +3567,7 @@ clearGpxButton.addEventListener("click", function () {
 
   map.on("overlayadd", function (event) {
     if (event.layer === oregonDogParksLayer) loadOregonDogParks();
+    if (event.layer === airQualityLayer) updateAirQuality(true);
 
     if (event.layer === hillshade) updateHillshade();
     if (event.layer === publicLand) updatePublicLand();
@@ -3518,6 +3591,13 @@ clearGpxButton.addEventListener("click", function () {
   });
 
   map.on("overlayremove", function (event) {
+    if (event.layer === airQualityLayer) {
+      ++aqiRequestId;
+      if (aqiController) aqiController.abort();
+      aqiController = null;
+      airQualityLayer.clearLayers();
+      aqiLastView = "";
+    }
     if (event.layer === firePerimeterLayer) {
       clearTimeout(currentRefreshTimer);
       currentRequestSequence++;

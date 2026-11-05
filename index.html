@@ -315,12 +315,6 @@ html, body {
 #enterCoordsButton {
   bottom: 380px;
 }
-#addPointButton[aria-pressed="true"] {
-  background: #ff861c !important;
-  color: #111 !important;
-  outline: 2px solid #111;
-  box-shadow: 0 0 0 3px rgba(255,134,28,.35) !important;
-}
 .marked-point-pin {
   width: 26px;
   height: 26px;
@@ -1275,6 +1269,96 @@ html, body {
     content: none;
   }
 }
+
+/* ======================================================================
+ * TOPOTAC UNIFIED THEME — online UI matched to offline v0.6.12
+ * Final responsive layout rules are grouped here for easy maintenance.
+ * Existing online map overlays, services, and LiDAR opacity are unchanged.
+ * ====================================================================== */
+:root {--tt-black:#171717;--tt-orange:#ff861c;--tt-white:#fff;}
+#toolsToggle,#addPointButton {
+  position:absolute!important;top:9px!important;bottom:auto!important;
+  z-index:2200!important;min-height:42px!important;box-sizing:border-box!important;
+  background:var(--tt-black)!important;color:var(--tt-white)!important;
+  border:2px solid var(--tt-orange)!important;border-radius:7px!important;
+  padding:8px 10px!important;font:bold 12px Arial!important;
+  width:auto!important;box-shadow:0 2px 7px #0005!important;
+}
+#toolsToggle {left:9px!important;}
+#addPointButton {left:105px!important;}
+/* ADD POINT recording-style active indicator: one authoritative rule. */
+#addPointButton[aria-pressed="true"] {
+  background:#e00000!important;
+  color:#fff!important;
+  box-shadow:0 0 0 3px rgba(224,0,0,.3)!important;
+}
+#toolsDrawer {
+  top:59px!important;left:9px!important;width:min(238px,calc(100vw - 18px))!important;
+  max-height:calc(100dvh - 68px)!important;background:var(--tt-black)!important;
+  color:var(--tt-white)!important;border:2px solid var(--tt-orange)!important;
+  padding:10px!important;box-sizing:border-box!important;
+}
+#toolsDrawer .tools-heading {color:var(--tt-orange)!important;border-bottom:1px solid #555!important;}
+#toolsDrawer section:not(.tools-links) {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:10px;}
+#toolsDrawer .tools-heading,#toolsDrawer #gpsCoordinates,#toolsDrawer #gpsStatsPanel,#toolsDrawer #measureStatus,#toolsDrawer #opacityControl {grid-column:1/-1;}
+#toolsDrawer .tools-heading {margin:8px 0 2px!important;}
+#toolsDrawer button:not(#toolsToggle),#toolsDrawer .tools-links a {
+  position:static!important;width:100%!important;min-width:0!important;
+  min-height:42px!important;margin:0!important;padding:7px 3px!important;
+  font:bold 11px Arial!important;background:var(--tt-orange)!important;
+  color:#111!important;border:0!important;border-radius:4px!important;
+  white-space:nowrap!important;box-sizing:border-box!important;text-align:center;
+}
+/* Bright recording indicator: the GPS ON button stays red while tracking is active. */
+#toolsDrawer #gpsButton[aria-pressed="true"] {
+  background:#e00000!important;color:#fff!important;
+  box-shadow:0 0 0 2px #fff5 inset!important;
+}
+#toolsDrawer #measureAreaButton[aria-pressed="true"] {background:#fff!important;}
+#toolsDrawer #gpsCoordinates {
+  position:static!important;display:block!important;top:auto!important;left:auto!important;
+  right:auto!important;bottom:auto!important;width:100%!important;max-width:none!important;
+  padding:7px 5px!important;background:#292929!important;color:#fff!important;
+  border:1px solid #555!important;border-radius:5px!important;box-shadow:none!important;
+  font:11px/1.5 Arial!important;overflow-wrap:anywhere!important;min-height:0!important;
+}
+#toolsDrawer #gpsCoordinates .gps-lat,#toolsDrawer #gpsCoordinates .gps-lng {display:block!important;}
+#toolsDrawer #gpsCoordinates .gps-lat::after {content:none!important;}
+#toolsDrawer #measureStatus {font:11px Arial;color:#ffbf83;overflow-wrap:anywhere;}
+#toolsDrawer #opacityControl {
+  position:static!important;top:auto!important;left:auto!important;bottom:auto!important;
+  width:100%!important;max-width:none!important;padding:7px!important;
+  background:#292929!important;color:#fff!important;box-shadow:none!important;
+  border:1px solid #555!important;border-radius:5px!important;
+}
+#toolsDrawer #opacityControl input {accent-color:var(--tt-orange);}
+#toolsDrawer .tools-links {display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px!important;border-top:1px solid #555!important;}
+#toolsDrawer .tools-links #mapGuideButton,#toolsDrawer .tools-links #legendToggle {width:100%!important;height:42px!important;}
+#coordinates,#situsAddress {
+  position:absolute!important;left:9px!important;right:auto!important;top:auto!important;
+  width:fit-content!important;max-width:min(300px,calc(100vw - 95px))!important;
+  box-sizing:border-box!important;background:var(--tt-black)!important;color:#fff!important;
+  border:2px solid var(--tt-orange)!important;border-radius:6px!important;
+  box-shadow:0 2px 7px #0005!important;padding:8px 10px!important;
+  font:11px/1.4 Arial!important;overflow-wrap:anywhere!important;
+}
+#coordinates {bottom:10px!important;}
+#situsAddress {bottom:54px!important;}
+.leaflet-control-zoom {border:2px solid var(--tt-orange)!important;border-radius:7px!important;overflow:hidden;box-shadow:0 2px 7px #0005!important;}
+.leaflet-control-zoom a {width:42px!important;height:42px!important;line-height:42px!important;font-size:25px!important;color:#171717!important;}
+.leaflet-bottom.leaflet-right {bottom:8px!important;right:8px!important;}
+.measure-acres-label {background:#171717ed;color:#fff;border:1px solid #ff861c;border-radius:5px;padding:5px 7px;font:bold 12px Arial;white-space:nowrap;}
+@media(max-width:600px) {#toolsDrawer {width:min(210px,calc(100vw - 18px))!important;}#coordinates,#situsAddress {max-width:calc(100vw - 100px)!important;font-size:10px!important;}}
+@media(max-height:500px) and (orientation:landscape) {#toolsDrawer {max-height:calc(100dvh - 65px)!important;}#coordinates {bottom:8px!important;}#situsAddress {bottom:48px!important;}}
+
+
+/* GPS STATS — collapsible field readout in the two-column GPS tool group. */
+#toolsDrawer #gpsStatsPanel {font:11px/1.55 Arial;background:#292929;color:#fff;border:1px solid #555;border-radius:5px;padding:9px;overflow-wrap:anywhere;}
+#toolsDrawer #gpsStatsPanel[hidden] {display:none!important;}
+#toolsDrawer #gpsStatsPanel strong {color:#ffad62;}
+#toolsDrawer #gpsStatsButton[aria-expanded="true"] {background:#fff!important;}
+/* GPS recording warning: compact single line below the GPS heading. */
+#toolsDrawer .gps-screen-notice {grid-column:1/-1;color:#ffb66f;font-size:10px;font-weight:bold;white-space:nowrap;text-align:center;letter-spacing:-0.15px;margin:3px 0 6px;}
 </style>
 </head>
 
@@ -1294,7 +1378,7 @@ html, body {
 </div>
 
 <div id="coordinates">Tap Map for Coordinates</div>
-<div id="gpsCoordinates">GPS: Off — tap GPS to start</div>
+<div id="gpsCoordinates" role="status">GPS: Off — tap GPS to start</div>
 <div id="situsAddress" role="status" aria-live="polite">Situs: GPS off</div>
 
 <button id="gpsButton" type="button"
@@ -1317,6 +1401,9 @@ html, body {
 <button id="addPointButton" class="point-button" type="button" aria-pressed="false">ADD POINT</button>
 <button id="clearPointsButton" class="point-button" type="button">CLEAR POINTS</button>
 <button id="enterCoordsButton" class="point-button" type="button">ENTER COORDS</button>
+<button id="measureAreaButton" type="button" aria-pressed="false">MEASURE AREA</button>
+<button id="clearMeasureButton" type="button">CLR MEASURE</button>
+<div id="measureStatus" role="status" hidden></div>
 <div id="pointEntryPanel" hidden>
   <strong>Enter Coordinates</strong>
   <label for="pointFormat">Format</label>
@@ -1366,7 +1453,7 @@ html, body {
  <div class="legend-note">Imported GPX line colors may vary by track.</div>
  <div class="legend-section">OTHER FEATURES</div>
  <div class="legend-entry"><i class="legend-dot" style="background:#9333ea"></i>Dog park</div>
- <div class="legend-entry"><i class="legend-dot" style="background:#087f8c"></i>RAWS weather station</div>
+ <div class="legend-entry"><i class="legend-dot" style="background:#008CFF;border:2px solid white;border-radius:0;box-shadow:0 0 0 1px #777"></i>RAWS weather station</div>
  <div class="legend-entry"><i class="legend-area water"></i>USGS waterbody</div>
  <div class="legend-note">Basemaps, LiDAR hillshade, PLSS and taxlot overlays use service-rendered cartography; their appearance may change with zoom or source.</div>`;
  document.body.append(legend);
@@ -1377,8 +1464,13 @@ html, body {
  legend.addEventListener('click',e=>e.stopPropagation());legend.addEventListener('pointerdown',e=>e.stopPropagation());
  document.getElementById('map').addEventListener('click',closeLegend);
  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLegend()});
- const groups=[['GPS & TRACKING',['gpsButton','clearTrackButton']],['GPX TRACKS',['gpxImportButton','clearGpxButton']],['MARKED POINTS',['enterCoordsButton','clearPointsButton']],['DISPLAY',['opacityControl']]];
- groups.forEach(([heading,ids])=>{const section=document.createElement('section');const label=document.createElement('div');label.className='tools-heading';label.textContent=heading;section.append(label);ids.forEach(id=>{const el=document.getElementById(id);if(el)section.append(el)});drawer.append(section)});
+ // GPS tools are created before the drawer groups are assembled.
+ const saveGpsButton=document.createElement('button');saveGpsButton.id='saveGpsButton';saveGpsButton.type='button';saveGpsButton.textContent='SAVE GPX';
+ const gpsStatsButton=document.createElement('button');gpsStatsButton.id='gpsStatsButton';gpsStatsButton.type='button';gpsStatsButton.textContent='GPS STATS';gpsStatsButton.setAttribute('aria-expanded','false');
+ const gpsStatsPanel=document.createElement('div');gpsStatsPanel.id='gpsStatsPanel';gpsStatsPanel.hidden=true;gpsStatsPanel.setAttribute('role','status');gpsStatsPanel.textContent='Waiting for GPS data';
+ document.body.append(saveGpsButton,gpsStatsButton,gpsStatsPanel);
+ const groups=[['GPS & TRACKING',['gpsButton','clearTrackButton','saveGpsButton','gpsStatsButton','gpsCoordinates','gpsStatsPanel']],['GPX TRACKS',['gpxImportButton','clearGpxButton']],['POINTS & MEASURE',['enterCoordsButton','measureAreaButton','clearPointsButton','clearMeasureButton','measureStatus']],['DISPLAY',['opacityControl']]];
+ groups.forEach(([heading,ids])=>{const section=document.createElement('section');const label=document.createElement('div');label.className='tools-heading';label.textContent=heading;section.append(label);if(heading==='GPS & TRACKING'){const notice=document.createElement('div');notice.className='gps-screen-notice';notice.textContent='SCREEN MUST STAY ON TO RECORD';section.append(notice)}ids.forEach(id=>{const el=document.getElementById(id);if(el)section.append(el)});drawer.append(section)});
  const links=document.createElement('section');links.className='tools-links';
  links.append(guide,legendButton);drawer.append(links);
  // Keep ADD POINT visible so its active state cannot be hidden in the drawer.
@@ -1386,11 +1478,11 @@ html, body {
  // close: close logic.
  function close(){drawer.hidden=true;toggle.setAttribute('aria-expanded','false')}
  toggle.addEventListener('click',e=>{e.stopPropagation();closeLegend();drawer.hidden=!drawer.hidden;toggle.setAttribute('aria-expanded',String(!drawer.hidden))});
- drawer.addEventListener('click',e=>{e.stopPropagation();if(e.target.closest('button') && e.target.id!=='enterCoordsButton' && e.target.id!=='legendToggle')close()});
+ drawer.addEventListener('click',e=>e.stopPropagation()); // Only TOOLS toggles the drawer closed.
  drawer.addEventListener('pointerdown',e=>e.stopPropagation());
  drawer.addEventListener('dblclick',e=>e.stopPropagation());
  drawer.addEventListener('wheel',e=>e.stopPropagation(),{passive:true});
- document.getElementById('map').addEventListener('click',close);
+ // Keep the tools drawer open when interacting with the map.
  document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
 })();
 </script>
@@ -1405,6 +1497,9 @@ html, body {
     zoomControl: false,
     doubleClickZoom: true
   }).setView([42.4368, -123.1400], 9);
+
+  // ZOOM CONTROLS — fixed in the lower-right corner.
+  L.control.zoom({position:"bottomright",zoomInTitle:"Zoom in",zoomOutTitle:"Zoom out"}).addTo(map);
 
   // =========================================================
   // BASE MAPS
@@ -3014,6 +3109,8 @@ function historicalPerimeterStyle() {
     // Delete every segment, including earlier GPS sessions.
     gpsTrackGeneration++;
     gpsTrackLayer.clearLayers();
+    gpsRecordingStart=null;
+    updateGpsStats();
     gpsWriteQueue = gpsWriteQueue.then(async () => {
       await gpsRestorePromise;
       await gpsDbOperation("readwrite", store => store.clear());
@@ -3442,6 +3539,7 @@ clearGpxButton.addEventListener("click", function () {
     coordinatesDisplay.textContent =
       toDDM(event.latlng.lat) + "  " +
       toDDM(event.latlng.lng);
+    if (measureActive) return;
     if (pointPlacementActive) {
       addMarkedPoint(event.latlng.lat, event.latlng.lng);
     } else {
@@ -3529,7 +3627,7 @@ clearGpxButton.addEventListener("click", function () {
     addPointButton.textContent=active?"✓ ADD POINT":"ADD POINT";
     map.getContainer().style.cursor=active?"crosshair":"";
   }
-  addPointButton.addEventListener("click",()=>setPointMode(!pointPlacementActive));
+  addPointButton.addEventListener("click",()=>{if(measureActive)stopMeasure();setPointMode(!pointPlacementActive);});
   clearPointsButton.addEventListener("click",()=>{
     if (!markedPoints.length) return;
     const confirmed=confirm("Delete all "+markedPoints.length+" marked points?");
@@ -3613,6 +3711,169 @@ clearGpxButton.addEventListener("click", function () {
     L.DomEvent.disableClickPropagation(el);
     L.DomEvent.disableScrollPropagation(el);
   });
+
+
+  // =========================================================
+  // AREA MEASUREMENT — POLYGON CORNERS AND ACRES
+  // Tap MEASURE AREA, tap polygon corners, then FINISH MEASURE.
+  // CLEAR MEASURE removes only the measurement, never marked points.
+  // Spherical polygon area is approximate, not a legal survey.
+  // =========================================================
+  const measureAreaButton=document.getElementById("measureAreaButton");
+  const clearMeasureButton=document.getElementById("clearMeasureButton");
+  const measureStatus=document.getElementById("measureStatus");
+  const measureLayer=L.layerGroup().addTo(map);
+  let measureActive=false,measureVertices=[],measureLine=null,measurePolygon=null,measureLabel=null;
+  function acreage(latlngs){
+    if(latlngs.length<3)return 0;
+    const rad=Math.PI/180,R=6378137;
+    let sum=0;
+    for(let i=0;i<latlngs.length;i++){
+      const a=latlngs[i],b=latlngs[(i+1)%latlngs.length];
+      let d=(b.lng-a.lng)*rad;
+      if(d>Math.PI)d-=2*Math.PI;
+      if(d< -Math.PI)d+=2*Math.PI;
+      sum+=d*(2+Math.sin(a.lat*rad)+Math.sin(b.lat*rad));
+    }
+    return Math.abs(sum*R*R/2)/4046.8564224;
+  }
+  function measureText(){return acreage(measureVertices).toFixed(2)+" acres";}
+  function showMeasureStatus(message){measureStatus.hidden=false;measureStatus.textContent=message;}
+  function stopMeasure(){
+    measureActive=false;
+    measureAreaButton.textContent="MEASURE AREA";
+    measureAreaButton.setAttribute("aria-pressed","false");
+    map.getContainer().style.cursor=pointPlacementActive?"crosshair":"";
+  }
+  function clearMeasure(){
+    stopMeasure();measureVertices=[];measureLayer.clearLayers();
+    measureLine=null;measurePolygon=null;measureLabel=null;measureStatus.hidden=true;
+  }
+  measureAreaButton.addEventListener("click",()=>{
+    if(measureActive){
+      if(measureVertices.length<3){showMeasureStatus("Add at least 3 corners");return;}
+      if(measureLine){measureLayer.removeLayer(measureLine);measureLine=null;}
+      if(measurePolygon)measureLayer.removeLayer(measurePolygon);
+      measurePolygon=L.polygon(measureVertices,{color:"#ff861c",weight:3,fillColor:"#ff861c",fillOpacity:0.22,interactive:false}).addTo(measureLayer);
+      measureLabel=L.marker(measurePolygon.getBounds().getCenter(),{
+        interactive:false,icon:L.divIcon({className:"",html:'<span class="measure-acres-label">'+measureText()+'</span>',iconSize:[0,0],iconAnchor:[0,0]})
+      }).addTo(measureLayer);
+      showMeasureStatus("Area: "+measureText());stopMeasure();return;
+    }
+    clearMeasure();setPointMode(false);measureActive=true;
+    measureAreaButton.textContent="FINISH MEASURE";
+    measureAreaButton.setAttribute("aria-pressed","true");
+    map.getContainer().style.cursor="crosshair";
+    showMeasureStatus("Tap corners on map");
+  });
+  clearMeasureButton.addEventListener("click",clearMeasure);
+  map.on("click",e=>{
+    if(!measureActive)return;
+    measureVertices.push(e.latlng);
+    L.circleMarker(e.latlng,{radius:4,color:"#fff",weight:1,fillColor:"#ff861c",fillOpacity:1,interactive:false}).addTo(measureLayer);
+    if(measureLine)measureLayer.removeLayer(measureLine);
+    measureLine=L.polyline(measureVertices,{color:"#ff861c",weight:3,interactive:false}).addTo(measureLayer);
+    if(measureVertices.length>=3){
+      if(measurePolygon)measureLayer.removeLayer(measurePolygon);
+      measurePolygon=L.polygon(measureVertices,{color:"#ff861c",weight:1,fillColor:"#ff861c",fillOpacity:0.16,interactive:false}).addTo(measureLayer);
+      showMeasureStatus("Area: "+measureText()+" (drawing)");
+    }else showMeasureStatus(measureVertices.length+" corner"+(measureVertices.length===1?"":"s")+" placed");
+  });
+  [measureAreaButton,clearMeasureButton,measureStatus].forEach(el=>{
+    L.DomEvent.disableClickPropagation(el);
+    L.DomEvent.disableScrollPropagation(el);
+  });
+
+  // =========================================================
+  // GPS EXPORT & FIELD STATS
+  // GPX export includes all recorded segments, even if the layer is hidden.
+  // Stats use the browser's latest GPS fix and the track's recorded geometry.
+  // =========================================================
+  const saveGpsButton = document.getElementById("saveGpsButton");
+  const gpsStatsButton = document.getElementById("gpsStatsButton");
+  const gpsStatsPanel = document.getElementById("gpsStatsPanel");
+  let latestGpsPosition = null;
+  let gpsRecordingStart = null;
+
+  function gpsSegmentsForExport() {
+    const segments = [];
+    gpsTrackLayer.eachLayer(layer => {
+      if (!(layer instanceof L.Polyline)) return;
+      const points = layer.getLatLngs();
+      if (Array.isArray(points) && points.length) segments.push(points);
+    });
+    return segments;
+  }
+
+  function gpsXmlEscape(value) {
+    return String(value).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  saveGpsButton.addEventListener("click", () => {
+    const segments = gpsSegmentsForExport();
+    if (!segments.length) { alert("No recorded GPS track points to save."); return; }
+    const tracks = segments.map((points,i) =>
+      `<trk><name>TopoTac GPS Segment ${i+1}</name><trkseg>` +
+      points.map(p => `<trkpt lat="${p.lat.toFixed(7)}" lon="${p.lng.toFixed(7)}"></trkpt>`).join("") +
+      `</trkseg></trk>`).join("");
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="TopoTac Online" xmlns="http://www.topografix.com/GPX/1/1">${tracks}</gpx>`;
+    const blob = new Blob([xml], {type:"application/gpx+xml"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href=url;a.download="TopoTac_GPS_"+new Date().toISOString().replace(/[:.]/g,"-")+".gpx";
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),10000);
+  });
+
+  function formatGpsDDM(value,latitude) {
+    const abs=Math.abs(value),degrees=Math.floor(abs),minutes=(abs-degrees)*60;
+    return `${degrees}° ${minutes.toFixed(4)}' ${latitude?(value<0?'S':'N'):(value<0?'W':'E')}`;
+  }
+  function formatGpsDMS(value,latitude) {
+    const abs=Math.abs(value),degrees=Math.floor(abs),mins=(abs-degrees)*60;
+    const wholeMins=Math.floor(mins),seconds=(mins-wholeMins)*60;
+    return `${degrees}° ${wholeMins}' ${seconds.toFixed(2)}" ${latitude?(value<0?'S':'N'):(value<0?'W':'E')}`;
+  }
+  function recordedTrackStats() {
+    let distance=0,count=0;
+    for(const segment of gpsSegmentsForExport()) {
+      count+=segment.length;
+      for(let i=1;i<segment.length;i++) distance+=map.distance(segment[i-1],segment[i]);
+    }
+    return {distance,count};
+  }
+  function updateGpsStats() {
+    if(gpsStatsPanel.hidden)return;
+    const {distance,count}=recordedTrackStats();
+    const pos=latestGpsPosition;
+    const c=pos?.coords;
+    const lat=c?.latitude,lng=c?.longitude;
+    const fmt=(value,digits=1)=>Number.isFinite(value)?value.toFixed(digits):"Unavailable";
+    const elapsed=gpsRecordingStart?Math.floor((Date.now()-gpsRecordingStart)/1000):null;
+    const elapsedText=elapsed===null?'Unavailable':`${Math.floor(elapsed/3600)}h ${Math.floor(elapsed%3600/60)}m ${elapsed%60}s`;
+    gpsStatsPanel.innerHTML =
+      `<strong>CURRENT POSITION (When GPS is on)</strong>` +
+      (Number.isFinite(lat)&&Number.isFinite(lng) ?
+       `<div>DD: ${lat.toFixed(6)}, ${lng.toFixed(6)}</div>`+
+       `<div>DDM: ${formatGpsDDM(lat,true)} / ${formatGpsDDM(lng,false)}</div>`+
+       `<div>DMS: ${formatGpsDMS(lat,true)} / ${formatGpsDMS(lng,false)}</div>` :
+       `<div>No current GPS fix</div>`) +
+      `<strong>GPS FIX</strong>`+
+      `<div>Accuracy: ${c&&Number.isFinite(c.accuracy)?'±'+fmt(c.accuracy,0)+' m':'Unavailable'}</div>`+
+      `<div>Speed: ${c&&Number.isFinite(c.speed)?fmt(c.speed*2.236936,1)+' mph':'Unavailable'}</div>`+
+      `<div>Heading: ${c&&Number.isFinite(c.heading)?fmt(c.heading,0)+'°':'Unavailable'}</div>`+
+      `<strong>RECORDED TRACK</strong>`+
+      `<div>Distance: ${(distance/1609.344).toFixed(2)} mi (${(distance/1000).toFixed(2)} km)</div>`+
+      `<div>Points: ${count}</div>`+
+      `<div>Session elapsed: ${elapsedText}</div>`+
+      `<div style="color:#ccc">Distance is based on recorded GPS fixes; accuracy varies.</div>`;
+  }
+  gpsStatsButton.addEventListener("click",()=>{
+    gpsStatsPanel.hidden=!gpsStatsPanel.hidden;
+    gpsStatsButton.setAttribute('aria-expanded',String(!gpsStatsPanel.hidden));
+    updateGpsStats();
+  });
+  setInterval(updateGpsStats,1000);
 
   // =========================================================
   // PHONE GPS
@@ -3724,7 +3985,10 @@ clearGpxButton.addEventListener("click", function () {
 
  // Record each new GPS position for the track.
 
+     if (!gpsRecordingStart) gpsRecordingStart=Date.now();
+     latestGpsPosition=position;
      recordGpsTrackPoint(location);
+     updateGpsStats();
 
         if (!gpsAccuracy) {
           gpsAccuracy = L.circle(location, {

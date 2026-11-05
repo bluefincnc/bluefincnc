@@ -1397,6 +1397,26 @@ html, body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* MAP ZOOM LEVEL — compact readout directly beneath the Layers control. */
+.leaflet-control.zoom-level-readout {
+  float: right;
+  clear: both;
+  margin: 4px 9px 0 0 !important;
+  width: 44px;
+  box-sizing: border-box;
+  padding: 4px 7px;
+  background: #171717;
+  color: #fff;
+  border: 1px solid #ff861c;
+  border-radius: 5px;
+  font: bold 11px/1 Arial, sans-serif;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 1px 5px rgba(0,0,0,.35);
+}
+
 </style>
 </head>
 
@@ -3255,6 +3275,17 @@ function historicalPerimeterStyle() {
       position: "topright"
     }
   ).addTo(map);
+
+  // Small live zoom indicator beneath the upper-right Layers menu.
+  const zoomReadout = L.control({ position: "topright" });
+  zoomReadout.onAdd = function () {
+    const label = L.DomUtil.create("div", "leaflet-control zoom-level-readout");
+    const update = () => { label.textContent = "Z " + map.getZoom(); };
+    update();
+    map.on("zoomend", update);
+    return label;
+  };
+  zoomReadout.addTo(map);
 
   // =========================================================
   // GPX IMPORT — local files, rendered as a separate map layer

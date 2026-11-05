@@ -1359,6 +1359,44 @@ html, body {
 #toolsDrawer #gpsStatsButton[aria-expanded="true"] {background:#fff!important;}
 /* GPS recording warning: compact single line below the GPS heading. */
 #toolsDrawer .gps-screen-notice {grid-column:1/-1;color:#ffb66f;font-size:10px;font-weight:bold;white-space:nowrap;text-align:center;letter-spacing:-0.15px;margin:3px 0 6px;}
+
+/* LAYER MENU — fixed corner alignment, bounded GPX filenames, and topmost stacking.
+   Keep this in one place so imported track names cannot cover ADD POINT. */
+.leaflet-top.leaflet-right {
+  top: 0!important;
+  right: 0!important;
+  z-index: 3000!important;
+}
+.leaflet-top.leaflet-right .leaflet-control-layers {
+  margin: 9px 9px 0 0!important;
+  max-width: min(230px, calc(100vw - 18px))!important;
+  box-sizing: border-box!important;
+}
+.leaflet-control-layers-expanded {
+  overflow-x: hidden!important;
+}
+.leaflet-control-layers-expanded .leaflet-control-layers-list,
+.leaflet-control-layers-expanded .leaflet-control-layers-base,
+.leaflet-control-layers-expanded .leaflet-control-layers-overlays {
+  min-width: 0;
+  max-width: 100%;
+}
+.leaflet-control-layers-expanded label {
+  max-width: 100%;
+}
+.leaflet-control-layers-expanded label > span {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+}
+.leaflet-control-layers-expanded label > span > span {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 </style>
 </head>
 

@@ -3763,7 +3763,7 @@ function historicalPerimeterStyle() {
       aprsStatus.textContent = 'APRS-IS unavailable: ' + err.message + ' · showing last loaded positions';
     } finally { aprsBusy = false; }
   }
-  function startAprs() { refreshAprs(); if (!aprsTimer) aprsTimer=setInterval(refreshAprs,60000); }
+  function startAprs() { refreshAprs(); if (!aprsTimer) aprsTimer=setInterval(refreshAprs,30000); }
   function stopAprs() { if(aprsTimer) clearInterval(aprsTimer);aprsTimer=null;aprsStatus.textContent='APRS-IS off'; }
 
   // Saved drawn lines have their own visibility checkbox.

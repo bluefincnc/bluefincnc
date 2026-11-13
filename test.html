@@ -3665,7 +3665,7 @@ function historicalPerimeterStyle() {
   }
   function aprsStationIcon(callsign, active) {
     const safeName = aprsEscape(callsign);
-    const color = active ? '#1677db' : '#777777';
+    const color = active ? '#ff861c' : '#777777';
     return L.divIcon({
       className: 'aprs-station-icon',
       html: '<span class="aprs-station-diamond" style="background:' + color + '"></span>' +
@@ -3722,7 +3722,7 @@ function historicalPerimeterStyle() {
         const existing = aprsTracks.get(id);
         if (existing) existing.setLatLngs(coords);
         else {
-          const line = L.polyline(coords, {color:'#1677db',weight:3,opacity:0.85,interactive:false});
+          const line = L.polyline(coords, {color:'#ff861c',weight:3,opacity:0.85,interactive:false});
           aprsTracks.set(id,line);
           line.addTo(aprsTracksLayer);
         }

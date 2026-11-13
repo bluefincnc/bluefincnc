@@ -3624,7 +3624,6 @@ function historicalPerimeterStyle() {
 
 
   // APRS-IS test overlay: continuous Windows receiver / SQLite / FastAPI.
-  // APRS data comes only from the current aprs.topotac.com API.
   const APRS_API_BASE = 'https://aprs.topotac.com';
   const aprsPositionsLayer = L.layerGroup();
   const aprsTracksLayer = L.layerGroup();
@@ -3655,13 +3654,36 @@ function historicalPerimeterStyle() {
     const lastHeard = new Date(station.last_heard_utc);
     const heard = Number.isNaN(lastHeard.getTime()) ? 'Unknown' : lastHeard.toLocaleString();
     const age = Math.floor(ageSeconds / 60);
-    return '<b>' + aprsEscape(station.callsign) + '</b>' +
-      '<br>' + aprsDdm(Number(station.lat), true) +
-      '<br>' + aprsDdm(Number(station.lon), false) +
-      '<br>Last position: ' + aprsEscape(heard) +
-      '<br>Age: ' + age + ' min' +
-      '<br>Status: ' + (ageSeconds < 3600 ? 'Recent (orange)' : 'Stale (gray)') +
-      '<br><small>APRS-IS reported position; not a verified live GPS fix</small>';
+    const rows = [];
+    const add = (label, value) => {
+      if (value !== null && value !== undefined && value !== '')
+        rows.push('<div><b>' + aprsEscape(label) + ':</b> ' + aprsEscape(value) + '</div>');
+    };
+    add('Packet type', station.packet_type);
+    add('Speed', Number.isFinite(Number(station.speed_mph)) && station.speed_mph !== null ?
+      Number(station.speed_mph).toFixed(1) + ' mph (' + Number(station.speed_knots).toFixed(1) + ' kn)' : null);
+    add('Course', station.course_deg !== null && station.course_deg !== undefined ? station.course_deg + '°' : null);
+    add('Altitude', station.altitude_ft !== null && station.altitude_ft !== undefined ?
+      Math.round(Number(station.altitude_ft)).toLocaleString() + ' ft (' + station.altitude_m + ' m)' : null);
+    add('Symbol', station.symbol_table && station.symbol_code ? station.symbol_table + station.symbol_code : null);
+    add('Comment', station.comment);
+    const attrs = station.attributes && typeof station.attributes === 'object' ? station.attributes : {};
+    if (attrs.phg) {
+      const phg = attrs.phg;
+      add('PHG', [phg.power_w + ' W', phg.height_ft + ' ft', phg.gain_dbi + ' dBi', phg.directivity_deg + '°'].join(' / '));
+    }
+    return '<div style="min-width:210px;max-width:300px;line-height:1.5">' +
+      '<b>' + aprsEscape(station.callsign) + '</b>' +
+      '<div>' + aprsDdm(Number(station.lat), true) + '</div>' +
+      '<div>' + aprsDdm(Number(station.lon), false) + '</div>' +
+      rows.join('') +
+      '<div><b>Last position:</b> ' + aprsEscape(heard) + '</div>' +
+      '<div><b>Age:</b> ' + age + ' min</div>' +
+      '<div><b>Status:</b> ' + (ageSeconds < 3600 ? 'Recent (orange)' : 'Stale (gray)') + '</div>' +
+      (station.raw_packet ? '<details style="margin-top:6px"><summary>Raw APRS packet</summary>' +
+        '<div style="max-height:120px;overflow:auto;overflow-wrap:anywhere;font:11px monospace">' +
+        aprsEscape(station.raw_packet) + '</div></details>' : '') +
+      '<small>APRS-IS reported position; not a verified live GPS fix</small></div>';
   }
   function aprsStationIcon(callsign, active) {
     const safeName = aprsEscape(callsign);

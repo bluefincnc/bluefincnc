@@ -1420,7 +1420,8 @@ html, body {
 
 /* APRS-IS test station markers: compact white callsign labels. */
 .aprs-station-icon { background:transparent; border:0; overflow:visible; }
-.aprs-station-dot { position:absolute;top:0;left:0;width:12px;height:12px;box-sizing:border-box;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 4px #0009; }
+.aprs-station-diamond { position:absolute;top:0;left:0;width:12px;height:12px;box-sizing:border-box;border:2px solid #fff;transform:rotate(45deg);box-shadow:0 1px 4px #0009; }
+.aprs-station-diamond::after{content:"";position:absolute;inset:3px;background:white;border-radius:50%;}
 .aprs-callsign-tag { position:absolute;left:16px;top:-4px;display:inline-block;white-space:nowrap;background:#fff;color:#111;border:1px solid #777;border-radius:3px;padding:2px 4px;font:bold 10px Arial;line-height:13px;box-shadow:0 1px 3px #0005;pointer-events:none; }
 </style>
 </head>
@@ -2186,9 +2187,12 @@ function updatePublicLand() {
   const healthBadge = document.createElement('button');
   healthBadge.type = 'button';
   healthBadge.id = 'topotacDataWarning';
-  healthBadge.style.cssText = 'display:none;position:absolute;bottom:145px;left:9px;z-index:2200;background:#b42318;color:white;border:2px solid white;border-radius:6px;padding:7px 9px;font:bold 11px Arial;max-width:200px;box-shadow:0 2px 7px #0007;cursor:pointer';
+  healthBadge.style.cssText = 'display:block;position:static;width:100%;min-height:40px;background:#292929;color:white;border:1px solid #ff861c;border-radius:5px;padding:7px 9px;font:bold 11px Arial;cursor:pointer';
   healthBadge.textContent = '⚠ DATA WARNING';
-  document.body.appendChild(healthBadge);
+  const healthSection = document.createElement('section');
+  healthSection.innerHTML = '<div class="tools-heading">DATA SOURCES</div>';
+  healthSection.appendChild(healthBadge);
+  document.getElementById('toolsDrawer').appendChild(healthSection);
   function observationMillis(value) {
     if (value == null || value === '') return NaN;
     if (typeof value === 'number' || /^\d+$/.test(String(value))) {
@@ -2210,8 +2214,8 @@ function updatePublicLand() {
     const now = Date.now();
     const problems = Object.entries(sourceHealth).filter(([name, info]) =>
       !info.ok || (now - info.checked > (name === 'RAWS' ? 35 : 15) * 60000));
-    healthBadge.style.display = problems.length ? 'block' : 'none';
-    healthBadge.textContent = '⚠ DATA WARNING (' + problems.length + ')';
+    healthBadge.style.display = 'block';
+    healthBadge.textContent = problems.length ? '⚠ DATA SOURCES (' + problems.length + ')' : 'DATA SOURCES: OK';
     healthBadge.title = 'Tap for data source details';
   }
   healthBadge.addEventListener('click', () => {
@@ -2997,7 +3001,7 @@ function historicalPerimeterStyle() {
         layer.addTo(rawsLayer);
       });
 
-      reportSource("RAWS", freshStations === features.length && features.length > 0, freshStations + "/" + features.length + " stations observed within 3 hours; " + (features.length - freshStations) + " stale/unknown", newestRaws);
+      reportSource("RAWS", features.length > 0, freshStations + "/" + features.length + " stations observed within 3 hours; " + (features.length - freshStations) + " stale/unknown", newestRaws);
       console.info(
         "Active Jackson/Josephine RAWS stations loaded:",
         features.length
@@ -3626,7 +3630,8 @@ function historicalPerimeterStyle() {
   // APRS-IS test overlay: continuous Windows receiver / SQLite / FastAPI.
   // The main TopoTAC site and original APRS Worker are not modified.
   const APRS_API_BASE = 'https://aprs.topotac.com';
-  const aprsLayer = L.layerGroup();
+  const aprsPositionsLayer = L.layerGroup();
+  const aprsTracksLayer = L.layerGroup();
   const aprsMarkers = new Map();
   const aprsTracks = new Map();
   let aprsTimer = null;
@@ -3636,22 +3641,10 @@ function historicalPerimeterStyle() {
   aprsStatus.style.cssText = 'font:11px/1.4 Arial;color:#fff;margin:6px 0;grid-column:1/-1;overflow-wrap:anywhere';
   aprsStatus.textContent = 'APRS-IS off';
   const aprsSection = document.createElement('section');
-  aprsSection.innerHTML = '<div class="tools-heading">APRS-IS (TEST)</div>' +
-    '<button type="button" id="aprsRefreshButton">REFRESH APRS</button>' +
-    '<button type="button" id="aprsTracksButton" aria-pressed="true">TRACKS ON</button>';
+  aprsSection.innerHTML = '<div class="tools-heading">APRS-IS (TEST)</div><button type="button" id="aprsRefreshButton">REFRESH APRS</button>';
   aprsSection.appendChild(aprsStatus);
   document.getElementById('toolsDrawer').appendChild(aprsSection);
-  let aprsShowTracks = true;
-  document.getElementById('aprsRefreshButton').addEventListener('click', () => refreshAprs());
-  document.getElementById('aprsTracksButton').addEventListener('click', event => {
-    aprsShowTracks = !aprsShowTracks;
-    event.currentTarget.textContent = aprsShowTracks ? 'TRACKS ON' : 'TRACKS OFF';
-    event.currentTarget.setAttribute('aria-pressed', String(aprsShowTracks));
-    for (const line of aprsTracks.values()) {
-      if (aprsShowTracks) line.addTo(aprsLayer);
-      else aprsLayer.removeLayer(line);
-    }
-  });
+  document.getElementById('aprsRefreshButton').addEventListener('click', refreshAprs);
   const aprsEscape = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   function aprsDdm(value, latitude) {
     const positive = Math.abs(value);
@@ -3670,21 +3663,21 @@ function historicalPerimeterStyle() {
       '<br>' + aprsDdm(Number(station.lon), false) +
       '<br>Last position: ' + aprsEscape(heard) +
       '<br>Age: ' + age + ' min' +
-      '<br>Status: ' + (ageSeconds < 3600 ? 'Recent (green)' : 'Stale (gray)') +
+      '<br>Status: ' + (ageSeconds < 3600 ? 'Recent (blue)' : 'Stale (gray)') +
       '<br><small>APRS-IS reported position; not a verified live GPS fix</small>';
   }
   function aprsStationIcon(callsign, active) {
     const safeName = aprsEscape(callsign);
-    const color = active ? '#00a86b' : '#777777';
+    const color = active ? '#1677db' : '#777777';
     return L.divIcon({
       className: 'aprs-station-icon',
-      html: '<span class="aprs-station-dot" style="background:' + color + '"></span>' +
+      html: '<span class="aprs-station-diamond" style="background:' + color + '"></span>' +
         '<span class="aprs-callsign-tag">' + safeName + '</span>',
       iconSize: [12, 12], iconAnchor: [6, 6], popupAnchor: [0, -8]
     });
   }
   async function refreshAprs() {
-    if (aprsBusy || !map.hasLayer(aprsLayer)) return;
+    if (aprsBusy || (!map.hasLayer(aprsPositionsLayer) && !map.hasLayer(aprsTracksLayer))) return;
     aprsBusy = true;
     aprsStatus.textContent = 'APRS-IS: checking server…';
     try {
@@ -3714,13 +3707,13 @@ function historicalPerimeterStyle() {
         if (entry) {
           entry.marker.setLatLng([lat, lon]).setIcon(icon).setPopupContent(popup);
         } else {
-          const marker = L.marker([lat, lon], {icon, keyboard:true}).bindPopup(popup).addTo(aprsLayer);
+          const marker = L.marker([lat, lon], {icon, keyboard:true}).bindPopup(popup).addTo(aprsPositionsLayer);
           aprsMarkers.set(id, {marker});
         }
       }
       // The database is authoritative: retain last-known positions, including stale stations.
       for (const [id, entry] of aprsMarkers) {
-        if (!receivedIds.has(id)) { aprsLayer.removeLayer(entry.marker); aprsMarkers.delete(id); }
+        if (!receivedIds.has(id)) { aprsPositionsLayer.removeLayer(entry.marker); aprsMarkers.delete(id); }
       }
       const trackIds = new Set();
       for (const [id, points] of Object.entries(trackData.tracks)) {
@@ -3732,13 +3725,13 @@ function historicalPerimeterStyle() {
         const existing = aprsTracks.get(id);
         if (existing) existing.setLatLngs(coords);
         else {
-          const line = L.polyline(coords, {color:'#00a86b',weight:3,opacity:0.85,interactive:false});
+          const line = L.polyline(coords, {color:'#1677db',weight:3,opacity:0.85,interactive:false});
           aprsTracks.set(id,line);
-          if (aprsShowTracks) line.addTo(aprsLayer);
+          line.addTo(aprsTracksLayer);
         }
       }
       for (const [id,line] of aprsTracks) {
-        if (!trackIds.has(id)) { aprsLayer.removeLayer(line); aprsTracks.delete(id); }
+        if (!trackIds.has(id)) { aprsTracksLayer.removeLayer(line); aprsTracks.delete(id); }
       }
       const recent = stationData.stations.filter(s => {
         const t = Date.parse(s.last_heard_utc);
@@ -3781,7 +3774,8 @@ function historicalPerimeterStyle() {
       "OR RAWS WX": rawsLayer,
       "US Air Quality (AQI)": airQualityLayer,
       "OR Dog Parks": oregonDogParksLayer,
-      "APRS-IS (Grants Pass)": aprsLayer,
+      "APRS Positions": aprsPositionsLayer,
+      "APRS Tracks (1 hr)": aprsTracksLayer,
 
     },
     {
@@ -3792,9 +3786,9 @@ function historicalPerimeterStyle() {
 
   map.on('overlayadd', event => {
     if (event.layer === oregonDogParksLayer) loadOregonDogParks();
-    if (event.layer === aprsLayer) startAprs();
+    if (event.layer === aprsPositionsLayer || event.layer === aprsTracksLayer) startAprs();
   });
-  map.on('overlayremove', event => { if (event.layer === aprsLayer) stopAprs(); });
+  map.on('overlayremove', event => { if ((event.layer === aprsPositionsLayer || event.layer === aprsTracksLayer) && !map.hasLayer(aprsPositionsLayer) && !map.hasLayer(aprsTracksLayer)) stopAprs(); });
 
   // Small live zoom indicator beneath the upper-right Layers menu.
   const zoomReadout = L.control({ position: "topright" });

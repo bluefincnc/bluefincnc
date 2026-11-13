@@ -2189,10 +2189,6 @@ function updatePublicLand() {
   healthBadge.id = 'topotacDataWarning';
   healthBadge.style.cssText = 'display:block;position:static;width:100%;min-height:40px;background:#292929;color:white;border:1px solid #ff861c;border-radius:5px;padding:7px 9px;font:bold 11px Arial;cursor:pointer';
   healthBadge.textContent = '⚠ DATA WARNING';
-  const healthSection = document.createElement('section');
-  healthSection.innerHTML = '<div class="tools-heading">DATA SOURCES</div>';
-  healthSection.appendChild(healthBadge);
-  document.getElementById('toolsDrawer').appendChild(healthSection);
   function observationMillis(value) {
     if (value == null || value === '') return NaN;
     if (typeof value === 'number' || /^\d+$/.test(String(value))) {
@@ -2215,7 +2211,7 @@ function updatePublicLand() {
     const problems = Object.entries(sourceHealth).filter(([name, info]) =>
       !info.ok || (now - info.checked > (name === 'RAWS' ? 35 : 15) * 60000));
     healthBadge.style.display = 'block';
-    healthBadge.textContent = problems.length ? '⚠ DATA SOURCES (' + problems.length + ')' : 'DATA SOURCES: OK';
+    healthBadge.textContent = problems.length ? '⚠ SOURCES (' + problems.length + ')' : 'SOURCES';
     healthBadge.title = 'Tap for data source details';
   }
   healthBadge.addEventListener('click', () => {
@@ -3641,7 +3637,8 @@ function historicalPerimeterStyle() {
   aprsStatus.style.cssText = 'font:11px/1.4 Arial;color:#fff;margin:6px 0;grid-column:1/-1;overflow-wrap:anywhere';
   aprsStatus.textContent = 'APRS-IS off';
   const aprsSection = document.createElement('section');
-  aprsSection.innerHTML = '<div class="tools-heading">APRS-IS (TEST)</div><button type="button" id="aprsRefreshButton">REFRESH APRS</button>';
+  aprsSection.innerHTML = '<div class="tools-heading">DATA / APRS</div><button type="button" id="aprsRefreshButton" title="Refresh APRS stations and tracks">APRS SYNC</button>';
+  aprsSection.insertBefore(healthBadge, aprsSection.querySelector('#aprsRefreshButton'));
   aprsSection.appendChild(aprsStatus);
   document.getElementById('toolsDrawer').appendChild(aprsSection);
   document.getElementById('aprsRefreshButton').addEventListener('click', refreshAprs);

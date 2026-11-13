@@ -3660,7 +3660,7 @@ function historicalPerimeterStyle() {
       '<br>' + aprsDdm(Number(station.lon), false) +
       '<br>Last position: ' + aprsEscape(heard) +
       '<br>Age: ' + age + ' min' +
-      '<br>Status: ' + (ageSeconds < 3600 ? 'Recent (blue)' : 'Stale (gray)') +
+      '<br>Status: ' + (ageSeconds < 3600 ? 'Recent (orange)' : 'Stale (gray)') +
       '<br><small>APRS-IS reported position; not a verified live GPS fix</small>';
   }
   function aprsStationIcon(callsign, active) {
@@ -3722,7 +3722,7 @@ function historicalPerimeterStyle() {
         const existing = aprsTracks.get(id);
         if (existing) existing.setLatLngs(coords);
         else {
-          const line = L.polyline(coords, {color:'#ff861c',weight:3,opacity:0.85,interactive:false});
+          const line = L.polyline(coords, {color:'#000000',weight:3,opacity:0.85,interactive:false});
           aprsTracks.set(id,line);
           line.addTo(aprsTracksLayer);
         }

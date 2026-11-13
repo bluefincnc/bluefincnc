@@ -3643,6 +3643,7 @@ function historicalPerimeterStyle() {
   document.getElementById('aprsRefreshButton').addEventListener('click', refreshAprs);
   const aprsEscape = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   function aprsDdm(value, latitude) {
+    if (!Number.isFinite(value)) return "Coordinates unavailable";
     const positive = Math.abs(value);
     let degrees = Math.floor(positive);
     let minutes = (positive - degrees) * 60;
@@ -3650,7 +3651,7 @@ function historicalPerimeterStyle() {
     const direction = latitude ? (value >= 0 ? 'N' : 'S') : (value >= 0 ? 'E' : 'W');
     return degrees + '° ' + minutes.toFixed(3) + '′ ' + direction;
   }
-  function aprsPopup(station, ageSeconds) {
+  function aprsPopup(station, ageSeconds, lat, lon) {
     const lastHeard = new Date(station.last_heard_utc);
     const heard = Number.isNaN(lastHeard.getTime()) ? 'Unknown' : lastHeard.toLocaleString();
     const age = Math.floor(ageSeconds / 60);
@@ -3674,8 +3675,8 @@ function historicalPerimeterStyle() {
     }
     return '<div style="min-width:210px;max-width:300px;line-height:1.5">' +
       '<b>' + aprsEscape(station.callsign) + '</b>' +
-      '<div>' + aprsDdm(Number(station.lat), true) + '</div>' +
-      '<div>' + aprsDdm(Number(station.lon), false) + '</div>' +
+      '<div>' + aprsDdm(lat, true) + '</div>' +
+      '<div>' + aprsDdm(lon, false) + '</div>' +
       rows.join('') +
       '<div><b>Last position:</b> ' + aprsEscape(heard) + '</div>' +
       '<div><b>Age:</b> ' + age + ' min</div>' +
@@ -3723,7 +3724,7 @@ function historicalPerimeterStyle() {
         const ageSeconds = Number.isFinite(heardMs) ? Math.max(0, (now - heardMs) / 1000) : Infinity;
         const active = ageSeconds < 3600;
         receivedIds.add(id);
-        const popup = aprsPopup(station, ageSeconds);
+        const popup = aprsPopup(station, ageSeconds, lat, lon);
         const icon = aprsStationIcon(id, active);
         const entry = aprsMarkers.get(id);
         if (entry) {

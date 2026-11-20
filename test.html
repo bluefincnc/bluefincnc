@@ -4791,7 +4791,7 @@ drawer.insertBefore(section,drawer.querySelector('.tools-links'));
 const panel=document.createElement('div');panel.id='amgPanel';panel.hidden=true;
 panel.innerHTML=`<div class="amg-row"><h3>AMG · GEOPDF MAPS</h3><button id="amgClose" type="button">✕</button></div>
 <label>Choose GeoPDF <input type="file" id="amgFile" accept=".pdf,application/pdf"></label>
-<label>Conversion quality <select id="amgQuality"><option value="2">Standard 2×</option><option value="3">High 3×</option><option value="4" selected>Ultra 4× (288 DPI)</option><option value="6">Maximum 6×</option></select></label>
+<label>Conversion quality <select id="amgQuality"><option value="2">Standard 2×</option><option value="3" selected>High 3× (216 DPI) · recommended</option><option value="4">Ultra 4× (288 DPI)</option><option value="6">Maximum 6×</option></select></label>
 <p><button type="button" id="amgConvert">CONVERT & SAVE MAP</button></p><div id="amgStatus" role="status">Select a GeoPDF to begin. Maps are saved on this device.</div>
 <h3 style="margin-top:15px">Saved maps</h3><div id="amgList">Loading…</div>
 <p style="color:#bbb;font-size:11px">Saved in this browser (IndexedDB), not on the server. Clearing site data may delete maps. Verify alignment before field use.</p>`;
@@ -4999,7 +4999,11 @@ el('amgConvert').onclick=async()=>{
     const w=Math.min(Math.ceil(viewport.width),right)-x;
     const h=Math.min(Math.ceil(viewport.height),bottom)-y;
     if(w<=0||h<=0)throw Error('Map viewport outside PDF page: '+JSON.stringify(r));
-    if(w*h>45000000)throw Error('Map crop '+w+'×'+h+' exceeds safe pixel budget');
+    // 3× maps commonly exceed the old 45 MP cap even on capable phones.
+    // Permit a 3× crop up to 72 MP, but retain 2× fallback if allocation fails.
+    // Keep the higher-resolution 4×/6× experiments capped to avoid huge allocations.
+    const pixelBudget=candidate===3?72000000:45000000;
+    if(w*h>pixelBudget)throw Error('Map crop '+w+'×'+h+' exceeds '+Math.round(pixelBudget/1000000)+' MP safety budget');
     candidateCrop=document.createElement('canvas');candidateCrop.width=w;candidateCrop.height=h;
     if(candidateCrop.width!==w||candidateCrop.height!==h)throw Error('Crop canvas allocation failed');
     const ctx=candidateCrop.getContext('2d');if(!ctx)throw Error('Crop canvas context unavailable');
@@ -5026,7 +5030,7 @@ el('amgConvert').onclick=async()=>{
   const corrected=await rectify(cropped,corners,scale);cropped.width=0;cropped.height=0;
   const blob=await new Promise(resolve=>corrected.canvas.toBlob(resolve,'image/png'));corrected.canvas.width=0;corrected.canvas.height=0;if(!blob)throw Error('PNG creation failed');
   const name=file.name.replace(/\.pdf$/i,'').replace(/[^a-z0-9_-]+/gi,'_');const meta={name,bounds:corrected.bounds,source:file.name,renderScale:scale,outputPixels:corrected.size,projection:'EPSG:3857 rectified; geographic bounds EPSG:4326',controlPoints:corners.map(c=>({lat:c.lat,lon:c.lon}))};
-  const record={id:name,meta,blob,updated:Date.now()};await dbAction('readwrite','put',record);showMap(record,true);await refresh();amgStatus('AMG complete at '+scale+'×. Map saved and displayed. Use Layers to toggle.');
+  const record={id:name,meta,blob,updated:Date.now()};await dbAction('readwrite','put',record);showMap(record,true);await refresh();amgStatus('AMG complete at '+scale+'×. Map saved and displayed. Use Layers to toggle.'+(failures.length?' Earlier attempts: '+failures.join(' | '):''));
  }catch(e){console.error('AMG conversion:',e);amgStatus('AMG stopped: '+e.message);}finally{button.disabled=false;}
 };
 try{const records=await dbAction('readonly','getAll');for(const record of records)showMap(record,false);await refresh();}catch(e){amgStatus('IndexedDB unavailable: '+e.message);}

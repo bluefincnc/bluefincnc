@@ -4895,37 +4895,39 @@ el('amgConvert').onclick=async()=>{
   let cropped=null,scale=requestedScale;
   const failures=[];
   for(const candidate of attempts){
-   let canvas=null,probe=null;
+   let candidateCrop=null;
    try{
     const viewport=page.getViewport({scale:candidate});
-    const cw=Math.ceil(viewport.width),ch=Math.ceil(viewport.height);
-    if(cw*ch>45000000)throw Error('PDF canvas '+cw+'×'+ch+' exceeds safe pixel budget');
-    canvas=document.createElement('canvas');canvas.width=cw;canvas.height=ch;
-    if(canvas.width!==cw||canvas.height!==ch)throw Error('PDF canvas allocation failed');
-    const context=canvas.getContext('2d',{alpha:false});
-    if(!context)throw Error('PDF canvas context unavailable');
-    await page.render({canvasContext:context,viewport,background:'rgb(255,255,255)'}).promise;
     const r=viewport.convertToViewportRectangle(geo.bbox);
-    const x=Math.max(0,Math.floor(Math.min(r[0],r[2]))),y=Math.max(0,Math.floor(Math.min(r[1],r[3])));
-    const w=Math.min(cw-x,Math.ceil(Math.abs(r[2]-r[0]))),h=Math.min(ch-y,Math.ceil(Math.abs(r[3]-r[1])));
-    if(w<=0||h<=0)throw Error('Map viewport outside page: '+JSON.stringify(r));
-    const candidateCrop=document.createElement('canvas');candidateCrop.width=w;candidateCrop.height=h;
-    const cropCtx=candidateCrop.getContext('2d',{willReadFrequently:true});
-    if(!cropCtx)throw Error('Crop canvas context unavailable');
-    cropCtx.drawImage(canvas,x,y,w,h,0,0,w,h);
-    probe=document.createElement('canvas');probe.width=64;probe.height=64;
+    const left=Math.floor(Math.min(r[0],r[2]));
+    const top=Math.floor(Math.min(r[1],r[3]));
+    const right=Math.ceil(Math.max(r[0],r[2]));
+    const bottom=Math.ceil(Math.max(r[1],r[3]));
+    const x=Math.max(0,left),y=Math.max(0,top);
+    const w=Math.min(Math.ceil(viewport.width),right)-x;
+    const h=Math.min(Math.ceil(viewport.height),bottom)-y;
+    if(w<=0||h<=0)throw Error('Map viewport outside PDF page: '+JSON.stringify(r));
+    if(w*h>45000000)throw Error('Map crop '+w+'×'+h+' exceeds safe pixel budget');
+    candidateCrop=document.createElement('canvas');candidateCrop.width=w;candidateCrop.height=h;
+    if(candidateCrop.width!==w||candidateCrop.height!==h)throw Error('Crop canvas allocation failed');
+    const ctx=candidateCrop.getContext('2d');if(!ctx)throw Error('Crop canvas context unavailable');
+    // Render only the georeferenced PDF viewport. Avoid allocating a full-page
+    // 10,368×13,824 canvas on mobile devices. The PDF transform shifts the
+    // original viewport so the selected geographic rectangle starts at 0,0.
+    await page.render({canvasContext:ctx,viewport,transform:[1,0,0,1,-x,-y],background:'rgb(255,255,255)'}).promise;
+    const probe=document.createElement('canvas');probe.width=64;probe.height=64;
     const pc=probe.getContext('2d',{willReadFrequently:true});pc.drawImage(candidateCrop,0,0,64,64);
     const data=pc.getImageData(0,0,64,64).data;
     let opaque=0,variation=0;
     for(let i=0;i<data.length;i+=4){if(data[i+3]>0)opaque++;if(Math.min(data[i],data[i+1],data[i+2])<245)variation++;}
     if(opaque<4096*.05)throw Error('Crop transparent: '+(opaque/4096*100).toFixed(1)+'% opaque, '+w+'×'+h+' px');
     if(variation<4096*.001)throw Error('Crop contains almost no visible map detail: '+w+'×'+h+' px');
-    cropped=candidateCrop;scale=candidate;
-    break;
+    cropped=candidateCrop;scale=candidate;break;
    }catch(renderError){
     failures.push(candidate+'×: '+renderError.message);
+    if(candidateCrop){candidateCrop.width=0;candidateCrop.height=0;}
     if(candidate!==attempts[attempts.length-1])amgStatus('AMG: '+candidate+'× render failed; retrying lower resolution…');
-   }finally{if(canvas){canvas.width=0;canvas.height=0;}if(probe){probe.width=0;probe.height=0;}}
+   }
   }
   if(!cropped)throw Error('PDF rendering failed at all tested resolutions. '+failures.join(' | '));
   if(scale!==requestedScale)amgStatus('AMG: rendering succeeded at '+scale+'×; rectifying…');

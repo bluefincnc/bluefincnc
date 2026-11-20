@@ -4922,7 +4922,12 @@ function geoCorners(v){
   const lat=v.gpts[2*i],lon=v.gpts[2*i+1],u=v.lpts[2*i],vv=v.lpts[2*i+1];
   if(![lat,lon,u,vv].every(Number.isFinite)||Math.abs(lat)>85||Math.abs(lon)>180)
    throw Error('Invalid geographic control points');
-  points.push({lat,lon,u,v:1-vv,xy:merc(lat,lon)});
+  // /BBox can list Y coordinates in descending order (e.g. Galice 2014).
+  // PDF.js displays PDF Y upward as canvas Y downward. If BBox Y is
+  // reversed, increasing LPTS V already moves downward in canvas space.
+  // Preserve the original convention for normal ascending BBox values.
+  const canvasV = v.bbox[3] < v.bbox[1] ? vv : 1-vv;
+  points.push({lat,lon,u,v:canvasV,xy:merc(lat,lon)});
  }
  // Some BLM PDFs specify four control points INSIDE the viewport (e.g.
  // at 40%-60%), not at its corners. Fit an affine georeferencing transform

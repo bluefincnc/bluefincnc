@@ -1423,6 +1423,10 @@ html, body {
 .aprs-station-diamond { position:absolute;top:0;left:0;width:12px;height:12px;box-sizing:border-box;border:2px solid #fff;transform:rotate(45deg);box-shadow:0 1px 4px #0009; }
 .aprs-station-diamond::after{content:"";position:absolute;inset:3px;background:white;border-radius:50%;}
 .aprs-callsign-tag { position:absolute;left:16px;top:-4px;display:inline-block;white-space:nowrap;background:#fff;color:#111;border:1px solid #777;border-radius:3px;padding:2px 4px;font:bold 10px Arial;line-height:13px;box-shadow:0 1px 3px #0005;pointer-events:none; }
+
+/* AMG GEOPDF TEST — independent import and storage panel */
+#amgPanel{position:absolute;z-index:4000;top:58px;left:9px;width:min(350px,calc(100vw - 18px));max-height:calc(100dvh - 72px);overflow:auto;background:#171717;color:white;border:2px solid #ff861c;border-radius:9px;padding:12px;box-sizing:border-box;box-shadow:0 3px 16px #0009;font:12px/1.5 Arial}
+#amgPanel[hidden]{display:none!important}#amgPanel button,#amgPanel select{background:#ff861c;color:#111;border:0;border-radius:5px;padding:9px;font:bold 12px Arial;cursor:pointer}#amgPanel button:disabled{opacity:.5}#amgPanel input[type=file]{width:100%;max-width:100%;font-size:12px;margin:9px 0}#amgPanel select{width:100%}#amgPanel .amg-row{display:flex;gap:7px;align-items:center;justify-content:space-between;margin:7px 0}#amgPanel .amg-row button{padding:5px 8px}#amgPanel .amg-row span{flex:1;overflow-wrap:anywhere}#amgPanel input[type=range]{width:100%;accent-color:#ff861c}#amgPanel #amgStatus{white-space:pre-wrap;color:#ffbf83;overflow-wrap:anywhere}#amgPanel h3{color:#ff861c;margin:0 0 8px}
 </style>
 </head>
 
@@ -3808,6 +3812,7 @@ function historicalPerimeterStyle() {
       position: "topright"
     }
   ).addTo(map);
+  window.topotacAMGContext = { map, layerControl };
 
   map.on('overlayadd', event => {
     if (event.layer === oregonDogParksLayer) loadOregonDogParks();
@@ -4772,5 +4777,165 @@ clearGpxButton.addEventListener("click", function () {
 })();
 </script>
 
+
+<script type="module">
+/* AMG test integration. PDF.js loads over HTTPS; the actual PDF never leaves the browser. */
+import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs';
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs';
+const {map,layerControl}=window.topotacAMGContext||{};
+const drawer=document.getElementById('toolsDrawer');
+const section=document.createElement('section');
+section.innerHTML='<div class="tools-heading">GEOPDF MAPS</div><button type="button" id="amgOpen">IMPORT GEOPDF</button>';
+drawer.insertBefore(section,drawer.querySelector('.tools-links'));
+const panel=document.createElement('div');panel.id='amgPanel';panel.hidden=true;
+panel.innerHTML=`<div class="amg-row"><h3>AMG · GEOPDF MAPS</h3><button id="amgClose" type="button">✕</button></div>
+<label>Choose GeoPDF <input type="file" id="amgFile" accept=".pdf,application/pdf"></label>
+<label>Conversion quality <select id="amgQuality"><option value="2">Standard 2×</option><option value="3">High 3×</option><option value="4" selected>Ultra 4× (288 DPI)</option><option value="6">Maximum 6×</option></select></label>
+<p><button type="button" id="amgConvert">CONVERT & SAVE MAP</button></p><div id="amgStatus" role="status">Select a GeoPDF to begin. Maps are saved on this device.</div>
+<h3 style="margin-top:15px">Saved maps</h3><div id="amgList">Loading…</div>
+<p style="color:#bbb;font-size:11px">Saved in this browser (IndexedDB), not on the server. Clearing site data may delete maps. Verify alignment before field use.</p>`;
+document.body.append(panel);
+const el=id=>document.getElementById(id);
+const amgStatus=s=>{el('amgStatus').textContent=s;};
+el('amgOpen').onclick=()=>{drawer.hidden=true;document.getElementById('toolsToggle').setAttribute('aria-expanded','false');panel.hidden=false;};
+el('amgClose').onclick=()=>panel.hidden=true;
+panel.addEventListener('click',e=>e.stopPropagation());panel.addEventListener('pointerdown',e=>e.stopPropagation());
+const DB='topotac-amg-maps-v1',STORE='maps';
+function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB,1);req.onupgradeneeded=()=>req.result.createObjectStore(STORE,{keyPath:'id'});req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
+async function dbAction(mode,method,arg){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,mode),req=tx.objectStore(STORE)[method](...(arg===undefined?[]:[arg]));req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);tx.oncomplete=()=>db.close();tx.onerror=()=>reject(tx.error);});}
+const layers=new Map();
+function removeLayer(id){const item=layers.get(id);if(!item)return;layerControl.removeLayer(item.layer);map.removeLayer(item.layer);URL.revokeObjectURL(item.url);layers.delete(id);}
+function showMap(record,zoom=false){removeLayer(record.id);const url=URL.createObjectURL(record.blob);const layer=L.imageOverlay(url,record.meta.bounds,{opacity:0.8,interactive:false});layer.addTo(map);layer.setZIndex(350);layerControl.addOverlay(layer,'GeoPDF: '+record.meta.name);layers.set(record.id,{layer,url});if(zoom)map.fitBounds(record.meta.bounds,{padding:[20,20]});}
+async function refresh(){try{const records=await dbAction('readonly','getAll');const list=el('amgList');list.replaceChildren();if(!records.length){list.textContent='No imported maps.';return;}for(const record of records){const row=document.createElement('div');row.style.cssText='border-top:1px solid #555;padding:8px 0';const title=document.createElement('div');title.textContent=record.meta.name+' · '+(record.blob.size/1048576).toFixed(1)+' MB';title.style.overflowWrap='anywhere';row.append(title);const buttons=document.createElement('div');buttons.className='amg-row';const zoom=document.createElement('button');zoom.textContent='ZOOM';zoom.onclick=()=>{const layer=layers.get(record.id);if(layer)map.fitBounds(layer.layer.getBounds());panel.hidden=true;};const del=document.createElement('button');del.textContent='DELETE';del.onclick=async()=>{if(!confirm('Delete map "'+record.meta.name+'" from this device?'))return;await dbAction('readwrite','delete',record.id);removeLayer(record.id);await refresh();amgStatus('Map deleted.');};const opacity=document.createElement('input');opacity.type='range';opacity.min=0;opacity.max=100;opacity.value=80;opacity.setAttribute('aria-label','Opacity for '+record.meta.name);opacity.oninput=()=>layers.get(record.id)?.layer.setOpacity(Number(opacity.value)/100);buttons.append(zoom,del);row.append(buttons,opacity);list.append(row);}}catch(e){amgStatus('Storage error: '+e.message);}}
+function readNumbers(s){return (s.match(/[-+]?\d*\.?\d+(?:[Ee][-+]?\d+)?/g)||[]).map(Number)}
+function arrayAfter(s,key){const m=s.match(new RegExp('/'+key+'\\s*\\[([^\\]]+)\\]'));return m?readNumbers(m[1]):null}
+function getGeoViewport(bytes){
+ // Decode raw PDF bytes as Latin-1 so PDF syntax can be inspected without changing byte offsets.
+ const raw=new TextDecoder('latin1').decode(bytes);const start=raw.indexOf('/VP');
+ if(start<0)throw Error('No PDF /VP geospatial viewport found. This GeoPDF type is not supported by this test.');
+ const end=raw.indexOf('endobj',start);const region=raw.slice(start,end>start?end:start+25000);
+ const viewports=[];const re=/\/Type\s*\/Viewport\b/g;let m;
+ while((m=re.exec(region))){const next=region.search(/nevermatches/);const segment=region.slice(m.index,region.indexOf('/Type /Viewport',m.index+10)>-1?region.indexOf('/Type /Viewport',m.index+10):undefined);const bbox=arrayAfter(segment,'BBox'),gpts=arrayAfter(segment,'GPTS'),lpts=arrayAfter(segment,'LPTS');if(bbox?.length===4&&gpts?.length>=8&&lpts?.length>=8)viewports.push({bbox,gpts,lpts,area:(bbox[2]-bbox[0])*(bbox[3]-bbox[1])});}
+ if(!viewports.length)throw Error('No supported /BBox + /GPTS + /LPTS found in the viewport.');return viewports.sort((a,b)=>b.area-a.area)[0];
+}
+function merc(lat,lon){const r=Math.PI/180,cl=Math.max(-85.051128,Math.min(85.051128,lat));return [lon*r,Math.log(Math.tan(Math.PI/4+cl*r/2))]}
+function unmerc(x,y){return [Math.atan(Math.sinh(y))*180/Math.PI,x*180/Math.PI]}
+function geoCorners(v){
+ // LPTS: PDF local coordinates, x left-to-right, y bottom-to-top.
+ // GPTS: geographic latitude, longitude, paired with LPTS.
+ const corners=[];
+ for(let i=0;i<4;i++){
+  const lat=v.gpts[2*i],lon=v.gpts[2*i+1],u=v.lpts[2*i],vv=v.lpts[2*i+1];
+  if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>85||Math.abs(lon)>180)throw Error('Invalid geographic control points');
+  corners.push({lat,lon,u,v:1-vv,xy:merc(lat,lon)});
+ }
+ const nearest=(u,v)=>corners.reduce((a,b)=>Math.hypot(b.u-u,b.v-v)<Math.hypot(a.u-u,a.v-v)?b:a);
+ const ordered=[nearest(0,0),nearest(1,0),nearest(1,1),nearest(0,1)];
+ if(new Set(ordered).size!==4)throw Error('Unrecognized local control-point arrangement');
+ return ordered; // TL TR BR BL
+}
+function bilinear(c,u,v){const a=(1-u)*(1-v),b=u*(1-v),d=u*v,e=(1-u)*v;return [a*c[0].xy[0]+b*c[1].xy[0]+d*c[2].xy[0]+e*c[3].xy[0],a*c[0].xy[1]+b*c[1].xy[1]+d*c[2].xy[1]+e*c[3].xy[1]]}
+async function rectify(source,corners,renderScale){
+ amgStatus('AMG: correcting map orientation…'); await new Promise(r=>setTimeout(r,30));
+ const xs=corners.map(c=>c.xy[0]),ys=corners.map(c=>c.xy[1]);
+ const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+ const spanX=maxX-minX,spanY=maxY-minY;
+ if(!(spanX>0&&spanY>0))throw Error('Invalid geographic extent');
+ const aspect=spanX/spanY,maxDim=Math.round(2600*renderScale/2);
+ const outW=Math.max(1,Math.round(maxDim*Math.min(1,aspect)));
+ const outH=Math.max(1,Math.round(maxDim*Math.min(1,1/aspect)));
+ if(outW*outH>42000000)throw Error('Output image is too large for this browser. Select a lower quality.');const out=document.createElement('canvas');out.width=outW;out.height=outH;
+ const ctx=out.getContext('2d',{willReadFrequently:true});
+ // Mesh-based forward warp: canvas draws the actual PDF pixels into each geographic triangle.
+ // This avoids the blank-image failure caused by the earlier per-pixel inverse warp.
+ const project=(u,v)=>{
+  const [mx,my]=bilinear(corners,u,v);
+  return {x:(mx-minX)/spanX*outW,y:(maxY-my)/spanY*outH};
+ };
+ function triangle(s0,s1,s2,d0,d1,d2){
+  const den=(s0.x*(s1.y-s2.y)+s1.x*(s2.y-s0.y)+s2.x*(s0.y-s1.y));
+  if(Math.abs(den)<1e-8)return;
+  const a=(d0.x*(s1.y-s2.y)+d1.x*(s2.y-s0.y)+d2.x*(s0.y-s1.y))/den;
+  const c=(d0.x*(s2.x-s1.x)+d1.x*(s0.x-s2.x)+d2.x*(s1.x-s0.x))/den;
+  const e=(d0.x*(s1.x*s2.y-s2.x*s1.y)+d1.x*(s2.x*s0.y-s0.x*s2.y)+d2.x*(s0.x*s1.y-s1.x*s0.y))/den;
+  const b=(d0.y*(s1.y-s2.y)+d1.y*(s2.y-s0.y)+d2.y*(s0.y-s1.y))/den;
+  const d=(d0.y*(s2.x-s1.x)+d1.y*(s0.x-s2.x)+d2.y*(s1.x-s0.x))/den;
+  const f=(d0.y*(s1.x*s2.y-s2.x*s1.y)+d1.y*(s2.x*s0.y-s0.x*s2.y)+d2.y*(s0.x*s1.y-s1.x*s0.y))/den;
+  ctx.save();ctx.beginPath();ctx.moveTo(d0.x,d0.y);ctx.lineTo(d1.x,d1.y);ctx.lineTo(d2.x,d2.y);ctx.closePath();ctx.clip();
+  ctx.setTransform(a,b,c,d,e,f);ctx.drawImage(source,0,0);ctx.restore();
+ }
+ const grid=24;
+ for(let j=0;j<grid;j++){
+  for(let i=0;i<grid;i++){
+   const u0=i/grid,u1=(i+1)/grid,v0=j/grid,v1=(j+1)/grid;
+   const s00={x:u0*source.width,y:v0*source.height},s10={x:u1*source.width,y:v0*source.height};
+   const s01={x:u0*source.width,y:v1*source.height},s11={x:u1*source.width,y:v1*source.height};
+   const d00=project(u0,v0),d10=project(u1,v0),d01=project(u0,v1),d11=project(u1,v1);
+   triangle(s00,s10,s11,d00,d10,d11);triangle(s00,s11,s01,d00,d11,d01);
+  }
+  if(j%4===0){amgStatus('AMG: rectifying map '+Math.round((j+1)/grid*100)+'%');await new Promise(r=>setTimeout(r,0));}
+ }
+ // Reject a blank result instead of allowing a misleading map to be saved.
+ const probe=document.createElement('canvas');probe.width=128;probe.height=128;const pc=probe.getContext('2d',{willReadFrequently:true});pc.drawImage(out,0,0,128,128);const pixels=pc.getImageData(0,0,128,128).data;
+ let visible=0;for(let i=3;i<pixels.length;i+=4)if(pixels[i]>0)visible++;
+ if(visible<128*128*0.15)throw Error('Rectified output only '+(100*visible/(128*128)).toFixed(1)+'% visible ('+outW+'×'+outH+'). No files saved.');
+ return {canvas:out,bounds:[unmerc(minX,minY),unmerc(maxX,maxY)],size:[outW,outH]};
+}
+
+el('amgConvert').onclick=async()=>{
+ const file=el('amgFile').files[0];if(!file){amgStatus('Select a GeoPDF first.');return;}
+ const button=el('amgConvert');button.disabled=true;
+ try{
+  amgStatus('Reading geographic control points…');const bytes=new Uint8Array(await file.arrayBuffer());const geo=getGeoViewport(bytes);const corners=geoCorners(geo);
+  amgStatus('Rendering PDF…');
+  const doc=await pdfjsLib.getDocument({data:bytes}).promise;
+  const page=await doc.getPage(1);
+  const requestedScale=Number(el('amgQuality').value);
+  const attempts=[requestedScale,...[3,2].filter(n=>n<requestedScale)];
+  let cropped=null,scale=requestedScale;
+  const failures=[];
+  for(const candidate of attempts){
+   let canvas=null,probe=null;
+   try{
+    const viewport=page.getViewport({scale:candidate});
+    const cw=Math.ceil(viewport.width),ch=Math.ceil(viewport.height);
+    if(cw*ch>45000000)throw Error('PDF canvas '+cw+'×'+ch+' exceeds safe pixel budget');
+    canvas=document.createElement('canvas');canvas.width=cw;canvas.height=ch;
+    if(canvas.width!==cw||canvas.height!==ch)throw Error('PDF canvas allocation failed');
+    const context=canvas.getContext('2d',{alpha:false});
+    if(!context)throw Error('PDF canvas context unavailable');
+    await page.render({canvasContext:context,viewport,background:'rgb(255,255,255)'}).promise;
+    const r=viewport.convertToViewportRectangle(geo.bbox);
+    const x=Math.max(0,Math.floor(Math.min(r[0],r[2]))),y=Math.max(0,Math.floor(Math.min(r[1],r[3])));
+    const w=Math.min(cw-x,Math.ceil(Math.abs(r[2]-r[0]))),h=Math.min(ch-y,Math.ceil(Math.abs(r[3]-r[1])));
+    if(w<=0||h<=0)throw Error('Map viewport outside page: '+JSON.stringify(r));
+    const candidateCrop=document.createElement('canvas');candidateCrop.width=w;candidateCrop.height=h;
+    const cropCtx=candidateCrop.getContext('2d',{willReadFrequently:true});
+    if(!cropCtx)throw Error('Crop canvas context unavailable');
+    cropCtx.drawImage(canvas,x,y,w,h,0,0,w,h);
+    probe=document.createElement('canvas');probe.width=64;probe.height=64;
+    const pc=probe.getContext('2d',{willReadFrequently:true});pc.drawImage(candidateCrop,0,0,64,64);
+    const data=pc.getImageData(0,0,64,64).data;
+    let opaque=0,variation=0;
+    for(let i=0;i<data.length;i+=4){if(data[i+3]>0)opaque++;if(Math.min(data[i],data[i+1],data[i+2])<245)variation++;}
+    if(opaque<4096*.05)throw Error('Crop transparent: '+(opaque/4096*100).toFixed(1)+'% opaque, '+w+'×'+h+' px');
+    if(variation<4096*.001)throw Error('Crop contains almost no visible map detail: '+w+'×'+h+' px');
+    cropped=candidateCrop;scale=candidate;
+    break;
+   }catch(renderError){
+    failures.push(candidate+'×: '+renderError.message);
+    if(candidate!==attempts[attempts.length-1])amgStatus('AMG: '+candidate+'× render failed; retrying lower resolution…');
+   }finally{if(canvas){canvas.width=0;canvas.height=0;}if(probe){probe.width=0;probe.height=0;}}
+  }
+  if(!cropped)throw Error('PDF rendering failed at all tested resolutions. '+failures.join(' | '));
+  if(scale!==requestedScale)amgStatus('AMG: rendering succeeded at '+scale+'×; rectifying…');
+  const corrected=await rectify(cropped,corners,scale);cropped.width=0;cropped.height=0;
+  const blob=await new Promise(resolve=>corrected.canvas.toBlob(resolve,'image/png'));corrected.canvas.width=0;corrected.canvas.height=0;if(!blob)throw Error('PNG creation failed');
+  const name=file.name.replace(/\.pdf$/i,'').replace(/[^a-z0-9_-]+/gi,'_');const meta={name,bounds:corrected.bounds,source:file.name,renderScale:scale,outputPixels:corrected.size,projection:'EPSG:3857 rectified; geographic bounds EPSG:4326',controlPoints:corners.map(c=>({lat:c.lat,lon:c.lon}))};
+  const record={id:name,meta,blob,updated:Date.now()};await dbAction('readwrite','put',record);showMap(record,true);await refresh();amgStatus('AMG complete at '+scale+'×. Map saved and displayed. Use Layers to toggle.');
+ }catch(e){console.error('AMG conversion:',e);amgStatus('AMG stopped: '+e.message+' (try lower quality if memory is low)');}finally{button.disabled=false;}
+};
+try{const records=await dbAction('readonly','getAll');for(const record of records)showMap(record,false);await refresh();}catch(e){amgStatus('IndexedDB unavailable: '+e.message);}
+</script>
 </body>
 </html>

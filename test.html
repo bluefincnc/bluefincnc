@@ -4891,6 +4891,7 @@ el('amgConvert').onclick=async()=>{
   const doc=await pdfjsLib.getDocument({data:bytes}).promise;
   const page=await doc.getPage(1);
   const requestedScale=Number(el('amgQuality').value);
+  amgStatus('AMG: attempting '+requestedScale+'× cropped render (desktop limit 65 MP; mobile 45 MP)…');
   const attempts=[requestedScale,...[3,2].filter(n=>n<requestedScale)];
   let cropped=null,scale=requestedScale;
   const failures=[];
@@ -4907,7 +4908,8 @@ el('amgConvert').onclick=async()=>{
     const w=Math.min(Math.ceil(viewport.width),right)-x;
     const h=Math.min(Math.ceil(viewport.height),bottom)-y;
     if(w<=0||h<=0)throw Error('Map viewport outside PDF page: '+JSON.stringify(r));
-    if(w*h>45000000)throw Error('Map crop '+w+'×'+h+' exceeds safe pixel budget');
+    const cropPixelLimit = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? 45000000 : 65000000;
+    if(w*h>cropPixelLimit)throw Error('Map crop '+w+'×'+h+' exceeds '+Math.round(cropPixelLimit/1000000)+' MP safety budget');
     candidateCrop=document.createElement('canvas');candidateCrop.width=w;candidateCrop.height=h;
     if(candidateCrop.width!==w||candidateCrop.height!==h)throw Error('Crop canvas allocation failed');
     const ctx=candidateCrop.getContext('2d');if(!ctx)throw Error('Crop canvas context unavailable');
@@ -4931,6 +4933,7 @@ el('amgConvert').onclick=async()=>{
   }
   if(!cropped)throw Error('PDF rendering failed at all tested resolutions. '+failures.join(' | '));
   if(scale!==requestedScale)amgStatus('AMG: rendering succeeded at '+scale+'×; rectifying…');
+  else amgStatus('AMG: full '+scale+'× render succeeded; rectifying…');
   const corrected=await rectify(cropped,corners,scale);cropped.width=0;cropped.height=0;
   const blob=await new Promise(resolve=>corrected.canvas.toBlob(resolve,'image/png'));corrected.canvas.width=0;corrected.canvas.height=0;if(!blob)throw Error('PNG creation failed');
   const name=file.name.replace(/\.pdf$/i,'').replace(/[^a-z0-9_-]+/gi,'_');const meta={name,bounds:corrected.bounds,source:file.name,renderScale:scale,outputPixels:corrected.size,projection:'EPSG:3857 rectified; geographic bounds EPSG:4326',controlPoints:corners.map(c=>({lat:c.lat,lon:c.lon}))};

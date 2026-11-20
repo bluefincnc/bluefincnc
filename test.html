@@ -4917,54 +4917,42 @@ async function getGeoViewportWithObjects(bytes){
 function merc(lat,lon){const r=Math.PI/180,cl=Math.max(-85.051128,Math.min(85.051128,lat));return [lon*r,Math.log(Math.tan(Math.PI/4+cl*r/2))]}
 function unmerc(x,y){return [Math.atan(Math.sinh(y))*180/Math.PI,x*180/Math.PI]}
 function geoCorners(v){
+ // LPTS are geographic tie points, NOT necessarily the corners of /BBox.
+ // Galice has LPTS as far as -0.047 and 1.047, so selecting the nearest
+ // corner displaces and rotates the map. Fit all four points instead.
  const points=[];
- for(let i=0;i<4;i++){
+ for(let i=0;i<Math.min(v.gpts.length,v.lpts.length)/2;i++){
   const lat=v.gpts[2*i],lon=v.gpts[2*i+1],u=v.lpts[2*i],vv=v.lpts[2*i+1];
   if(![lat,lon,u,vv].every(Number.isFinite)||Math.abs(lat)>85||Math.abs(lon)>180)
    throw Error('Invalid geographic control points');
-  // /BBox can list Y coordinates in descending order (e.g. Galice 2014).
-  // PDF.js displays PDF Y upward as canvas Y downward. If BBox Y is
-  // reversed, increasing LPTS V already moves downward in canvas space.
-  // Preserve the original convention for normal ascending BBox values.
-  const canvasV = v.bbox[3] < v.bbox[1] ? vv : 1-vv;
-  points.push({lat,lon,u,v:canvasV,xy:merc(lat,lon)});
+  const canvasV=v.bbox[3]<v.bbox[1]?vv:1-vv;
+  points.push({u,v:canvasV,xy:merc(lat,lon)});
  }
- // Some BLM PDFs specify four control points INSIDE the viewport (e.g.
- // at 40%-60%), not at its corners. Fit an affine georeferencing transform
- // and extrapolate to the actual viewport corners. The older converter
- // assumed the four LPTS points always lay at 0 and 1.
- const minU=Math.min(...points.map(p=>p.u)),maxU=Math.max(...points.map(p=>p.u));
- const minV=Math.min(...points.map(p=>p.v)),maxV=Math.max(...points.map(p=>p.v));
- if(minU>0.08||maxU<0.92||minV>0.08||maxV<0.92){
-  function solve(A,b){
-   const m=A.map((r,i)=>[...r,b[i]]);
-   for(let k=0;k<3;k++){
-    let pivot=k;for(let j=k+1;j<3;j++)if(Math.abs(m[j][k])>Math.abs(m[pivot][k]))pivot=j;
-    [m[k],m[pivot]]=[m[pivot],m[k]];
-    if(Math.abs(m[k][k])<1e-14)throw Error('GeoPDF control points are degenerate');
-    const scale=m[k][k];for(let j=k;j<4;j++)m[k][j]/=scale;
-    for(let i=0;i<3;i++)if(i!==k){const f=m[i][k];for(let j=k;j<4;j++)m[i][j]-=f*m[k][j];}
-   }
-   return m.map(r=>r[3]);
+ if(points.length<3)throw Error('GeoPDF requires at least three control points');
+ const A=[[0,0,0],[0,0,0],[0,0,0]],bx=[0,0,0],by=[0,0,0];
+ for(const p of points){const r=[1,p.u,p.v];for(let i=0;i<3;i++){
+  bx[i]+=r[i]*p.xy[0];by[i]+=r[i]*p.xy[1];
+  for(let j=0;j<3;j++)A[i][j]+=r[i]*r[j];
+ }}
+ function solve(b){
+  const m=A.map((r,i)=>[...r,b[i]]);
+  for(let k=0;k<3;k++){
+   let pivot=k;for(let j=k+1;j<3;j++)if(Math.abs(m[j][k])>Math.abs(m[pivot][k]))pivot=j;
+   [m[k],m[pivot]]=[m[pivot],m[k]];
+   if(Math.abs(m[k][k])<1e-14)throw Error('GeoPDF control points are degenerate');
+   const d=m[k][k];for(let j=k;j<4;j++)m[k][j]/=d;
+   for(let i=0;i<3;i++)if(i!==k){const f=m[i][k];for(let j=k;j<4;j++)m[i][j]-=f*m[k][j];}
   }
-  const A=[[0,0,0],[0,0,0],[0,0,0]],bx=[0,0,0],by=[0,0,0];
-  for(const p of points){const r=[1,p.u,p.v];for(let i=0;i<3;i++){
-   bx[i]+=r[i]*p.xy[0];by[i]+=r[i]*p.xy[1];
-   for(let j=0;j<3;j++)A[i][j]+=r[i]*r[j];
-  }}
-  const cx=solve(A,bx),cy=solve(A,by);
-  const predict=(u,v)=>[cx[0]+cx[1]*u+cx[2]*v,cy[0]+cy[1]*u+cy[2]*v];
-  const residual=Math.max(...points.map(p=>Math.hypot(...predict(p.u,p.v).map((x,i)=>x-p.xy[i]))));
-  const extent=Math.max(...points.map(p=>p.xy[0]))-Math.min(...points.map(p=>p.xy[0]));
-  if(residual>Math.max(1e-7,extent*0.02))throw Error('GeoPDF control points disagree; cannot safely extrapolate');
-  return [[0,0],[1,0],[1,1],[0,1]].map(([u,v])=>{
-   const xy=predict(u,v),[lat,lon]=unmerc(...xy);return {u,v,xy,lat,lon};
-  });
+  return m.map(r=>r[3]);
  }
- const nearest=(u,v)=>points.reduce((a,b)=>Math.hypot(b.u-u,b.v-v)<Math.hypot(a.u-u,a.v-v)?b:a);
- const ordered=[nearest(0,0),nearest(1,0),nearest(1,1),nearest(0,1)];
- if(new Set(ordered).size!==4)throw Error('Unrecognized local control-point arrangement');
- return ordered;
+ const cx=solve(bx),cy=solve(by);
+ const predict=(u,v)=>[cx[0]+cx[1]*u+cx[2]*v,cy[0]+cy[1]*u+cy[2]*v];
+ const residual=Math.max(...points.map(p=>Math.hypot(...predict(p.u,p.v).map((x,i)=>x-p.xy[i]))));
+ const span=Math.max(Math.hypot(cx[1],cy[1]),Math.hypot(cx[2],cy[2]));
+ if(residual>Math.max(1e-7,span*.02))throw Error('GeoPDF control points disagree (affine fit error); cannot safely align');
+ return [[0,0],[1,0],[1,1],[0,1]].map(([u,v])=>{
+  const xy=predict(u,v),[lat,lon]=unmerc(...xy);return {u,v,xy,lat,lon};
+ });
 }
 function bilinear(c,u,v){const a=(1-u)*(1-v),b=u*(1-v),d=u*v,e=(1-u)*v;return [a*c[0].xy[0]+b*c[1].xy[0]+d*c[2].xy[0]+e*c[3].xy[0],a*c[0].xy[1]+b*c[1].xy[1]+d*c[2].xy[1]+e*c[3].xy[1]]}
 async function rectify(source,corners,renderScale){

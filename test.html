@@ -4778,6 +4778,7 @@ clearGpxButton.addEventListener("click", function () {
 </script>
 
 
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script type="module">
 /* AMG test integration. PDF.js loads over HTTPS; the actual PDF never leaves the browser. */
 import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs';
@@ -4810,29 +4811,120 @@ async function refresh(){try{const records=await dbAction('readonly','getAll');c
 function readNumbers(s){return (s.match(/[-+]?\d*\.?\d+(?:[Ee][-+]?\d+)?/g)||[]).map(Number)}
 function arrayAfter(s,key){const m=s.match(new RegExp('/'+key+'\\s*\\[([^\\]]+)\\]'));return m?readNumbers(m[1]):null}
 function getGeoViewport(bytes){
- // Decode raw PDF bytes as Latin-1 so PDF syntax can be inspected without changing byte offsets.
- const raw=new TextDecoder('latin1').decode(bytes);const start=raw.indexOf('/VP');
- if(start<0)throw Error('No PDF /VP geospatial viewport found. This GeoPDF type is not supported by this test.');
- const end=raw.indexOf('endobj',start);const region=raw.slice(start,end>start?end:start+25000);
- const viewports=[];const re=/\/Type\s*\/Viewport\b/g;let m;
- while((m=re.exec(region))){const next=region.search(/nevermatches/);const segment=region.slice(m.index,region.indexOf('/Type /Viewport',m.index+10)>-1?region.indexOf('/Type /Viewport',m.index+10):undefined);const bbox=arrayAfter(segment,'BBox'),gpts=arrayAfter(segment,'GPTS'),lpts=arrayAfter(segment,'LPTS');if(bbox?.length===4&&gpts?.length>=8&&lpts?.length>=8)viewports.push({bbox,gpts,lpts,area:(bbox[2]-bbox[0])*(bbox[3]-bbox[1])});}
- if(!viewports.length)throw Error('No supported /BBox + /GPTS + /LPTS found in the viewport.');return viewports.sort((a,b)=>b.area-a.area)[0];
+ // PDF geospatial measurement dictionaries may be embedded or referenced as
+ // /Measure 322 0 R. Read the referenced dictionary without confusing it
+ // with unrelated coordinate arrays elsewhere in the PDF.
+ const raw=new TextDecoder('latin1').decode(bytes);
+ const start=raw.indexOf('/VP');
+ if(start<0)throw Error('No PDF /VP geospatial viewport found. This GeoPDF encoding is not supported yet.');
+ const end=raw.indexOf('endobj',start);
+ const region=raw.slice(start,end>start?end:start+30000);
+ const viewports=[];
+ const re=/\/Type\s*\/Viewport\b/g;let m;
+ function getObject(num){
+  const objRe=new RegExp('(?:^|[\\r\\n])\\s*'+num+'\\s+\\d+\\s+obj\\b');
+  const match=objRe.exec(raw);
+  if(!match)return null;
+  const finish=raw.indexOf('endobj',match.index+match[0].length);
+  return raw.slice(match.index,finish>=0?finish:match.index+16000);
+ }
+ while((m=re.exec(region))){
+  // The /Type /Viewport marker may appear after its /BBox and /Measure.
+  // Locate its enclosing dictionary by looking back to the nearest <<.
+  const dictStart=region.lastIndexOf('<<',m.index);
+  const dictEnd=region.indexOf('>>',m.index);
+  const segment=region.slice(Math.max(0,dictStart),dictEnd>=0?dictEnd+2:undefined);
+  const bbox=arrayAfter(segment,'BBox');
+  const measureRef=segment.match(/\/Measure\s+(\d+)\s+\d+\s+R\b/);
+  const measure=measureRef?getObject(Number(measureRef[1])):segment;
+  const gpts=arrayAfter(measure||segment,'GPTS')||arrayAfter(segment,'GPTS');
+  const lpts=arrayAfter(measure||segment,'LPTS')||arrayAfter(segment,'LPTS');
+  if(bbox?.length===4&&gpts?.length>=8&&lpts?.length>=8)
+   viewports.push({bbox,gpts,lpts,area:Math.abs((bbox[2]-bbox[0])*(bbox[3]-bbox[1]))});
+ }
+ // Preserve support for older GeoPDFs where arrays are in the same
+ // enclosing object, even when the viewport dictionary is nonstandard.
+ if(!viewports.length){
+  const bbox=arrayAfter(region,'BBox'),gpts=arrayAfter(region,'GPTS'),lpts=arrayAfter(region,'LPTS');
+  if(bbox?.length===4&&gpts?.length>=8&&lpts?.length>=8)
+   viewports.push({bbox,gpts,lpts,area:Math.abs((bbox[2]-bbox[0])*(bbox[3]-bbox[1]))});
+ }
+ if(!viewports.length)throw Error('GeoPDF viewport found, but its /Measure coordinates could not be read.');
+ return viewports.sort((a,b)=>b.area-a.area)[0];
+}
+async function getGeoViewportWithObjects(bytes){
+ // pdf-lib resolves indirect objects and compressed PDF object streams.
+ // This is required for BLM Cathedral Hills: /Measure 322 0 R.
+ if(!window.PDFLib)throw Error('GeoPDF object reader failed to load. Check internet connection.');
+ const {PDFDocument,PDFName}=window.PDFLib;
+ const doc=await PDFDocument.load(bytes,{ignoreEncryption:true,updateMetadata:false});
+ const context=doc.context, page=doc.getPages()[0];
+ const deref=value=>value?context.lookup(value):null;
+ const readArray=value=>{
+  const arr=deref(value);if(!arr||typeof arr.asArray!=='function')return null;
+  return arr.asArray().map(x=>{const n=deref(x);return typeof n?.asNumber==='function'?n.asNumber():Number(n?.toString());});
+ };
+ const vp=deref(page.node.get(PDFName.of('VP')));
+ if(!vp||typeof vp.asArray!=='function')throw Error('No /VP geospatial viewport found in PDF.');
+ const found=[];
+ for(const vpRef of vp.asArray()){
+  const v=deref(vpRef);if(!v||typeof v.get!=='function')continue;
+  const bbox=readArray(v.get(PDFName.of('BBox')));
+  const measure=deref(v.get(PDFName.of('Measure'))) || v;
+  const gpts=readArray(measure.get(PDFName.of('GPTS')));
+  const lpts=readArray(measure.get(PDFName.of('LPTS')));
+  if(bbox?.length===4&&gpts?.length>=8&&lpts?.length>=8)
+   found.push({bbox,gpts,lpts,area:Math.abs((bbox[2]-bbox[0])*(bbox[3]-bbox[1]))});
+ }
+ if(!found.length)throw Error('No supported /BBox + /GPTS + /LPTS found in PDF geospatial measurement dictionaries.');
+ return found.sort((a,b)=>b.area-a.area)[0];
 }
 function merc(lat,lon){const r=Math.PI/180,cl=Math.max(-85.051128,Math.min(85.051128,lat));return [lon*r,Math.log(Math.tan(Math.PI/4+cl*r/2))]}
 function unmerc(x,y){return [Math.atan(Math.sinh(y))*180/Math.PI,x*180/Math.PI]}
 function geoCorners(v){
- // LPTS: PDF local coordinates, x left-to-right, y bottom-to-top.
- // GPTS: geographic latitude, longitude, paired with LPTS.
- const corners=[];
+ const points=[];
  for(let i=0;i<4;i++){
   const lat=v.gpts[2*i],lon=v.gpts[2*i+1],u=v.lpts[2*i],vv=v.lpts[2*i+1];
-  if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>85||Math.abs(lon)>180)throw Error('Invalid geographic control points');
-  corners.push({lat,lon,u,v:1-vv,xy:merc(lat,lon)});
+  if(![lat,lon,u,vv].every(Number.isFinite)||Math.abs(lat)>85||Math.abs(lon)>180)
+   throw Error('Invalid geographic control points');
+  points.push({lat,lon,u,v:1-vv,xy:merc(lat,lon)});
  }
- const nearest=(u,v)=>corners.reduce((a,b)=>Math.hypot(b.u-u,b.v-v)<Math.hypot(a.u-u,a.v-v)?b:a);
+ // Some BLM PDFs specify four control points INSIDE the viewport (e.g.
+ // at 40%-60%), not at its corners. Fit an affine georeferencing transform
+ // and extrapolate to the actual viewport corners. The older converter
+ // assumed the four LPTS points always lay at 0 and 1.
+ const minU=Math.min(...points.map(p=>p.u)),maxU=Math.max(...points.map(p=>p.u));
+ const minV=Math.min(...points.map(p=>p.v)),maxV=Math.max(...points.map(p=>p.v));
+ if(minU>0.08||maxU<0.92||minV>0.08||maxV<0.92){
+  function solve(A,b){
+   const m=A.map((r,i)=>[...r,b[i]]);
+   for(let k=0;k<3;k++){
+    let pivot=k;for(let j=k+1;j<3;j++)if(Math.abs(m[j][k])>Math.abs(m[pivot][k]))pivot=j;
+    [m[k],m[pivot]]=[m[pivot],m[k]];
+    if(Math.abs(m[k][k])<1e-14)throw Error('GeoPDF control points are degenerate');
+    const scale=m[k][k];for(let j=k;j<4;j++)m[k][j]/=scale;
+    for(let i=0;i<3;i++)if(i!==k){const f=m[i][k];for(let j=k;j<4;j++)m[i][j]-=f*m[k][j];}
+   }
+   return m.map(r=>r[3]);
+  }
+  const A=[[0,0,0],[0,0,0],[0,0,0]],bx=[0,0,0],by=[0,0,0];
+  for(const p of points){const r=[1,p.u,p.v];for(let i=0;i<3;i++){
+   bx[i]+=r[i]*p.xy[0];by[i]+=r[i]*p.xy[1];
+   for(let j=0;j<3;j++)A[i][j]+=r[i]*r[j];
+  }}
+  const cx=solve(A,bx),cy=solve(A,by);
+  const predict=(u,v)=>[cx[0]+cx[1]*u+cx[2]*v,cy[0]+cy[1]*u+cy[2]*v];
+  const residual=Math.max(...points.map(p=>Math.hypot(...predict(p.u,p.v).map((x,i)=>x-p.xy[i]))));
+  const extent=Math.max(...points.map(p=>p.xy[0]))-Math.min(...points.map(p=>p.xy[0]));
+  if(residual>Math.max(1e-7,extent*0.02))throw Error('GeoPDF control points disagree; cannot safely extrapolate');
+  return [[0,0],[1,0],[1,1],[0,1]].map(([u,v])=>{
+   const xy=predict(u,v),[lat,lon]=unmerc(...xy);return {u,v,xy,lat,lon};
+  });
+ }
+ const nearest=(u,v)=>points.reduce((a,b)=>Math.hypot(b.u-u,b.v-v)<Math.hypot(a.u-u,a.v-v)?b:a);
  const ordered=[nearest(0,0),nearest(1,0),nearest(1,1),nearest(0,1)];
  if(new Set(ordered).size!==4)throw Error('Unrecognized local control-point arrangement');
- return ordered; // TL TR BR BL
+ return ordered;
 }
 function bilinear(c,u,v){const a=(1-u)*(1-v),b=u*(1-v),d=u*v,e=(1-u)*v;return [a*c[0].xy[0]+b*c[1].xy[0]+d*c[2].xy[0]+e*c[3].xy[0],a*c[0].xy[1]+b*c[1].xy[1]+d*c[2].xy[1]+e*c[3].xy[1]]}
 async function rectify(source,corners,renderScale){
@@ -4886,12 +4978,11 @@ el('amgConvert').onclick=async()=>{
  const file=el('amgFile').files[0];if(!file){amgStatus('Select a GeoPDF first.');return;}
  const button=el('amgConvert');button.disabled=true;
  try{
-  amgStatus('Reading geographic control points…');const bytes=new Uint8Array(await file.arrayBuffer());const geo=getGeoViewport(bytes);const corners=geoCorners(geo);
+  amgStatus('Reading geographic control points…');const bytes=new Uint8Array(await file.arrayBuffer());const geo=await getGeoViewportWithObjects(bytes);const corners=geoCorners(geo);
   amgStatus('Rendering PDF…');
   const doc=await pdfjsLib.getDocument({data:bytes}).promise;
   const page=await doc.getPage(1);
   const requestedScale=Number(el('amgQuality').value);
-  amgStatus('AMG: attempting '+requestedScale+'× cropped render (desktop limit 65 MP; mobile 45 MP)…');
   const attempts=[requestedScale,...[3,2].filter(n=>n<requestedScale)];
   let cropped=null,scale=requestedScale;
   const failures=[];
@@ -4908,8 +4999,7 @@ el('amgConvert').onclick=async()=>{
     const w=Math.min(Math.ceil(viewport.width),right)-x;
     const h=Math.min(Math.ceil(viewport.height),bottom)-y;
     if(w<=0||h<=0)throw Error('Map viewport outside PDF page: '+JSON.stringify(r));
-    const cropPixelLimit = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? 45000000 : 65000000;
-    if(w*h>cropPixelLimit)throw Error('Map crop '+w+'×'+h+' exceeds '+Math.round(cropPixelLimit/1000000)+' MP safety budget');
+    if(w*h>45000000)throw Error('Map crop '+w+'×'+h+' exceeds safe pixel budget');
     candidateCrop=document.createElement('canvas');candidateCrop.width=w;candidateCrop.height=h;
     if(candidateCrop.width!==w||candidateCrop.height!==h)throw Error('Crop canvas allocation failed');
     const ctx=candidateCrop.getContext('2d');if(!ctx)throw Error('Crop canvas context unavailable');
@@ -4933,12 +5023,11 @@ el('amgConvert').onclick=async()=>{
   }
   if(!cropped)throw Error('PDF rendering failed at all tested resolutions. '+failures.join(' | '));
   if(scale!==requestedScale)amgStatus('AMG: rendering succeeded at '+scale+'×; rectifying…');
-  else amgStatus('AMG: full '+scale+'× render succeeded; rectifying…');
   const corrected=await rectify(cropped,corners,scale);cropped.width=0;cropped.height=0;
   const blob=await new Promise(resolve=>corrected.canvas.toBlob(resolve,'image/png'));corrected.canvas.width=0;corrected.canvas.height=0;if(!blob)throw Error('PNG creation failed');
   const name=file.name.replace(/\.pdf$/i,'').replace(/[^a-z0-9_-]+/gi,'_');const meta={name,bounds:corrected.bounds,source:file.name,renderScale:scale,outputPixels:corrected.size,projection:'EPSG:3857 rectified; geographic bounds EPSG:4326',controlPoints:corners.map(c=>({lat:c.lat,lon:c.lon}))};
   const record={id:name,meta,blob,updated:Date.now()};await dbAction('readwrite','put',record);showMap(record,true);await refresh();amgStatus('AMG complete at '+scale+'×. Map saved and displayed. Use Layers to toggle.');
- }catch(e){console.error('AMG conversion:',e);amgStatus('AMG stopped: '+e.message+' (try lower quality if memory is low)');}finally{button.disabled=false;}
+ }catch(e){console.error('AMG conversion:',e);amgStatus('AMG stopped: '+e.message);}finally{button.disabled=false;}
 };
 try{const records=await dbAction('readonly','getAll');for(const record of records)showMap(record,false);await refresh();}catch(e){amgStatus('IndexedDB unavailable: '+e.message);}
 </script>
